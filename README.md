@@ -17,7 +17,10 @@ npm install       # install dev dependencies (vite, vitest, typescript)
 npm run dev       # start the dev server, then open the printed URL
 ```
 
-Controls (Phase 0): move with **Arrow keys** or **WASD**.
+Controls: move/drill with **Arrow keys** or **WASD**. **Z** = place dynamite, **X** = flare
+(reserved). At the surface **base**, the shop opens automatically: **Z** cycles the
+highlighted upgrade, **X** buys it. Return to the surface to auto-sell ore, recharge and
+restock. The UI is pictograms only (🪙 money · 📦 cargo · 🔋 battery · 🧨 dynamite · ⬇️ depth).
 
 ## Scripts
 

@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { Game } from '../src/app/Game';
 import { Battery } from '../src/domain/Battery';
+import { Consumable } from '../src/domain/Consumable';
 import { RIGHT } from '../src/domain/Direction';
 import { Player } from '../src/domain/Player';
 import { PlayerProgress } from '../src/domain/PlayerProgress';
+import { TileType } from '../src/domain/tiles';
 import { UpgradeType } from '../src/domain/upgrades';
 import { Vec2 } from '../src/domain/Vec2';
 import { worldFrom } from './helpers/worldFrom';
@@ -68,6 +70,45 @@ describe('Game base economy', () => {
   it('reports depth below the surface', () => {
     const game = newGame(['..', 'ss', 'ss'], new Vec2(0, 2));
     expect(game.depth()).toBe(1);
+  });
+});
+
+describe('Game dynamite', () => {
+  const FUSE_STEPS = 30; // more than enough fixed steps for the fuse to burn down
+
+  it('places dynamite underground, consuming a stick', () => {
+    const game = newGame(['....', 'sRss'], new Vec2(1, 1));
+    const before = game.player.dynamite.remaining;
+    expect(game.placeDynamite()).toBe(true);
+    expect(game.player.dynamite.remaining).toBe(before - 1);
+    expect(game.activeDynamites.length).toBe(1);
+  });
+
+  it('cannot place dynamite at the base', () => {
+    const game = newGame(['....', 'sRss'], new Vec2(1, 0));
+    expect(game.placeDynamite()).toBe(false);
+  });
+
+  it('cannot place dynamite with no supplies left', () => {
+    const game = newGame(['....', 'sRss'], new Vec2(1, 1), { dynamite: new Consumable(0) });
+    expect(game.placeDynamite()).toBe(false);
+  });
+
+  it('blasts nearby rock when the fuse burns out, leaving the miner unharmed', () => {
+    const game = newGame(['....', '..R.'], new Vec2(1, 1)); // miner at empty (1,1), rock at (2,1)
+    game.placeDynamite();
+    for (let i = 0; i < FUSE_STEPS; i++) game.step(MOVE_DURATION, null);
+    expect(game.activeDynamites.length).toBe(0);
+    expect(game.world.getTile(2, 1)).toBe(TileType.Empty); // rock destroyed
+    expect(game.player.tile.equals(new Vec2(1, 1))).toBe(true); // no friendly fire
+  });
+
+  it('restocks dynamite at the base', () => {
+    const game = newGame(['....', 'sRss'], new Vec2(1, 1), { dynamite: new Consumable(3) });
+    game.placeDynamite();
+    game.player.tile = new Vec2(1, 0); // return to surface
+    game.step(MOVE_DURATION, null);
+    expect(game.player.dynamite.remaining).toBe(3);
   });
 });
 

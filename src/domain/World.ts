@@ -3,6 +3,7 @@ import { Vec2 } from './Vec2';
 import { TileType, isSolid } from './tiles';
 
 const DEFAULT_PILLAR_CHANCE = 0.08;
+const DEFAULT_ROCK_CHANCE = 0.05;
 const DEFAULT_SURFACE_ROWS = 3;
 const DEFAULT_SPAWN = new Vec2(1, 1);
 
@@ -27,6 +28,8 @@ const ORE_SPECS: readonly OreSpec[] = [
 export interface WorldGenOptions {
   /** Probability [0,1] that a ground tile becomes a bedrock pillar. */
   readonly pillarChance?: number;
+  /** Probability [0,1] that a ground tile becomes a destructible rock. */
+  readonly rockChance?: number;
   /** Number of open-air (sky) rows at the top before the ground begins. */
   readonly surfaceRows?: number;
   /** Tile kept clear so the player has somewhere to spawn. */
@@ -64,6 +67,7 @@ export class World {
 
   static generate(width: number, height: number, seed: number, options: WorldGenOptions = {}): World {
     const pillarChance = options.pillarChance ?? DEFAULT_PILLAR_CHANCE;
+    const rockChance = options.rockChance ?? DEFAULT_ROCK_CHANCE;
     const surfaceRows = options.surfaceRows ?? DEFAULT_SURFACE_ROWS;
     const spawn = options.spawn ?? DEFAULT_SPAWN;
     const rng = new Rng(seed);
@@ -71,7 +75,7 @@ export class World {
 
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        tiles[y * width + x] = World.pickTile(x, y, width, height, surfaceRows, rng, pillarChance);
+        tiles[y * width + x] = World.pickTile(x, y, width, height, surfaceRows, rng, pillarChance, rockChance);
       }
     }
 
@@ -87,11 +91,13 @@ export class World {
     surfaceRows: number,
     rng: Rng,
     pillarChance: number,
+    rockChance: number,
   ): TileType {
     // Left/right walls and the bottom floor are indestructible; the top is open sky.
     if (x === 0 || x === width - 1 || y === height - 1) return TileType.Bedrock;
     if (y < surfaceRows) return TileType.Empty;
     if (rng.next() < pillarChance) return TileType.Bedrock;
+    if (rng.next() < rockChance) return TileType.Rock;
     return World.pickOre(y - surfaceRows, rng);
   }
 

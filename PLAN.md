@@ -35,8 +35,12 @@ falling-rock and bat hazards, procedural generation, an upgrade economy, and gen
   battery (drains per drill, blocks drilling at 0), surface base auto-sell + recharge,
   4 upgrades (drill strength/speed, cargo, battery), HUD + base shop overlay, localStorage
   save (money + upgrade levels). 57 tests passing; typecheck + build clean.
-- **Phase 3 — Rocks & dynamite**: Destructible rock, dynamite consumable (place/fuse/blast,
-  no friendly fire), auto-restock at base, dynamite capacity upgrade.
+- **Phase 3 — Rocks & dynamite** ✅ DONE: destructible Rock tile, dynamite consumable
+  (Consumable + Dynamite entity, fuse → small blast that clears rock/sand, preserves ore &
+  bedrock, no friendly fire), auto-restock at base, dynamite-capacity upgrade. Feedback
+  polish shipped: keyboard-only shop (Z=cycle, X=buy at base; Z=dynamite underground),
+  pictogram/emoji HUD + shop (no words), save on every surface arrival. 71 tests passing;
+  typecheck + build clean.
 - **Phase 4 — Falling rocks**: Rock gravity system, "wobble" telegraph, knock-out + gentle
   respawn (lose this run's cargo).
 - **Phase 5 — Bats**: Cave pockets in procgen, sleeping bats, wake/chase AI, instant

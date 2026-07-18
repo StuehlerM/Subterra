@@ -1,6 +1,9 @@
 import { Game } from '../app/Game';
 
-/** Small always-on overlay showing money, cargo, battery and depth. */
+/**
+ * Always-on overlay for young players: pictograms + numbers only, no words.
+ * 🪙 money · 📦 cargo · 🔋 battery · 🧨 dynamite · ⬇️ depth.
+ */
 export class Hud {
   private readonly root: HTMLDivElement;
 
@@ -11,23 +14,25 @@ export class Hud {
       top: '8px',
       left: '8px',
       padding: '8px 12px',
-      font: '14px monospace',
+      font: '18px system-ui, sans-serif',
       color: '#f0f0f0',
       background: 'rgba(0,0,0,0.45)',
-      borderRadius: '6px',
+      borderRadius: '8px',
       whiteSpace: 'pre',
+      lineHeight: '1.5',
       pointerEvents: 'none',
     } satisfies Partial<CSSStyleDeclaration>);
     parent.appendChild(this.root);
   }
 
   update(game: Game): void {
-    const { cargo, battery } = game.player;
+    const { cargo, battery, dynamite } = game.player;
     this.root.textContent = [
-      `Money:   $${game.progress.money}`,
-      `Cargo:   ${cargo.count}/${cargo.capacity}  ($${cargo.totalValue})`,
-      `Battery: ${battery.current}/${battery.capacity}`,
-      `Depth:   ${game.depth()}`,
+      `🪙 ${game.progress.money}`,
+      `📦 ${cargo.count}/${cargo.capacity}`,
+      `🔋 ${battery.current}/${battery.capacity}`,
+      `🧨 ${dynamite.remaining}/${dynamite.capacity}`,
+      `⬇️ ${game.depth()}`,
     ].join('\n');
   }
 }

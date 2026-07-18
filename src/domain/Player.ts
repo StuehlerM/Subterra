@@ -1,5 +1,6 @@
 import { Battery } from './Battery';
 import { Cargo } from './Cargo';
+import { Consumable } from './Consumable';
 import { Direction } from './Direction';
 import { PlayerProgress } from './PlayerProgress';
 import { Vec2 } from './Vec2';
@@ -10,6 +11,7 @@ const DEFAULT_MOVE_DURATION = 0.14;
 const DEFAULT_DRILL_STRENGTH = 1;
 const DEFAULT_CARGO_CAPACITY = 8;
 const DEFAULT_BATTERY_CAPACITY = 30;
+const DEFAULT_DYNAMITE_CAPACITY = 3;
 /** Battery spent per drilled tile. */
 const DIG_BATTERY_COST = 1;
 
@@ -18,6 +20,7 @@ export interface PlayerOptions {
   moveDuration?: number;
   cargo?: Cargo;
   battery?: Battery;
+  dynamite?: Consumable;
 }
 
 /**
@@ -29,6 +32,7 @@ export interface PlayerOptions {
 export class Player {
   readonly cargo: Cargo;
   readonly battery: Battery;
+  readonly dynamite: Consumable;
   drillStrength: number;
   moveDuration: number;
 
@@ -45,6 +49,7 @@ export class Player {
     this.moveDuration = options.moveDuration ?? DEFAULT_MOVE_DURATION;
     this.cargo = options.cargo ?? new Cargo(DEFAULT_CARGO_CAPACITY);
     this.battery = options.battery ?? new Battery(DEFAULT_BATTERY_CAPACITY);
+    this.dynamite = options.dynamite ?? new Consumable(DEFAULT_DYNAMITE_CAPACITY);
     this.from = tile;
     this.to = tile;
   }
@@ -64,6 +69,7 @@ export class Player {
     this.moveDuration = progress.moveDuration;
     this.cargo.setCapacity(progress.cargoCapacity);
     this.battery.setCapacity(progress.batteryCapacity);
+    this.dynamite.setCapacity(progress.dynamiteCapacity);
   }
 
   /**

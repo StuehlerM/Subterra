@@ -3,6 +3,7 @@ export enum UpgradeType {
   DrillSpeed = 'drillSpeed',
   CargoCapacity = 'cargoCapacity',
   BatteryCapacity = 'batteryCapacity',
+  DynamiteCapacity = 'dynamiteCapacity',
 }
 
 export interface UpgradeSpec {
@@ -23,6 +24,7 @@ export const STARTING_LEVEL = 1;
  * - DrillSpeed: seconds to traverse/drill one tile (lower is faster).
  * - CargoCapacity: ore pieces carried per run.
  * - BatteryCapacity: drill actions available before a recharge.
+ * - DynamiteCapacity: sticks of dynamite carried per run.
  */
 export const UPGRADE_CATALOG: Record<UpgradeType, UpgradeSpec> = {
   [UpgradeType.DrillStrength]: {
@@ -44,6 +46,11 @@ export const UPGRADE_CATALOG: Record<UpgradeType, UpgradeSpec> = {
     label: 'Battery',
     values: [30, 45, 65, 90, 120],
     costs: [30, 80, 160, 320],
+  },
+  [UpgradeType.DynamiteCapacity]: {
+    label: 'Dynamite',
+    values: [3, 4, 5, 6, 8],
+    costs: [60, 140, 300, 600],
   },
 };
 

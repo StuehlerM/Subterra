@@ -76,6 +76,10 @@ export class PlayerProgress {
     return upgradeValue(UpgradeType.BatteryCapacity, this.levels[UpgradeType.BatteryCapacity]);
   }
 
+  get dynamiteCapacity(): number {
+    return upgradeValue(UpgradeType.DynamiteCapacity, this.levels[UpgradeType.DynamiteCapacity]);
+  }
+
   toJSON(): PlayerProgressData {
     return { money: this.bank, levels: { ...this.levels } };
   }

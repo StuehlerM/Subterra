@@ -29,7 +29,11 @@ describe('World generation', () => {
   });
 
   it('leaves open-air surface rows at the top and diggable ground below', () => {
-    const world = World.generate(SIZE, SIZE, 1, { surfaceRows: SURFACE_ROWS, pillarChance: 0 });
+    const world = World.generate(SIZE, SIZE, 1, {
+      surfaceRows: SURFACE_ROWS,
+      pillarChance: 0,
+      rockChance: 0,
+    });
     // Interior surface rows are open air.
     for (let y = 0; y < SURFACE_ROWS; y++) {
       expect(world.getTile(3, y)).toBe(TileType.Empty);

@@ -43,6 +43,7 @@ export class AssetRegistry {
     registry.registerTile(TileType.Silver, { color: '#d7dce0' });
     registry.registerTile(TileType.Gold, { color: '#ffcf3f' });
     registry.registerTile(TileType.Gem, { color: '#4fd0e3' });
+    registry.registerTile(TileType.Rock, { color: '#808791' });
     return registry;
   }
 }

@@ -11,13 +11,18 @@ const KEY_DIRECTIONS: Record<string, Direction> = {
   KeyD: RIGHT,
 };
 
+const DYNAMITE_KEY = 'KeyZ';
+const FLARE_KEY = 'KeyX';
+
 /**
- * Translates keyboard state into a movement direction. Tracks held keys so that
- * the most recently pressed direction wins (natural for grid movement). Only
- * the four movement keys are handled in Phase 0; dynamite/flare come later.
+ * Translates keyboard state into intents. Movement is level-triggered (held key
+ * wins, most-recent first); the two action keys are edge-triggered and consumed
+ * once per press. At the base these action keys drive the shop instead.
  */
 export class InputController {
   private readonly held: string[] = [];
+  private dynamitePressed = false;
+  private flarePressed = false;
 
   attach(target: Window): void {
     target.addEventListener('keydown', (event) => this.onKeyDown(event));
@@ -32,10 +37,32 @@ export class InputController {
     return null;
   }
 
+  consumeDynamite(): boolean {
+    const pressed = this.dynamitePressed;
+    this.dynamitePressed = false;
+    return pressed;
+  }
+
+  consumeFlare(): boolean {
+    const pressed = this.flarePressed;
+    this.flarePressed = false;
+    return pressed;
+  }
+
   private onKeyDown(event: KeyboardEvent): void {
-    if (!KEY_DIRECTIONS[event.code]) return;
-    event.preventDefault();
-    if (!this.held.includes(event.code)) this.held.push(event.code);
+    if (KEY_DIRECTIONS[event.code]) {
+      event.preventDefault();
+      if (!this.held.includes(event.code)) this.held.push(event.code);
+      return;
+    }
+    if (event.repeat) return;
+    if (event.code === DYNAMITE_KEY) {
+      event.preventDefault();
+      this.dynamitePressed = true;
+    } else if (event.code === FLARE_KEY) {
+      event.preventDefault();
+      this.flarePressed = true;
+    }
   }
 
   private onKeyUp(event: KeyboardEvent): void {

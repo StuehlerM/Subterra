@@ -31,12 +31,18 @@ export class AssetRegistry {
     return this.playerColor;
   }
 
-  /** Registers the default placeholder palette for Phase 0. */
+  /** Registers the default placeholder palette (swap for sprites later). */
   static withDefaults(): AssetRegistry {
     const registry = new AssetRegistry();
     registry.registerTile(TileType.Empty, { color: '#1c1a2e' });
     registry.registerTile(TileType.Sand, { color: '#c2a15a' });
     registry.registerTile(TileType.Bedrock, { color: '#3a3f4b' });
+    registry.registerTile(TileType.Coal, { color: '#2f3033' });
+    registry.registerTile(TileType.Copper, { color: '#b87333' });
+    registry.registerTile(TileType.Iron, { color: '#a7a19a' });
+    registry.registerTile(TileType.Silver, { color: '#d7dce0' });
+    registry.registerTile(TileType.Gold, { color: '#ffcf3f' });
+    registry.registerTile(TileType.Gem, { color: '#4fd0e3' });
     return registry;
   }
 }

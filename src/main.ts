@@ -11,10 +11,16 @@ import {
 } from './app/constants';
 import { FixedTimestep } from './app/FixedTimestep';
 import { Player } from './domain/Player';
+import { PlayerProgress } from './domain/PlayerProgress';
 import { World } from './domain/World';
 import { AssetRegistry } from './infra/AssetRegistry';
 import { CanvasRenderer } from './infra/CanvasRenderer';
+import { Hud } from './infra/Hud';
 import { InputController } from './infra/InputController';
+import { SaveRepository } from './infra/SaveRepository';
+import { Shop } from './infra/Shop';
+
+const SAVE_KEY = 'deep-diggers-save-v1';
 
 function bootstrap(): void {
   const canvas = document.getElementById('game') as HTMLCanvasElement;
@@ -28,28 +34,42 @@ function bootstrap(): void {
   resize();
   window.addEventListener('resize', resize);
 
+  const save = new SaveRepository(SAVE_KEY, window.localStorage);
+  const progress = save.load() ?? new PlayerProgress();
+
   const world = World.generate(WORLD_WIDTH, WORLD_HEIGHT, DEFAULT_SEED, {
     surfaceRows: SURFACE_ROWS,
     spawn: SPAWN_TILE,
   });
   const player = new Player(SPAWN_TILE);
-  const game = new Game(world, player);
+  const game = new Game(world, player, progress, SURFACE_ROWS);
 
   const input = new InputController();
   input.attach(window);
 
   const renderer = new CanvasRenderer(ctx, AssetRegistry.withDefaults(), TILE_SIZE);
+  const hud = new Hud(document.body);
+  const shop = new Shop(document.body, game, () => save.save(progress));
   const timestep = new FixedTimestep(FIXED_DT);
 
+  let savedMoney = progress.money;
   let last = performance.now();
   const frame = (now: number) => {
     const frameDt = Math.min((now - last) / 1000, MAX_FRAME_DT);
     last = now;
+
     const steps = timestep.advance(frameDt);
     for (let i = 0; i < steps; i++) {
       game.step(FIXED_DT, input.currentDirection());
     }
+    if (progress.money !== savedMoney) {
+      save.save(progress);
+      savedMoney = progress.money;
+    }
+
     renderer.render(world, player);
+    hud.update(game);
+    shop.update();
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);

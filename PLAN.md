@@ -31,8 +31,10 @@ falling-rock and bat hazards, procedural generation, an upgrade economy, and gen
 - **Phase 1 — Dig & world** ✅ DONE: Sand tiles + drilling (move into sand removes it),
   bedrock walls/floor, open-air surface band, top-right surface spawn, seeded sand/pillar
   generation. Tests use an ASCII-map helper. 30 tests passing; typecheck clean.
-- **Phase 2 — Ore & economy**: Ore tiles + values, cargo, surface base zone, shop UI,
-  sell + first upgrades (drill strength/speed, cargo, battery). localStorage save.
+- **Phase 2 — Ore & economy** ✅ DONE: 6 ore tiers (value + hardness gating), cargo hold,
+  battery (drains per drill, blocks drilling at 0), surface base auto-sell + recharge,
+  4 upgrades (drill strength/speed, cargo, battery), HUD + base shop overlay, localStorage
+  save (money + upgrade levels). 57 tests passing; typecheck + build clean.
 - **Phase 3 — Rocks & dynamite**: Destructible rock, dynamite consumable (place/fuse/blast,
   no friendly fire), auto-restock at base, dynamite capacity upgrade.
 - **Phase 4 — Falling rocks**: Rock gravity system, "wobble" telegraph, knock-out + gentle

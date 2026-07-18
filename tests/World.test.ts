@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Vec2 } from '../src/domain/Vec2';
 import { World } from '../src/domain/World';
-import { TileType } from '../src/domain/tiles';
+import { TileType, isDiggable, isOre } from '../src/domain/tiles';
 
 const SIZE = 10;
 const SURFACE_ROWS = 3;
@@ -28,16 +28,29 @@ describe('World generation', () => {
     }
   });
 
-  it('leaves open-air surface rows at the top and sand below', () => {
+  it('leaves open-air surface rows at the top and diggable ground below', () => {
     const world = World.generate(SIZE, SIZE, 1, { surfaceRows: SURFACE_ROWS, pillarChance: 0 });
     // Interior surface rows are open air.
     for (let y = 0; y < SURFACE_ROWS; y++) {
       expect(world.getTile(3, y)).toBe(TileType.Empty);
     }
-    // Interior ground rows are sand (pillarChance 0 => no bedrock pillars).
+    // Interior ground rows are diggable (sand or ore) with no bedrock pillars.
     for (let y = SURFACE_ROWS; y < SIZE - 1; y++) {
-      expect(world.getTile(3, y)).toBe(TileType.Sand);
+      const tile = world.getTile(3, y);
+      expect(tile).not.toBe(TileType.Empty);
+      expect(isDiggable(tile)).toBe(true);
     }
+  });
+
+  it('scatters ore into the ground (deterministically for a seed)', () => {
+    const world = World.generate(40, 80, 2024);
+    let oreCount = 0;
+    for (let y = 0; y < 80; y++) {
+      for (let x = 0; x < 40; x++) {
+        if (isOre(world.getTile(x, y))) oreCount += 1;
+      }
+    }
+    expect(oreCount).toBeGreaterThan(0);
   });
 
   it('treats out-of-bounds tiles as bedrock (non-walkable)', () => {

@@ -6,6 +6,24 @@ const DEFAULT_PILLAR_CHANCE = 0.08;
 const DEFAULT_SURFACE_ROWS = 3;
 const DEFAULT_SPAWN = new Vec2(1, 1);
 
+interface OreSpec {
+  readonly tile: TileType;
+  /** Minimum depth (rows below the surface) at which this ore can appear. */
+  readonly minDepth: number;
+  /** Spawn probability [0,1] once eligible. */
+  readonly chance: number;
+}
+
+// Rarer/deeper ores first so they claim the low end of the random roll.
+const ORE_SPECS: readonly OreSpec[] = [
+  { tile: TileType.Gem, minDepth: 30, chance: 0.02 },
+  { tile: TileType.Gold, minDepth: 20, chance: 0.04 },
+  { tile: TileType.Silver, minDepth: 12, chance: 0.05 },
+  { tile: TileType.Iron, minDepth: 6, chance: 0.07 },
+  { tile: TileType.Copper, minDepth: 2, chance: 0.08 },
+  { tile: TileType.Coal, minDepth: 1, chance: 0.1 },
+];
+
 export interface WorldGenOptions {
   /** Probability [0,1] that a ground tile becomes a bedrock pillar. */
   readonly pillarChance?: number;
@@ -73,6 +91,18 @@ export class World {
     // Left/right walls and the bottom floor are indestructible; the top is open sky.
     if (x === 0 || x === width - 1 || y === height - 1) return TileType.Bedrock;
     if (y < surfaceRows) return TileType.Empty;
-    return rng.next() < pillarChance ? TileType.Bedrock : TileType.Sand;
+    if (rng.next() < pillarChance) return TileType.Bedrock;
+    return World.pickOre(y - surfaceRows, rng);
+  }
+
+  private static pickOre(depth: number, rng: Rng): TileType {
+    const roll = rng.next();
+    let threshold = 0;
+    for (const spec of ORE_SPECS) {
+      if (depth < spec.minDepth) continue;
+      threshold += spec.chance;
+      if (roll < threshold) return spec.tile;
+    }
+    return TileType.Sand;
   }
 }

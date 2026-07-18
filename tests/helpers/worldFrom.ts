@@ -5,11 +5,15 @@ const CHAR_TO_TILE: Record<string, TileType> = {
   '.': TileType.Empty,
   s: TileType.Sand,
   '#': TileType.Bedrock,
+  C: TileType.Coal,
+  I: TileType.Iron,
+  G: TileType.Gold,
 };
 
 /**
  * Builds a World from an ASCII map for readable, deterministic tests.
- * Legend: '.' empty, 's' sand, '#' bedrock. All rows must be equal length.
+ * Legend: '.' empty, 's' sand, '#' bedrock, 'C' coal, 'I' iron, 'G' gold.
+ * All rows must be equal length.
  */
 export function worldFrom(rows: string[]): World {
   const height = rows.length;

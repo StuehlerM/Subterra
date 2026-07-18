@@ -13,6 +13,13 @@ const FUSE_URGENT_SECONDS = 0.6;
 const BLINK_SLOW_MS = 260;
 const BLINK_FAST_MS = 110;
 
+// Fog of war (playtest): darkness alpha and torch/flare light radii (in tiles).
+const FOG_DARKNESS = 0.9;
+const PLAYER_LIGHT_INNER_TILES = 2;
+const PLAYER_LIGHT_OUTER_TILES = 6;
+const FLARE_LIGHT_INNER_TILES = 1;
+const FLARE_LIGHT_OUTER_TILES = 5;
+
 interface Camera {
   readonly x: number;
   readonly y: number;
@@ -23,6 +30,9 @@ interface Camera {
  * on the player's (interpolated) position; only visible tiles are drawn.
  */
 export class CanvasRenderer {
+  private readonly fog = document.createElement('canvas');
+  private readonly fogCtx = this.fog.getContext('2d')!;
+
   constructor(
     private readonly ctx: CanvasRenderingContext2D,
     private readonly assets: AssetRegistry,
@@ -44,7 +54,43 @@ export class CanvasRenderer {
     for (const dynamite of game.activeDynamites) this.drawDynamite(dynamite, camera);
     for (const bat of game.activeBats) this.drawBat(bat, camera);
     this.drawPlayer(center, camera);
+    this.drawFog(game, camera);
     if (game.knockoutFlash > 0) this.drawKnockoutFlash(game.knockoutFlash);
+  }
+
+  /** Darkens everything beyond a torch radius around the miner; flares light up. */
+  private drawFog(game: Game, camera: Camera): void {
+    const { canvas } = this.ctx;
+    if (this.fog.width !== canvas.width || this.fog.height !== canvas.height) {
+      this.fog.width = canvas.width;
+      this.fog.height = canvas.height;
+    }
+    const f = this.fogCtx;
+    f.clearRect(0, 0, canvas.width, canvas.height);
+    f.fillStyle = `rgba(6,6,12,${FOG_DARKNESS})`;
+    f.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Punch holes of light (destination-out erases darkness on this offscreen layer only).
+    f.globalCompositeOperation = 'destination-out';
+    this.punchLight(canvas.width / 2, canvas.height / 2, PLAYER_LIGHT_INNER_TILES, PLAYER_LIGHT_OUTER_TILES);
+    for (const flare of game.activeFlares) {
+      const fx = flare.tile.x * this.tileSize - camera.x + this.tileSize / 2;
+      const fy = flare.tile.y * this.tileSize - camera.y + this.tileSize / 2;
+      this.punchLight(fx, fy, FLARE_LIGHT_INNER_TILES, FLARE_LIGHT_OUTER_TILES, flare.intensity);
+    }
+    f.globalCompositeOperation = 'source-over';
+
+    this.ctx.drawImage(this.fog, 0, 0);
+  }
+
+  private punchLight(x: number, y: number, innerTiles: number, outerTiles: number, strength = 1): void {
+    const inner = innerTiles * this.tileSize;
+    const outer = outerTiles * this.tileSize;
+    const gradient = this.fogCtx.createRadialGradient(x, y, inner, x, y, outer);
+    gradient.addColorStop(0, `rgba(0,0,0,${strength})`);
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    this.fogCtx.fillStyle = gradient;
+    this.fogCtx.fillRect(x - outer, y - outer, outer * 2, outer * 2);
   }
 
   private drawTiles(world: World, camera: Camera, viewW: number, viewH: number): void {

@@ -1,6 +1,9 @@
+import { Game } from '../app/Game';
+import { Bat, BatState } from '../domain/Bat';
 import { Dynamite } from '../domain/Dynamite';
 import { FallingRock, RockState } from '../domain/FallingRock';
-import { Player } from '../domain/Player';
+import { FLARE_RADIUS, Flare } from '../domain/Flare';
+import { Vec2 } from '../domain/Vec2';
 import { World } from '../domain/World';
 import { TileType } from '../domain/tiles';
 import { AssetRegistry } from './AssetRegistry';
@@ -10,9 +13,14 @@ const FUSE_URGENT_SECONDS = 0.6;
 const BLINK_SLOW_MS = 260;
 const BLINK_FAST_MS = 110;
 
+interface Camera {
+  readonly x: number;
+  readonly y: number;
+}
+
 /**
- * Draws the world, player and placed dynamite to a 2D canvas. The camera
- * centers on the player's (interpolated) position; only visible tiles are drawn.
+ * Draws the whole scene from the game state to a 2D canvas. The camera centers
+ * on the player's (interpolated) position; only visible tiles are drawn.
  */
 export class CanvasRenderer {
   constructor(
@@ -21,53 +29,36 @@ export class CanvasRenderer {
     private readonly tileSize: number,
   ) {}
 
-  render(
-    world: World,
-    player: Player,
-    dynamites: readonly Dynamite[],
-    fallingRocks: readonly FallingRock[],
-    knockoutFlash: number,
-  ): void {
+  render(game: Game): void {
     const { canvas } = this.ctx;
-    const center = player.renderPosition();
-    const cameraX = center.x * this.tileSize + this.tileSize / 2 - canvas.width / 2;
-    const cameraY = center.y * this.tileSize + this.tileSize / 2 - canvas.height / 2;
+    const center = game.player.renderPosition();
+    const camera: Camera = {
+      x: center.x * this.tileSize + this.tileSize / 2 - canvas.width / 2,
+      y: center.y * this.tileSize + this.tileSize / 2 - canvas.height / 2,
+    };
 
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-    this.drawTiles(world, cameraX, cameraY, canvas.width, canvas.height);
-    for (const rock of fallingRocks) this.drawFallingRock(rock, cameraX, cameraY);
-    for (const dynamite of dynamites) this.drawDynamite(dynamite, cameraX, cameraY);
-    this.drawPlayer(center, cameraX, cameraY);
-    if (knockoutFlash > 0) this.drawKnockoutFlash(knockoutFlash);
+    this.drawTiles(game.world, camera, canvas.width, canvas.height);
+    for (const flare of game.activeFlares) this.drawFlare(flare, camera);
+    for (const rock of game.activeFallingRocks) this.drawFallingRock(rock, camera);
+    for (const dynamite of game.activeDynamites) this.drawDynamite(dynamite, camera);
+    for (const bat of game.activeBats) this.drawBat(bat, camera);
+    this.drawPlayer(center, camera);
+    if (game.knockoutFlash > 0) this.drawKnockoutFlash(game.knockoutFlash);
   }
 
-  private drawFallingRock(rock: FallingRock, cameraX: number, cameraY: number): void {
-    const wobble =
-      rock.phase === RockState.Wobbling ? Math.sin(performance.now() / 40) * (this.tileSize * 0.08) : 0;
-    const px = Math.round(rock.tile.x * this.tileSize - cameraX + wobble);
-    const py = Math.round((rock.tile.y + rock.fallProgress) * this.tileSize - cameraY);
-    this.ctx.fillStyle = this.assets.tileStyle(TileType.Rock).color;
-    this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
-  }
-
-  private drawKnockoutFlash(intensity: number): void {
-    const { canvas } = this.ctx;
-    this.ctx.fillStyle = `rgba(200,0,0,${Math.min(1, intensity) * 0.5})`;
-    this.ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
-
-  private drawTiles(world: World, cameraX: number, cameraY: number, viewW: number, viewH: number): void {
-    const minX = Math.floor(cameraX / this.tileSize);
-    const minY = Math.floor(cameraY / this.tileSize);
-    const maxX = Math.ceil((cameraX + viewW) / this.tileSize);
-    const maxY = Math.ceil((cameraY + viewH) / this.tileSize);
+  private drawTiles(world: World, camera: Camera, viewW: number, viewH: number): void {
+    const minX = Math.floor(camera.x / this.tileSize);
+    const minY = Math.floor(camera.y / this.tileSize);
+    const maxX = Math.ceil((camera.x + viewW) / this.tileSize);
+    const maxY = Math.ceil((camera.y + viewH) / this.tileSize);
 
     for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
         this.ctx.fillStyle = this.assets.tileStyle(world.getTile(x, y)).color;
         this.ctx.fillRect(
-          Math.round(x * this.tileSize - cameraX),
-          Math.round(y * this.tileSize - cameraY),
+          Math.round(x * this.tileSize - camera.x),
+          Math.round(y * this.tileSize - camera.y),
           this.tileSize,
           this.tileSize,
         );
@@ -75,28 +66,73 @@ export class CanvasRenderer {
     }
   }
 
-  private drawDynamite(dynamite: Dynamite, cameraX: number, cameraY: number): void {
-    const px = Math.round(dynamite.tile.x * this.tileSize - cameraX);
-    const py = Math.round(dynamite.tile.y * this.tileSize - cameraY);
+  private drawFallingRock(rock: FallingRock, camera: Camera): void {
+    const wobble =
+      rock.phase === RockState.Wobbling ? Math.sin(performance.now() / 40) * (this.tileSize * 0.08) : 0;
+    const px = Math.round(rock.tile.x * this.tileSize - camera.x + wobble);
+    const py = Math.round((rock.tile.y + rock.fallProgress) * this.tileSize - camera.y);
+    this.ctx.fillStyle = this.assets.tileStyle(TileType.Rock).color;
+    this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
+  }
+
+  private drawDynamite(dynamite: Dynamite, camera: Camera): void {
+    const px = Math.round(dynamite.tile.x * this.tileSize - camera.x);
+    const py = Math.round(dynamite.tile.y * this.tileSize - camera.y);
     const blinkMs = dynamite.fuseRemaining < FUSE_URGENT_SECONDS ? BLINK_FAST_MS : BLINK_SLOW_MS;
     const lit = Math.floor(performance.now() / blinkMs) % 2 === 0;
 
     const inset = Math.round(this.tileSize * 0.2);
     this.ctx.fillStyle = lit ? '#ff5a3c' : '#b53218';
     this.ctx.fillRect(px + inset, py + inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
-    // spark
     this.ctx.fillStyle = lit ? '#ffe36e' : '#8a6a1e';
     this.ctx.fillRect(px + this.tileSize / 2 - 2, py + inset - 4, 4, 5);
   }
 
-  private drawPlayer(center: { x: number; y: number }, cameraX: number, cameraY: number): void {
+  private drawBat(bat: Bat, camera: Camera): void {
+    const p = bat.renderPosition();
+    const cx = p.x * this.tileSize - camera.x + this.tileSize / 2;
+    const cy = p.y * this.tileSize - camera.y + this.tileSize / 2;
+    this.ctx.save();
+    this.ctx.globalAlpha = bat.phase === BatState.Sleeping ? 0.55 : bat.phase === BatState.Fleeing ? 0.5 : 1;
+    this.ctx.font = `${Math.floor(this.tileSize * 0.8)}px serif`;
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillText(bat.phase === BatState.Sleeping ? '😴' : '🦇', cx, cy);
+    this.ctx.restore();
+  }
+
+  private drawFlare(flare: Flare, camera: Camera): void {
+    const cx = flare.tile.x * this.tileSize - camera.x + this.tileSize / 2;
+    const cy = flare.tile.y * this.tileSize - camera.y + this.tileSize / 2;
+    const radius = FLARE_RADIUS * this.tileSize;
+    const gradient = this.ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+    gradient.addColorStop(0, `rgba(255,231,110,${0.5 * flare.intensity})`);
+    gradient.addColorStop(1, 'rgba(255,231,110,0)');
+    this.ctx.fillStyle = gradient;
+    this.ctx.beginPath();
+    this.ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    this.ctx.font = `${Math.floor(this.tileSize * 0.8)}px serif`;
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillText('🔥', cx, cy);
+  }
+
+  private drawPlayer(center: Vec2, camera: Camera): void {
     const padding = Math.round(this.tileSize * 0.12);
     this.ctx.fillStyle = this.assets.player;
     this.ctx.fillRect(
-      Math.round(center.x * this.tileSize - cameraX) + padding,
-      Math.round(center.y * this.tileSize - cameraY) + padding,
+      Math.round(center.x * this.tileSize - camera.x) + padding,
+      Math.round(center.y * this.tileSize - camera.y) + padding,
       this.tileSize - padding * 2,
       this.tileSize - padding * 2,
     );
+  }
+
+  private drawKnockoutFlash(intensity: number): void {
+    const { canvas } = this.ctx;
+    this.ctx.fillStyle = `rgba(200,0,0,${Math.min(1, intensity) * 0.5})`;
+    this.ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 }

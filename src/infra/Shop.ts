@@ -10,6 +10,7 @@ const UPGRADE_ICON: Record<UpgradeType, string> = {
   [UpgradeType.BatteryCapacity]: '🔋',
   [UpgradeType.DynamiteCapacity]: '🧨',
   [UpgradeType.BlastRadius]: '💥',
+  [UpgradeType.FlareCapacity]: '🔦',
 };
 
 const DRILL_AGAIN_ICON = '⛏️⬇️';

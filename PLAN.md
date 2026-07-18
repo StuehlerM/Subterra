@@ -48,8 +48,12 @@ falling-rock and bat hazards, procedural generation, an upgrade economy, and gen
   rocks collapse in sequence). **Event-driven** (no per-frame scan): rocks are re-checked
   only when a tile is emptied by a drill/blast, cascading up the column; a single settle
   pass at startup catches pre-unsupported rocks. 83 tests passing; typecheck + build clean.
-- **Phase 5 — Bats**: Cave pockets in procgen, sleeping bats, wake/chase AI, instant
-  knock-out, flares + flee/vanish + tire-and-resleep.
+- **Phase 5 — Bats** ✅ DONE: cave pockets in procgen (World.generateMap returns bat spawns);
+  sleeping bats wake on proximity → chase (grid AI through open tiles at 0.18s/tile, slower
+  than walking so you can outrun); touch while awake = knock-out (reuses rock knock-out).
+  Flares are a consumable (X underground): light one → nearby bats flee and vanish. Awake
+  bats tire and re-sleep after losing you for 3s. New Flare-capacity upgrade (🔦). Renderer
+  refactored to take the Game; bats 🦇/😴 and flare 🔥 glow drawn. 100 tests passing; build clean.
 - **Phase 6 — Return tech & polish**: Elevator (mid), teleport (late), battery low-warning,
   depth-scaled ore/hazard tuning, SFX hooks, art-swap pass.
 

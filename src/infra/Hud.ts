@@ -2,7 +2,7 @@ import { Game } from '../app/Game';
 
 /**
  * Always-on overlay for young players: pictograms + numbers only, no words.
- * 🪙 money · 📦 cargo · 🔋 battery · 🧨 dynamite · ⬇️ depth.
+ * 🪙 money · 📦 cargo · 🔋 battery · 🧨 dynamite · 🔦 flares · ⬇️ depth.
  */
 export class Hud {
   private readonly root: HTMLDivElement;
@@ -26,12 +26,13 @@ export class Hud {
   }
 
   update(game: Game): void {
-    const { cargo, battery, dynamite } = game.player;
+    const { cargo, battery, dynamite, flare } = game.player;
     this.root.textContent = [
       `🪙 ${game.progress.money}`,
       `📦 ${cargo.count}/${cargo.capacity}`,
       `🔋 ${battery.current}/${battery.capacity}`,
       `🧨 ${dynamite.remaining}/${dynamite.capacity}`,
+      `🔦 ${flare.remaining}/${flare.capacity}`,
       `⬇️ ${game.depth()}`,
     ].join('\n');
   }

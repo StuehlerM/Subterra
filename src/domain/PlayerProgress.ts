@@ -84,6 +84,10 @@ export class PlayerProgress {
     return upgradeValue(UpgradeType.BlastRadius, this.levels[UpgradeType.BlastRadius]);
   }
 
+  get flareCapacity(): number {
+    return upgradeValue(UpgradeType.FlareCapacity, this.levels[UpgradeType.FlareCapacity]);
+  }
+
   toJSON(): PlayerProgressData {
     return { money: this.bank, levels: { ...this.levels } };
   }

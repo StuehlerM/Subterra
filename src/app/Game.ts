@@ -1,8 +1,10 @@
+import { Bat } from '../domain/Bat';
 import { Direction } from '../domain/Direction';
 import { Dynamite } from '../domain/Dynamite';
 import { sellCargo } from '../domain/Economy';
 import { explode } from '../domain/Explosion';
 import { FallingRock } from '../domain/FallingRock';
+import { FLARE_RADIUS, Flare } from '../domain/Flare';
 import { Player } from '../domain/Player';
 import { PlayerProgress } from '../domain/PlayerProgress';
 import { Vec2 } from '../domain/Vec2';
@@ -12,6 +14,10 @@ import { World } from '../domain/World';
 
 /** Seconds the red knock-out flash lingers. */
 const KNOCKOUT_FLASH_SECONDS = 0.6;
+
+function chebyshev(a: Vec2, b: Vec2): number {
+  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+}
 
 /**
  * Orchestrates a single fixed logic step and owns the surface economy: when the
@@ -27,6 +33,8 @@ export class Game {
   private knockoutTimer = 0;
   private readonly dynamites: Dynamite[] = [];
   private readonly fallingRocks: FallingRock[] = [];
+  private readonly bats: Bat[] = [];
+  private readonly flares: Flare[] = [];
 
   constructor(
     public readonly world: World,
@@ -34,9 +42,11 @@ export class Game {
     public readonly progress: PlayerProgress,
     private readonly surfaceRows: number,
     private readonly spawn: Vec2,
+    batSpawns: readonly Vec2[] = [],
   ) {
     this.player.applyProgress(progress);
     this.settleWorld();
+    for (const tile of batSpawns) this.bats.push(new Bat(tile));
   }
 
   step(dt: number, direction: Direction | null): void {
@@ -53,6 +63,7 @@ export class Game {
     }
     this.updateDynamites(dt);
     this.updateFallingRocks(dt);
+    this.updateBatsAndFlares(dt);
     this.handleBase();
     if (this.knockoutTimer > 0) this.knockoutTimer = Math.max(0, this.knockoutTimer - dt);
     this.wasAtBase = atBase;
@@ -89,6 +100,14 @@ export class Game {
     return this.fallingRocks;
   }
 
+  get activeBats(): readonly Bat[] {
+    return this.bats;
+  }
+
+  get activeFlares(): readonly Flare[] {
+    return this.flares;
+  }
+
   /** 0..1 intensity of the fading knock-out flash (0 = none). */
   get knockoutFlash(): number {
     return this.knockoutTimer / KNOCKOUT_FLASH_SECONDS;
@@ -105,6 +124,17 @@ export class Game {
     if (this.dynamites.some((d) => d.tile.equals(at))) return false;
     if (!this.player.dynamite.tryUse()) return false;
     this.dynamites.push(new Dynamite(at));
+    return true;
+  }
+
+  /**
+   * Lights a flare on the miner's tile (underground only, if supplies remain).
+   * Nearby bats flee and vanish. Returns whether one was lit.
+   */
+  useFlare(): boolean {
+    if (this.isAtBase()) return false;
+    if (!this.player.flare.tryUse()) return false;
+    this.flares.push(new Flare(this.player.tile));
     return true;
   }
 
@@ -177,6 +207,30 @@ export class Game {
     this.knockoutTimer = KNOCKOUT_FLASH_SECONDS;
   }
 
+  private updateBatsAndFlares(dt: number): void {
+    this.updateFlares(dt);
+    for (const bat of this.bats) {
+      const result = bat.update(dt, this.world, this.player.tile);
+      if (result.hitPlayer) this.knockout();
+    }
+    for (let i = this.bats.length - 1; i >= 0; i--) {
+      if (this.bats[i].isGone) this.bats.splice(i, 1);
+    }
+  }
+
+  private updateFlares(dt: number): void {
+    if (this.flares.length === 0) return;
+    for (const flare of this.flares) {
+      flare.update(dt);
+      for (const bat of this.bats) {
+        if (chebyshev(bat.tile, flare.tile) <= FLARE_RADIUS) bat.startFleeing(flare.tile);
+      }
+    }
+    for (let i = this.flares.length - 1; i >= 0; i--) {
+      if (this.flares[i].isDone) this.flares.splice(i, 1);
+    }
+  }
+
   private handleBase(): void {
     if (!this.isAtBase()) return;
     if (!this.player.cargo.isEmpty) {
@@ -184,5 +238,6 @@ export class Game {
     }
     this.player.battery.refill();
     this.player.dynamite.restock();
+    this.player.flare.restock();
   }
 }

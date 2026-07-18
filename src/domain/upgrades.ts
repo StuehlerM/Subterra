@@ -5,6 +5,7 @@ export enum UpgradeType {
   BatteryCapacity = 'batteryCapacity',
   DynamiteCapacity = 'dynamiteCapacity',
   BlastRadius = 'blastRadius',
+  FlareCapacity = 'flareCapacity',
 }
 
 export interface UpgradeSpec {
@@ -59,6 +60,11 @@ export const UPGRADE_CATALOG: Record<UpgradeType, UpgradeSpec> = {
     label: 'Blast',
     values: [1, 2, 3],
     costs: [150, 400],
+  },
+  [UpgradeType.FlareCapacity]: {
+    label: 'Flare',
+    values: [2, 3, 4],
+    costs: [80, 200],
   },
 };
 

@@ -37,12 +37,12 @@ function bootstrap(): void {
   const save = new SaveRepository(SAVE_KEY, window.localStorage);
   const progress = save.load() ?? new PlayerProgress();
 
-  const world = World.generate(WORLD_WIDTH, WORLD_HEIGHT, DEFAULT_SEED, {
+  const { world, batSpawns } = World.generateMap(WORLD_WIDTH, WORLD_HEIGHT, DEFAULT_SEED, {
     surfaceRows: SURFACE_ROWS,
     spawn: SPAWN_TILE,
   });
   const player = new Player(SPAWN_TILE);
-  const game = new Game(world, player, progress, SURFACE_ROWS, SPAWN_TILE);
+  const game = new Game(world, player, progress, SURFACE_ROWS, SPAWN_TILE, batSpawns);
 
   const input = new InputController();
   input.attach(window);
@@ -69,7 +69,7 @@ function bootstrap(): void {
     if (menuOpen && !wasMenuOpen) save.save(progress);
     wasMenuOpen = menuOpen;
 
-    renderer.render(world, player, game.activeDynamites, game.activeFallingRocks, game.knockoutFlash);
+    renderer.render(game);
     hud.update(game);
     shop.update();
     requestAnimationFrame(frame);
@@ -97,7 +97,7 @@ function handleActions(game: Game, shop: Shop, input: InputController): void {
       /* discard buffered nav during play */
     }
     if (input.consumeDynamite()) game.placeDynamite();
-    input.consumeConfirm();
+    if (input.consumeConfirm()) game.useFlare();
   }
 }
 

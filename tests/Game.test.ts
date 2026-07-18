@@ -15,10 +15,10 @@ const SURFACE_ROWS = 1;
 const FIXED_DT = 1 / 60;
 const SPAWN = new Vec2(0, 0);
 
-function newGame(rows: string[], tile: Vec2, options = {}): Game {
+function newGame(rows: string[], tile: Vec2, options = {}, batSpawns: Vec2[] = []): Game {
   const world = worldFrom(rows);
   const player = new Player(tile, { moveDuration: MOVE_DURATION, ...options });
-  return new Game(world, player, new PlayerProgress(), SURFACE_ROWS, SPAWN);
+  return new Game(world, player, new PlayerProgress(), SURFACE_ROWS, SPAWN, batSpawns);
 }
 
 describe('Game movement', () => {
@@ -217,6 +217,40 @@ describe('Game blast radius upgrade', () => {
     game.buyUpgrade(UpgradeType.BlastRadius);
     detonateAt(game);
     expect(game.world.getTile(1, 1)).toBe(TileType.Empty); // distance 2: now cleared
+  });
+});
+
+describe('Game bats and flares', () => {
+  const TUNNEL = ['........', '........', '########'];
+  const STEPS = 220;
+
+  it('a chasing bat that reaches the miner knocks them out', () => {
+    const game = newGame(TUNNEL, new Vec2(6, 1), {}, [new Vec2(3, 1)]);
+    game.progress.addMoney(50);
+    game.player.cargo.add(10);
+    for (let i = 0; i < STEPS; i++) game.step(FIXED_DT, null);
+    expect(game.player.tile.equals(SPAWN)).toBe(true); // respawned
+    expect(game.player.cargo.isEmpty).toBe(true); // lost the run's cargo
+    expect(game.progress.money).toBe(50); // kept the bank
+  });
+
+  it('a flare banishes a nearby bat without harming the miner', () => {
+    const game = newGame(TUNNEL, new Vec2(6, 1), {}, [new Vec2(3, 1)]);
+    game.step(FIXED_DT, null); // bat wakes
+    expect(game.useFlare()).toBe(true);
+    for (let i = 0; i < STEPS; i++) game.step(FIXED_DT, null);
+    expect(game.activeBats.length).toBe(0); // vanished
+    expect(game.player.tile.equals(new Vec2(6, 1))).toBe(true); // not knocked out
+  });
+
+  it('lighting a flare consumes one and is refused at the base', () => {
+    const underground = newGame(TUNNEL, new Vec2(6, 1), {});
+    const before = underground.player.flare.remaining;
+    expect(underground.useFlare()).toBe(true);
+    expect(underground.player.flare.remaining).toBe(before - 1);
+
+    const atBase = newGame(TUNNEL, new Vec2(0, 0), {});
+    expect(atBase.useFlare()).toBe(false);
   });
 });
 

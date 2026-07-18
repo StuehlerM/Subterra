@@ -7,6 +7,18 @@ const DEFAULT_ROCK_CHANCE = 0.05;
 const DEFAULT_SURFACE_ROWS = 3;
 const DEFAULT_SPAWN = new Vec2(1, 1);
 
+// Cave/bat tuning.
+const DEFAULT_CAVE_COUNT = 10;
+const MIN_CAVE_DEPTH = 8; // rows below the surface before caves may appear
+const CAVE_MAX_WIDTH = 4;
+const CAVE_MAX_HEIGHT = 3;
+
+export interface GeneratedWorld {
+  readonly world: World;
+  /** Tiles where a sleeping bat should be placed (cave floors). */
+  readonly batSpawns: Vec2[];
+}
+
 interface OreSpec {
   readonly tile: TileType;
   /** Minimum depth (rows below the surface) at which this ore can appear. */
@@ -66,6 +78,15 @@ export class World {
   }
 
   static generate(width: number, height: number, seed: number, options: WorldGenOptions = {}): World {
+    return World.generateMap(width, height, seed, options).world;
+  }
+
+  static generateMap(
+    width: number,
+    height: number,
+    seed: number,
+    options: WorldGenOptions = {},
+  ): GeneratedWorld {
     const pillarChance = options.pillarChance ?? DEFAULT_PILLAR_CHANCE;
     const rockChance = options.rockChance ?? DEFAULT_ROCK_CHANCE;
     const surfaceRows = options.surfaceRows ?? DEFAULT_SURFACE_ROWS;
@@ -79,8 +100,40 @@ export class World {
       }
     }
 
+    const batSpawns = World.carveCaves(tiles, width, height, surfaceRows, rng);
     tiles[spawn.y * width + spawn.x] = TileType.Empty;
-    return new World(width, height, tiles);
+    return { world: new World(width, height, tiles), batSpawns };
+  }
+
+  /**
+   * Carves small empty pockets (caves) into the deeper ground and returns a
+   * sleeping-bat spawn tile (cave floor centre) for each. Deterministic.
+   */
+  private static carveCaves(
+    tiles: Uint8Array,
+    width: number,
+    height: number,
+    surfaceRows: number,
+    rng: Rng,
+  ): Vec2[] {
+    const batSpawns: Vec2[] = [];
+    const minY = surfaceRows + MIN_CAVE_DEPTH;
+    const maxY = height - 2;
+    if (minY > maxY || width < 4) return batSpawns;
+
+    for (let i = 0; i < DEFAULT_CAVE_COUNT; i++) {
+      const cw = rng.range(2, CAVE_MAX_WIDTH + 1);
+      const ch = rng.range(2, CAVE_MAX_HEIGHT + 1);
+      const left = rng.range(1, Math.max(2, width - 1 - cw));
+      const top = rng.range(minY, maxY - ch + 1);
+      for (let y = top; y < top + ch; y++) {
+        for (let x = left; x < left + cw; x++) {
+          if (x > 0 && x < width - 1 && y < height - 1) tiles[y * width + x] = TileType.Empty;
+        }
+      }
+      batSpawns.push(new Vec2(left + Math.floor(cw / 2), top + ch - 1));
+    }
+    return batSpawns;
   }
 
   private static pickTile(

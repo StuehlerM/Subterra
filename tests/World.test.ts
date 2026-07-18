@@ -46,6 +46,14 @@ describe('World generation', () => {
     }
   });
 
+  it('carves caves and returns bat spawns on cave floors', () => {
+    const { world, batSpawns } = World.generateMap(40, 80, 7);
+    expect(batSpawns.length).toBeGreaterThan(0);
+    for (const spawn of batSpawns) {
+      expect(world.getTile(spawn.x, spawn.y)).toBe(TileType.Empty);
+    }
+  });
+
   it('scatters ore into the ground (deterministically for a seed)', () => {
     const world = World.generate(40, 80, 2024);
     let oreCount = 0;

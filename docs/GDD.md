@@ -146,5 +146,10 @@ Things that differ from the first draft above, decided during build/playtest:
 - **Rock** is a distinct tile from Bedrock: Rock is destructible by dynamite; Bedrock is
   fully indestructible.
 - **Save trigger**: on every surface arrival (when the menu opens), plus after purchases.
-- **Upgrade set (6)**: Drill Strength, Drill Speed, Cargo, Battery, Dynamite, Blast Radius
-  (💥 3 levels: 3×3 → 5×5 → 7×7). Elevator & teleport (§9) remain future work (Phase 6).
+- **Upgrade set (7)**: Drill Strength, Drill Speed, Cargo, Battery, Dynamite, Blast Radius
+  (💥 3 levels: 3×3 → 5×5 → 7×7), Flare (🔦). Elevator & teleport (§9) remain future work.
+- **Bats**: sleep in generated caves; wake within 4 tiles; chase through open tiles at
+  0.18s/tile (slower than the 0.07s walk, so you can outrun them in tunnels). Touch while
+  awake = knock-out. A flare (X, consumable) banishes bats within 4 tiles — they flee then
+  vanish. Awake bats that lose you for 3s tire and re-sleep. Contact only knocks out while
+  the bat is *awake* (bumping a sleeper just wakes it), for fairness.

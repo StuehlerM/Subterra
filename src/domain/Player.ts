@@ -15,6 +15,7 @@ const DEFAULT_DRILL_STRENGTH = 1;
 const DEFAULT_CARGO_CAPACITY = 8;
 const DEFAULT_BATTERY_CAPACITY = 30;
 const DEFAULT_DYNAMITE_CAPACITY = 3;
+const DEFAULT_FLARE_CAPACITY = 2;
 /** Battery spent per drilled tile. */
 const DIG_BATTERY_COST = 1;
 
@@ -27,6 +28,7 @@ export interface PlayerOptions {
   cargo?: Cargo;
   battery?: Battery;
   dynamite?: Consumable;
+  flare?: Consumable;
 }
 
 /**
@@ -39,6 +41,7 @@ export class Player {
   readonly cargo: Cargo;
   readonly battery: Battery;
   readonly dynamite: Consumable;
+  readonly flare: Consumable;
   drillStrength: number;
   /** Seconds per tile while drilling solid ground (set by the upgrade). */
   drillDuration: number;
@@ -62,6 +65,7 @@ export class Player {
     this.cargo = options.cargo ?? new Cargo(DEFAULT_CARGO_CAPACITY);
     this.battery = options.battery ?? new Battery(DEFAULT_BATTERY_CAPACITY);
     this.dynamite = options.dynamite ?? new Consumable(DEFAULT_DYNAMITE_CAPACITY);
+    this.flare = options.flare ?? new Consumable(DEFAULT_FLARE_CAPACITY);
     this.from = tile;
     this.to = tile;
   }
@@ -96,6 +100,7 @@ export class Player {
     this.cargo.setCapacity(progress.cargoCapacity);
     this.battery.setCapacity(progress.batteryCapacity);
     this.dynamite.setCapacity(progress.dynamiteCapacity);
+    this.flare.setCapacity(progress.flareCapacity);
   }
 
   /**

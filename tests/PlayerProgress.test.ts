@@ -45,6 +45,13 @@ describe('PlayerProgress', () => {
     expect(progress.costToUpgrade(UpgradeType.BlastRadius)).toBeNull(); // maxed at 3
   });
 
+  it('exposes flare capacity that grows with the upgrade', () => {
+    const progress = new PlayerProgress(10000);
+    expect(progress.flareCapacity).toBe(2);
+    progress.buy(UpgradeType.FlareCapacity);
+    expect(progress.flareCapacity).toBe(3);
+  });
+
   it('round-trips through JSON', () => {
     const progress = new PlayerProgress(500);
     progress.buy(UpgradeType.CargoCapacity);

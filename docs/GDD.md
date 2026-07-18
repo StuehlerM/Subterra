@@ -142,5 +142,5 @@ Things that differ from the first draft above, decided during build/playtest:
 - **Rock** is a distinct tile from Bedrock: Rock is destructible by dynamite; Bedrock is
   fully indestructible.
 - **Save trigger**: on every surface arrival (when the menu opens), plus after purchases.
-- **Upgrade set (5)**: Drill Strength, Drill Speed, Cargo, Battery, Dynamite. Elevator &
-  teleport (§9) remain future work (Phase 6).
+- **Upgrade set (6)**: Drill Strength, Drill Speed, Cargo, Battery, Dynamite, Blast Radius
+  (💥 3 levels: 3×3 → 5×5 → 7×7). Elevator & teleport (§9) remain future work (Phase 6).

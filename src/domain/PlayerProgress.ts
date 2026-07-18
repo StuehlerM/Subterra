@@ -80,6 +80,10 @@ export class PlayerProgress {
     return upgradeValue(UpgradeType.DynamiteCapacity, this.levels[UpgradeType.DynamiteCapacity]);
   }
 
+  get blastRadius(): number {
+    return upgradeValue(UpgradeType.BlastRadius, this.levels[UpgradeType.BlastRadius]);
+  }
+
   toJSON(): PlayerProgressData {
     return { money: this.bank, levels: { ...this.levels } };
   }

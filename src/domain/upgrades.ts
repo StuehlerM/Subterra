@@ -4,6 +4,7 @@ export enum UpgradeType {
   CargoCapacity = 'cargoCapacity',
   BatteryCapacity = 'batteryCapacity',
   DynamiteCapacity = 'dynamiteCapacity',
+  BlastRadius = 'blastRadius',
 }
 
 export interface UpgradeSpec {
@@ -25,6 +26,7 @@ export const STARTING_LEVEL = 1;
  * - CargoCapacity: ore pieces carried per run.
  * - BatteryCapacity: drill actions available before a recharge.
  * - DynamiteCapacity: sticks of dynamite carried per run.
+ * - BlastRadius: Chebyshev radius of a dynamite blast (1=3x3, 2=5x5, 3=7x7).
  */
 export const UPGRADE_CATALOG: Record<UpgradeType, UpgradeSpec> = {
   [UpgradeType.DrillStrength]: {
@@ -51,6 +53,11 @@ export const UPGRADE_CATALOG: Record<UpgradeType, UpgradeSpec> = {
     label: 'Dynamite',
     values: [3, 4, 5, 6, 8],
     costs: [60, 140, 300, 600],
+  },
+  [UpgradeType.BlastRadius]: {
+    label: 'Blast',
+    values: [1, 2, 3],
+    costs: [150, 400],
   },
 };
 

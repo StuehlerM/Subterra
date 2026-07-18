@@ -1,7 +1,7 @@
 import { Direction } from '../domain/Direction';
 import { Dynamite } from '../domain/Dynamite';
 import { sellCargo } from '../domain/Economy';
-import { BLAST_RADIUS, explode } from '../domain/Explosion';
+import { explode } from '../domain/Explosion';
 import { FallingRock } from '../domain/FallingRock';
 import { Player } from '../domain/Player';
 import { PlayerProgress } from '../domain/PlayerProgress';
@@ -120,7 +120,7 @@ export class Game {
     for (const dynamite of this.dynamites) {
       dynamite.update(dt);
       if (dynamite.hasExploded) {
-        const cleared = explode(this.world, dynamite.tile, BLAST_RADIUS);
+        const cleared = explode(this.world, dynamite.tile, this.progress.blastRadius);
         for (const cell of cleared) this.freeRocksAbove(cell.x, cell.y);
       }
     }

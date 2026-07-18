@@ -35,6 +35,16 @@ describe('PlayerProgress', () => {
     expect(progress.buy(UpgradeType.DrillStrength)).toBe(false);
   });
 
+  it('exposes blast radius that grows with the upgrade', () => {
+    const progress = new PlayerProgress(10000);
+    expect(progress.blastRadius).toBe(1);
+    progress.buy(UpgradeType.BlastRadius);
+    expect(progress.blastRadius).toBe(2);
+    progress.buy(UpgradeType.BlastRadius);
+    expect(progress.blastRadius).toBe(3);
+    expect(progress.costToUpgrade(UpgradeType.BlastRadius)).toBeNull(); // maxed at 3
+  });
+
   it('round-trips through JSON', () => {
     const progress = new PlayerProgress(500);
     progress.buy(UpgradeType.CargoCapacity);

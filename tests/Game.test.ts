@@ -194,6 +194,32 @@ describe('Game falling rocks', () => {
   });
 });
 
+describe('Game blast radius upgrade', () => {
+  const FUSE_STEPS = 120;
+  // Miner stands in an empty pocket at (3,1) surrounded by sand; bedrock floor.
+  const ROWS = ['.......', 'sss.sss', '#######'];
+
+  function detonateAt(game: Game): void {
+    game.placeDynamite();
+    for (let i = 0; i < FUSE_STEPS; i++) game.step(FIXED_DT, null);
+  }
+
+  it('clears only the 3x3 area at blast level 1', () => {
+    const game = newGame(ROWS, new Vec2(3, 1), {});
+    detonateAt(game);
+    expect(game.world.getTile(2, 1)).toBe(TileType.Empty); // distance 1: cleared
+    expect(game.world.getTile(1, 1)).toBe(TileType.Sand); // distance 2: untouched
+  });
+
+  it('reaches distance 2 after buying the blast radius upgrade', () => {
+    const game = newGame(ROWS, new Vec2(3, 1), {});
+    game.progress.addMoney(1000);
+    game.buyUpgrade(UpgradeType.BlastRadius);
+    detonateAt(game);
+    expect(game.world.getTile(1, 1)).toBe(TileType.Empty); // distance 2: now cleared
+  });
+});
+
 describe('Game upgrades', () => {
   it('buys an upgrade and applies it to the miner', () => {
     const game = newGame(['..', 'ss'], new Vec2(0, 0));

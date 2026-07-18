@@ -52,7 +52,7 @@ function bootstrap(): void {
   const shop = new Shop(document.body, game, () => save.save(progress));
   const timestep = new FixedTimestep(FIXED_DT);
 
-  let wasAtBase = game.isAtBase();
+  let wasMenuOpen = game.isMenuOpen();
   let last = performance.now();
   const frame = (now: number) => {
     const frameDt = Math.min((now - last) / 1000, MAX_FRAME_DT);
@@ -64,10 +64,10 @@ function bootstrap(): void {
     }
     handleActions(game, shop, input);
 
-    // Save whenever the miner is on the surface (on arrival).
-    const atBase = game.isAtBase();
-    if (atBase && !wasAtBase) save.save(progress);
-    wasAtBase = atBase;
+    // Save when the surface menu opens (i.e. on arrival, after auto-sell).
+    const menuOpen = game.isMenuOpen();
+    if (menuOpen && !wasMenuOpen) save.save(progress);
+    wasMenuOpen = menuOpen;
 
     renderer.render(world, player, game.activeDynamites);
     hud.update(game);
@@ -78,16 +78,26 @@ function bootstrap(): void {
 }
 
 /**
- * Routes the two action keys: at the base they drive the shop (Z cycles, X
- * buys); underground Z places dynamite (X/flare arrives in a later phase).
+ * Routes edge-triggered keys. While the surface menu is open, arrow presses
+ * move the highlight and X confirms; otherwise Z places dynamite underground
+ * (X/flare arrives in a later phase). Nav presses are always drained so they
+ * never buffer during play.
  */
 function handleActions(game: Game, shop: Shop, input: InputController): void {
-  if (input.consumeDynamite()) {
-    if (game.isAtBase()) shop.cycle();
-    else game.placeDynamite();
-  }
-  if (input.consumeFlare()) {
-    if (game.isAtBase()) shop.buySelected();
+  if (game.isMenuOpen()) {
+    let nav = input.consumeNav();
+    while (nav) {
+      shop.navigate(nav);
+      nav = input.consumeNav();
+    }
+    if (input.consumeConfirm()) shop.confirm();
+    input.consumeDynamite();
+  } else {
+    while (input.consumeNav()) {
+      /* discard buffered nav during play */
+    }
+    if (input.consumeDynamite()) game.placeDynamite();
+    input.consumeConfirm();
   }
 }
 

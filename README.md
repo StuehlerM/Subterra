@@ -17,10 +17,12 @@ npm install       # install dev dependencies (vite, vitest, typescript)
 npm run dev       # start the dev server, then open the printed URL
 ```
 
-Controls: move/drill with **Arrow keys** or **WASD**. **Z** = place dynamite, **X** = flare
-(reserved). At the surface **base**, the shop opens automatically: **Z** cycles the
-highlighted upgrade, **X** buys it. Return to the surface to auto-sell ore, recharge and
-restock. The UI is pictograms only (🪙 money · 📦 cargo · 🔋 battery · 🧨 dynamite · ⬇️ depth).
+Controls: move/drill with **Arrow keys** or **WASD**. **Z** = place dynamite, **X** = confirm
+(also the flare key, reserved). Reaching the surface auto-sells ore, recharges and restocks,
+and pops open a **modal upgrade menu** (the miner is frozen): **Left/Right** pick an upgrade,
+**Down** selects **Drill again ⛏️⬇️** (below the row), **Up** goes back, **X** confirms (buy,
+or Drill again to leave). The UI is pictograms only (🪙 money · 📦 cargo · 🔋 battery ·
+🧨 dynamite · ⬇️ depth).
 
 ## Scripts
 

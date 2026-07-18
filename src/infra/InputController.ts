@@ -12,7 +12,8 @@ const KEY_DIRECTIONS: Record<string, Direction> = {
 };
 
 const DYNAMITE_KEY = 'KeyZ';
-const FLARE_KEY = 'KeyX';
+const CONFIRM_KEY = 'KeyX';
+const MAX_NAV_QUEUE = 8;
 
 /**
  * Translates keyboard state into intents. Movement is level-triggered (held key
@@ -21,8 +22,9 @@ const FLARE_KEY = 'KeyX';
  */
 export class InputController {
   private readonly held: string[] = [];
+  private readonly navQueue: Direction[] = [];
   private dynamitePressed = false;
-  private flarePressed = false;
+  private confirmPressed = false;
 
   attach(target: Window): void {
     target.addEventListener('keydown', (event) => this.onKeyDown(event));
@@ -37,31 +39,39 @@ export class InputController {
     return null;
   }
 
+  /** Next edge-triggered direction press (for menu navigation), or null. */
+  consumeNav(): Direction | null {
+    return this.navQueue.shift() ?? null;
+  }
+
   consumeDynamite(): boolean {
     const pressed = this.dynamitePressed;
     this.dynamitePressed = false;
     return pressed;
   }
 
-  consumeFlare(): boolean {
-    const pressed = this.flarePressed;
-    this.flarePressed = false;
+  /** The universal confirm key (X). Also used as the flare key in gameplay. */
+  consumeConfirm(): boolean {
+    const pressed = this.confirmPressed;
+    this.confirmPressed = false;
     return pressed;
   }
 
   private onKeyDown(event: KeyboardEvent): void {
-    if (KEY_DIRECTIONS[event.code]) {
+    const direction = KEY_DIRECTIONS[event.code];
+    if (direction) {
       event.preventDefault();
       if (!this.held.includes(event.code)) this.held.push(event.code);
+      if (!event.repeat && this.navQueue.length < MAX_NAV_QUEUE) this.navQueue.push(direction);
       return;
     }
     if (event.repeat) return;
     if (event.code === DYNAMITE_KEY) {
       event.preventDefault();
       this.dynamitePressed = true;
-    } else if (event.code === FLARE_KEY) {
+    } else if (event.code === CONFIRM_KEY) {
       event.preventDefault();
-      this.flarePressed = true;
+      this.confirmPressed = true;
     }
   }
 

@@ -16,6 +16,8 @@ import { World } from '../domain/World';
  */
 export class Game {
   private lastSale = 0;
+  private menuOpen = false;
+  private wasAtBase = false;
   private readonly dynamites: Dynamite[] = [];
 
   constructor(
@@ -29,15 +31,30 @@ export class Game {
 
   step(dt: number, direction: Direction | null): void {
     this.player.update(dt);
-    if (direction && !this.player.isMoving) {
+
+    const atBase = this.isAtBase();
+    if (atBase && !this.wasAtBase) this.menuOpen = true; // pop the menu on arrival
+
+    // The miner is frozen while the surface menu is open.
+    if (direction && !this.player.isMoving && !this.menuOpen) {
       this.player.tryStartMove(direction, this.world);
     }
     this.updateDynamites(dt);
     this.handleBase();
+    this.wasAtBase = atBase;
   }
 
   isAtBase(): boolean {
     return this.player.tile.y < this.surfaceRows;
+  }
+
+  isMenuOpen(): boolean {
+    return this.menuOpen;
+  }
+
+  /** Closes the surface menu ("Drill again"); stays closed until next arrival. */
+  closeMenu(): void {
+    this.menuOpen = false;
   }
 
   /** Rows below the surface, for the HUD (0 at the surface). */

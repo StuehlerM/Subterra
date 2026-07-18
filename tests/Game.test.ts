@@ -73,6 +73,47 @@ describe('Game base economy', () => {
   });
 });
 
+describe('Game surface menu', () => {
+  it('opens the menu on arrival at the surface', () => {
+    const game = newGame(['....', 'ssss'], new Vec2(0, 0));
+    game.step(MOVE_DURATION, null);
+    expect(game.isMenuOpen()).toBe(true);
+  });
+
+  it('keeps the menu closed while underground', () => {
+    const game = newGame(['....', 'ssss'], new Vec2(0, 1));
+    game.step(MOVE_DURATION, null);
+    expect(game.isMenuOpen()).toBe(false);
+  });
+
+  it('freezes the miner while the menu is open', () => {
+    const game = newGame(['....', 'ssss'], new Vec2(0, 0));
+    game.step(MOVE_DURATION, null); // opens the menu
+    game.step(MOVE_DURATION, RIGHT);
+    expect(game.player.isMoving).toBe(false);
+  });
+
+  it('lets the miner move again after Drill again closes the menu', () => {
+    const game = newGame(['....', 'ssss'], new Vec2(0, 0));
+    game.step(MOVE_DURATION, null); // opens the menu
+    game.closeMenu();
+    game.step(MOVE_DURATION, RIGHT);
+    expect(game.player.isMoving).toBe(true);
+  });
+
+  it('reopens the menu on the next surface arrival', () => {
+    const game = newGame(['....', 'ssss', 'ssss'], new Vec2(0, 0));
+    game.step(MOVE_DURATION, null); // opens
+    game.closeMenu();
+    game.player.tile = new Vec2(0, 1); // go underground
+    game.step(MOVE_DURATION, null);
+    expect(game.isMenuOpen()).toBe(false);
+    game.player.tile = new Vec2(0, 0); // back to the surface
+    game.step(MOVE_DURATION, null);
+    expect(game.isMenuOpen()).toBe(true);
+  });
+});
+
 describe('Game dynamite', () => {
   const FUSE_STEPS = 30; // more than enough fixed steps for the fuse to burn down
 

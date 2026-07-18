@@ -4,6 +4,7 @@ import {
   FIXED_DT,
   MAX_FRAME_DT,
   SPAWN_TILE,
+  SURFACE_ROWS,
   TILE_SIZE,
   WORLD_HEIGHT,
   WORLD_WIDTH,
@@ -27,7 +28,10 @@ function bootstrap(): void {
   resize();
   window.addEventListener('resize', resize);
 
-  const world = World.generate(WORLD_WIDTH, WORLD_HEIGHT, DEFAULT_SEED, { spawn: SPAWN_TILE });
+  const world = World.generate(WORLD_WIDTH, WORLD_HEIGHT, DEFAULT_SEED, {
+    surfaceRows: SURFACE_ROWS,
+    spawn: SPAWN_TILE,
+  });
   const player = new Player(SPAWN_TILE);
   const game = new Game(world, player);
 

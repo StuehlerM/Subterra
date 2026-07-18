@@ -3,7 +3,10 @@ import { Vec2 } from '../src/domain/Vec2';
 import { World } from '../src/domain/World';
 import { TileType } from '../src/domain/tiles';
 
-describe('World', () => {
+const SIZE = 10;
+const SURFACE_ROWS = 3;
+
+describe('World generation', () => {
   it('generates identical worlds for the same seed', () => {
     const a = World.generate(20, 20, 555);
     const b = World.generate(20, 20, 555);
@@ -14,34 +17,45 @@ describe('World', () => {
     }
   });
 
-  it('surrounds the map with a bedrock border', () => {
-    const world = World.generate(10, 10, 1);
-    for (let x = 0; x < 10; x++) {
-      expect(world.getTile(x, 0)).toBe(TileType.Bedrock);
-      expect(world.getTile(x, 9)).toBe(TileType.Bedrock);
-    }
-    for (let y = 0; y < 10; y++) {
+  it('walls the left/right sides and the bottom with bedrock', () => {
+    const world = World.generate(SIZE, SIZE, 1);
+    for (let y = 0; y < SIZE; y++) {
       expect(world.getTile(0, y)).toBe(TileType.Bedrock);
-      expect(world.getTile(9, y)).toBe(TileType.Bedrock);
+      expect(world.getTile(SIZE - 1, y)).toBe(TileType.Bedrock);
+    }
+    for (let x = 0; x < SIZE; x++) {
+      expect(world.getTile(x, SIZE - 1)).toBe(TileType.Bedrock);
+    }
+  });
+
+  it('leaves open-air surface rows at the top and sand below', () => {
+    const world = World.generate(SIZE, SIZE, 1, { surfaceRows: SURFACE_ROWS, pillarChance: 0 });
+    // Interior surface rows are open air.
+    for (let y = 0; y < SURFACE_ROWS; y++) {
+      expect(world.getTile(3, y)).toBe(TileType.Empty);
+    }
+    // Interior ground rows are sand (pillarChance 0 => no bedrock pillars).
+    for (let y = SURFACE_ROWS; y < SIZE - 1; y++) {
+      expect(world.getTile(3, y)).toBe(TileType.Sand);
     }
   });
 
   it('treats out-of-bounds tiles as bedrock (non-walkable)', () => {
-    const world = World.generate(10, 10, 1);
+    const world = World.generate(SIZE, SIZE, 1);
     expect(world.getTile(-1, 5)).toBe(TileType.Bedrock);
     expect(world.getTile(5, 100)).toBe(TileType.Bedrock);
     expect(world.isWalkable(-1, 5)).toBe(false);
   });
 
-  it('keeps the spawn tile clear and walkable', () => {
-    const spawn = new Vec2(1, 1);
-    const world = World.generate(10, 10, 1, { spawn, pillarChance: 1 });
+  it('keeps the spawn tile clear even in dense ground', () => {
+    const spawn = new Vec2(4, 5);
+    const world = World.generate(SIZE, SIZE, 1, { spawn, pillarChance: 1 });
     expect(world.getTile(spawn.x, spawn.y)).toBe(TileType.Empty);
     expect(world.isWalkable(spawn.x, spawn.y)).toBe(true);
   });
 
   it('setTile updates walkability and ignores out-of-bounds', () => {
-    const world = World.generate(10, 10, 1);
+    const world = World.generate(SIZE, SIZE, 1);
     world.setTile(2, 2, TileType.Bedrock);
     expect(world.isWalkable(2, 2)).toBe(false);
     expect(() => world.setTile(-5, -5, TileType.Empty)).not.toThrow();

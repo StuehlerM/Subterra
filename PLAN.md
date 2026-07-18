@@ -28,8 +28,9 @@ falling-rock and bat hazards, procedural generation, an upgrade economy, and gen
 - **Phase 0 — Skeleton** ✅ DONE: Vite + TS project, fixed-timestep game loop, Canvas
   renderer, asset registry, input controller, seeded world, grid movement with tween.
   28 unit tests passing; typecheck clean.
-- **Phase 1 — Dig & world**: Tile grid, sand/bedrock, grid movement + digging, camera
-  follows player, simple procedural sand/bedrock generation from a seed.
+- **Phase 1 — Dig & world** ✅ DONE: Sand tiles + drilling (move into sand removes it),
+  bedrock walls/floor, open-air surface band, top-right surface spawn, seeded sand/pillar
+  generation. Tests use an ASCII-map helper. 30 tests passing; typecheck clean.
 - **Phase 2 — Ore & economy**: Ore tiles + values, cargo, surface base zone, shop UI,
   sell + first upgrades (drill strength/speed, cargo, battery). localStorage save.
 - **Phase 3 — Rocks & dynamite**: Destructible rock, dynamite consumable (place/fuse/blast,

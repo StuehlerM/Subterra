@@ -3,11 +3,14 @@ import { Vec2 } from './Vec2';
 import { TileType, isSolid } from './tiles';
 
 const DEFAULT_PILLAR_CHANCE = 0.08;
+const DEFAULT_SURFACE_ROWS = 3;
 const DEFAULT_SPAWN = new Vec2(1, 1);
 
 export interface WorldGenOptions {
-  /** Probability [0,1] that an interior tile becomes a bedrock pillar. */
+  /** Probability [0,1] that a ground tile becomes a bedrock pillar. */
   readonly pillarChance?: number;
+  /** Number of open-air (sky) rows at the top before the ground begins. */
+  readonly surfaceRows?: number;
   /** Tile kept clear so the player has somewhere to spawn. */
   readonly spawn?: Vec2;
 }
@@ -43,13 +46,14 @@ export class World {
 
   static generate(width: number, height: number, seed: number, options: WorldGenOptions = {}): World {
     const pillarChance = options.pillarChance ?? DEFAULT_PILLAR_CHANCE;
+    const surfaceRows = options.surfaceRows ?? DEFAULT_SURFACE_ROWS;
     const spawn = options.spawn ?? DEFAULT_SPAWN;
     const rng = new Rng(seed);
     const tiles = new Uint8Array(width * height);
 
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        tiles[y * width + x] = World.pickTile(x, y, width, height, rng, pillarChance);
+        tiles[y * width + x] = World.pickTile(x, y, width, height, surfaceRows, rng, pillarChance);
       }
     }
 
@@ -62,11 +66,13 @@ export class World {
     y: number,
     width: number,
     height: number,
+    surfaceRows: number,
     rng: Rng,
     pillarChance: number,
   ): TileType {
-    const isBorder = x === 0 || y === 0 || x === width - 1 || y === height - 1;
-    if (isBorder) return TileType.Bedrock;
-    return rng.next() < pillarChance ? TileType.Bedrock : TileType.Empty;
+    // Left/right walls and the bottom floor are indestructible; the top is open sky.
+    if (x === 0 || x === width - 1 || y === height - 1) return TileType.Bedrock;
+    if (y < surfaceRows) return TileType.Empty;
+    return rng.next() < pillarChance ? TileType.Bedrock : TileType.Sand;
   }
 }

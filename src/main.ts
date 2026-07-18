@@ -15,6 +15,7 @@ import { PlayerProgress } from './domain/PlayerProgress';
 import { World } from './domain/World';
 import { AssetRegistry } from './infra/AssetRegistry';
 import { CanvasRenderer } from './infra/CanvasRenderer';
+import { FogOfWar } from './infra/FogOfWar';
 import { Hud } from './infra/Hud';
 import { InputController } from './infra/InputController';
 import { SaveRepository } from './infra/SaveRepository';
@@ -50,6 +51,8 @@ function bootstrap(): void {
   const renderer = new CanvasRenderer(ctx, AssetRegistry.withDefaults(), TILE_SIZE);
   const hud = new Hud(document.body);
   const shop = new Shop(document.body, game, () => save.save(progress));
+  const fog = new FogOfWar(WORLD_WIDTH, WORLD_HEIGHT);
+  addFogToggle(document.body, fog);
   const timestep = new FixedTimestep(FIXED_DT);
 
   let wasMenuOpen = game.isMenuOpen();
@@ -69,7 +72,7 @@ function bootstrap(): void {
     if (menuOpen && !wasMenuOpen) save.save(progress);
     wasMenuOpen = menuOpen;
 
-    renderer.render(game);
+    renderer.render(game, fog);
     hud.update(game);
     shop.update();
     requestAnimationFrame(frame);
@@ -99,6 +102,33 @@ function handleActions(game: Game, shop: Shop, input: InputController): void {
     if (input.consumeDynamite()) game.placeDynamite();
     if (input.consumeConfirm()) game.useFlare();
   }
+}
+
+/** Small on/off button for the fog of war (playtest control). */
+function addFogToggle(parent: HTMLElement, fog: FogOfWar): void {
+  const button = document.createElement('button');
+  button.textContent = '🌫️';
+  button.title = 'Fog of war on/off';
+  Object.assign(button.style, {
+    position: 'fixed',
+    top: '8px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    padding: '6px 12px',
+    fontSize: '20px',
+    lineHeight: '1',
+    cursor: 'pointer',
+    borderRadius: '8px',
+    border: '2px solid rgba(255,255,255,0.3)',
+    background: 'rgba(0,0,0,0.5)',
+    opacity: fog.enabled ? '1' : '0.4',
+  } satisfies Partial<CSSStyleDeclaration>);
+  button.addEventListener('click', () => {
+    fog.toggle();
+    button.style.opacity = fog.enabled ? '1' : '0.4';
+    button.blur(); // return keyboard focus to the game
+  });
+  parent.appendChild(button);
 }
 
 bootstrap();

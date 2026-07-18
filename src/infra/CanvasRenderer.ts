@@ -7,18 +7,17 @@ import { Vec2 } from '../domain/Vec2';
 import { World } from '../domain/World';
 import { TileType } from '../domain/tiles';
 import { AssetRegistry } from './AssetRegistry';
+import { FogOfWar } from './FogOfWar';
 
 /** Below this many seconds of fuse left, the dynamite blinks faster. */
 const FUSE_URGENT_SECONDS = 0.6;
 const BLINK_SLOW_MS = 260;
 const BLINK_FAST_MS = 110;
 
-// Fog of war (playtest): darkness alpha and torch/flare light radii (in tiles).
-const FOG_DARKNESS = 0.9;
-const PLAYER_LIGHT_INNER_TILES = 2;
-const PLAYER_LIGHT_OUTER_TILES = 6;
-const FLARE_LIGHT_INNER_TILES = 1;
-const FLARE_LIGHT_OUTER_TILES = 5;
+/** Fog reveal radii (in tiles) around the player and around lit flares. */
+const PLAYER_REVEAL_RADIUS = 4;
+const FLARE_REVEAL_RADIUS = 5;
+const UNDISCOVERED_COLOR = '#000000';
 
 interface Camera {
   readonly x: number;
@@ -28,18 +27,17 @@ interface Camera {
 /**
  * Draws the whole scene from the game state to a 2D canvas. The camera centers
  * on the player's (interpolated) position; only visible tiles are drawn.
+ * Undiscovered tiles (per the fog) render pitch black; explored tiles stay
+ * visible. Entities are hidden while on undiscovered tiles.
  */
 export class CanvasRenderer {
-  private readonly fog = document.createElement('canvas');
-  private readonly fogCtx = this.fog.getContext('2d')!;
-
   constructor(
     private readonly ctx: CanvasRenderingContext2D,
     private readonly assets: AssetRegistry,
     private readonly tileSize: number,
   ) {}
 
-  render(game: Game): void {
+  render(game: Game, fog: FogOfWar): void {
     const { canvas } = this.ctx;
     const center = game.player.renderPosition();
     const camera: Camera = {
@@ -47,53 +45,32 @@ export class CanvasRenderer {
       y: center.y * this.tileSize + this.tileSize / 2 - canvas.height / 2,
     };
 
+    if (fog.enabled) this.revealAround(game, fog);
+
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-    this.drawTiles(game.world, camera, canvas.width, canvas.height);
+    this.drawTiles(game.world, camera, canvas.width, canvas.height, fog);
     for (const flare of game.activeFlares) this.drawFlare(flare, camera);
-    for (const rock of game.activeFallingRocks) this.drawFallingRock(rock, camera);
-    for (const dynamite of game.activeDynamites) this.drawDynamite(dynamite, camera);
-    for (const bat of game.activeBats) this.drawBat(bat, camera);
+    for (const rock of game.activeFallingRocks) {
+      if (fog.isVisible(rock.tile.x, rock.tile.y)) this.drawFallingRock(rock, camera);
+    }
+    for (const dynamite of game.activeDynamites) {
+      if (fog.isVisible(dynamite.tile.x, dynamite.tile.y)) this.drawDynamite(dynamite, camera);
+    }
+    for (const bat of game.activeBats) {
+      if (fog.isVisible(bat.tile.x, bat.tile.y)) this.drawBat(bat, camera);
+    }
     this.drawPlayer(center, camera);
-    this.drawFog(game, camera);
     if (game.knockoutFlash > 0) this.drawKnockoutFlash(game.knockoutFlash);
   }
 
-  /** Darkens everything beyond a torch radius around the miner; flares light up. */
-  private drawFog(game: Game, camera: Camera): void {
-    const { canvas } = this.ctx;
-    if (this.fog.width !== canvas.width || this.fog.height !== canvas.height) {
-      this.fog.width = canvas.width;
-      this.fog.height = canvas.height;
-    }
-    const f = this.fogCtx;
-    f.clearRect(0, 0, canvas.width, canvas.height);
-    f.fillStyle = `rgba(6,6,12,${FOG_DARKNESS})`;
-    f.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Punch holes of light (destination-out erases darkness on this offscreen layer only).
-    f.globalCompositeOperation = 'destination-out';
-    this.punchLight(canvas.width / 2, canvas.height / 2, PLAYER_LIGHT_INNER_TILES, PLAYER_LIGHT_OUTER_TILES);
+  private revealAround(game: Game, fog: FogOfWar): void {
+    fog.reveal(game.player.tile.x, game.player.tile.y, PLAYER_REVEAL_RADIUS);
     for (const flare of game.activeFlares) {
-      const fx = flare.tile.x * this.tileSize - camera.x + this.tileSize / 2;
-      const fy = flare.tile.y * this.tileSize - camera.y + this.tileSize / 2;
-      this.punchLight(fx, fy, FLARE_LIGHT_INNER_TILES, FLARE_LIGHT_OUTER_TILES, flare.intensity);
+      fog.reveal(flare.tile.x, flare.tile.y, FLARE_REVEAL_RADIUS);
     }
-    f.globalCompositeOperation = 'source-over';
-
-    this.ctx.drawImage(this.fog, 0, 0);
   }
 
-  private punchLight(x: number, y: number, innerTiles: number, outerTiles: number, strength = 1): void {
-    const inner = innerTiles * this.tileSize;
-    const outer = outerTiles * this.tileSize;
-    const gradient = this.fogCtx.createRadialGradient(x, y, inner, x, y, outer);
-    gradient.addColorStop(0, `rgba(0,0,0,${strength})`);
-    gradient.addColorStop(1, 'rgba(0,0,0,0)');
-    this.fogCtx.fillStyle = gradient;
-    this.fogCtx.fillRect(x - outer, y - outer, outer * 2, outer * 2);
-  }
-
-  private drawTiles(world: World, camera: Camera, viewW: number, viewH: number): void {
+  private drawTiles(world: World, camera: Camera, viewW: number, viewH: number, fog: FogOfWar): void {
     const minX = Math.floor(camera.x / this.tileSize);
     const minY = Math.floor(camera.y / this.tileSize);
     const maxX = Math.ceil((camera.x + viewW) / this.tileSize);
@@ -101,7 +78,9 @@ export class CanvasRenderer {
 
     for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
-        this.ctx.fillStyle = this.assets.tileStyle(world.getTile(x, y)).color;
+        this.ctx.fillStyle = fog.isVisible(x, y)
+          ? this.assets.tileStyle(world.getTile(x, y)).color
+          : UNDISCOVERED_COLOR;
         this.ctx.fillRect(
           Math.round(x * this.tileSize - camera.x),
           Math.round(y * this.tileSize - camera.y),

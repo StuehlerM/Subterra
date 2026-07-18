@@ -100,12 +100,13 @@
 - Mid: iron/silver, more rocks + dynamite puzzles, first bat caves, buy elevator.
 - Late: gold/gems, dense bedrock mazes, more bats, buy teleport. Deep = rich but risky.
 
-## 11. Controls (v1) — **exactly 6 keys**
+## 11. Controls (v1) — **exactly 6 keys** (as implemented)
 - **Move/Dig**: Up / Down / Left / Right (Arrow keys or WASD).
-- **Place Dynamite**: Space.
-- **Use Flare**: F.
-- **Base/shop is automatic**: walking into the surface base auto-sells cargo and opens the
-  shop overlay (navigated with mouse/touch, not extra keys). No dedicated interact/pause key.
+- **Place Dynamite**: **Z**.
+- **Flare / Confirm**: **X** (universal confirm; flare use arrives in Phase 5).
+- **Surface menu**: on arrival the base auto-sells/recharges/restocks and opens a **modal
+  upgrade menu** that **freezes the miner**. Left/Right pick an upgrade, Down → **Drill
+  again** button, Up → back, **X** confirms (buy or leave), **Z** closes instantly.
 - (Touch on-screen D-pad + 2 buttons: later.)
 
 ## 12. Art & Audio (placeholder-first)
@@ -125,5 +126,21 @@
 1. Battery at 0 = can walk, **cannot dig** → forced to go home to recharge/sleep. ✅
 2. **Flares** are the anti-bat tool; bats tire and return to sleep if they lose you. ✅
 3. **No player gravity** — player walks everywhere, only rocks fall. ✅
-4. Controls limited to **6 keys** total (4 move/dig + dynamite + flare); shop is automatic. ✅
+4. Controls limited to **6 keys** total (4 move/dig + dynamite + flare). ✅
 5. Build tooling is free choice (Vite fine); saves via **localStorage**. ✅
+
+## 16. Implementation deviations & decisions (living — updated as we build)
+Things that differ from the first draft above, decided during build/playtest:
+- **Shop is a keyboard modal, not a mouse/touch overlay** (§11). It opens on surface
+  arrival and **freezes the miner**; navigated with arrows, **X** confirms, **Z** closes.
+  Owner preference (no mouse; pictograms only for ages 5–6).
+- **UI is pictograms/emoji + numbers, no words** (🪙 📦 🔋 🧨 ⬇️; ●/○ level pips; 🪙cost; ⭐ maxed).
+- **Battery drains per drill only** (not per move) for now — avoids stranding kids; the
+  "little per move" from §6 is deferred/optional tuning.
+- **Dynamite blasts preserve ore** (and bedrock); they clear rock + sand only, so ore is
+  never wasted. Blast is a 3×3 area; **no friendly fire** (player never harmed).
+- **Rock** is a distinct tile from Bedrock: Rock is destructible by dynamite; Bedrock is
+  fully indestructible.
+- **Save trigger**: on every surface arrival (when the menu opens), plus after purchases.
+- **Upgrade set (5)**: Drill Strength, Drill Speed, Cargo, Battery, Dynamite. Elevator &
+  teleport (§9) remain future work (Phase 6).

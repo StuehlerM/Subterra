@@ -4,8 +4,9 @@ Last updated: end of the Phase 3 session.
 
 ## TL;DR
 Kid-friendly 2D mining game (TypeScript + HTML5 Canvas, Vite, Vitest, **no engine**).
-Phases 0–3 are done, committed locally (not pushed). **71 tests pass**, typecheck + build
-clean. Next up: **Phase 4 — Falling rocks**.
+Phases 0–3 + the surface-menu rework are done, committed locally (not pushed). **76 tests
+pass**, typecheck + build clean. Next up: **Phase 4 — Falling rocks**. See GDD §16 for the
+list of decisions/deviations made during build.
 
 ## Where we are
 | Phase | Status | Summary |
@@ -14,6 +15,7 @@ clean. Next up: **Phase 4 — Falling rocks**.
 | 1 Dig & world | ✅ | Sand + drilling, bedrock walls/floor, open-air surface, top-right spawn |
 | 2 Ore & economy | ✅ | 6 ore tiers (value + hardness gating), cargo, battery, base auto-sell/recharge, 4 upgrades, HUD, shop, localStorage save |
 | 3 Rocks & dynamite | ✅ | Rock tile, dynamite (fuse→3×3 blast, no friendly fire, preserves ore/bedrock), restock at base, dynamite-capacity upgrade, keyboard pictogram shop, emoji HUD |
+| Menu rework | ✅ | Modal surface upgrade menu that freezes the miner; arrows navigate, X confirms/buys, Z or "Drill again" closes; reopens on next surface arrival |
 | 4 Falling rocks | ⏭️ NEXT | Freed rocks fall (gravity) with a "wobble" tell; gentle knock-out → respawn at surface losing that run's cargo |
 | 5 Bats | ⏭️ | Sleeping bats in caves, wake/chase, instant knock-out, flares (X) banish, tire→resleep |
 | 6 Return tech & polish | ⏭️ | Elevator, teleport, low-battery warning, depth tuning, SFX hooks, real art swap |

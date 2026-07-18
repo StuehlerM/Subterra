@@ -1,6 +1,8 @@
 import { Dynamite } from '../domain/Dynamite';
+import { FallingRock, RockState } from '../domain/FallingRock';
 import { Player } from '../domain/Player';
 import { World } from '../domain/World';
+import { TileType } from '../domain/tiles';
 import { AssetRegistry } from './AssetRegistry';
 
 /** Below this many seconds of fuse left, the dynamite blinks faster. */
@@ -19,7 +21,13 @@ export class CanvasRenderer {
     private readonly tileSize: number,
   ) {}
 
-  render(world: World, player: Player, dynamites: readonly Dynamite[]): void {
+  render(
+    world: World,
+    player: Player,
+    dynamites: readonly Dynamite[],
+    fallingRocks: readonly FallingRock[],
+    knockoutFlash: number,
+  ): void {
     const { canvas } = this.ctx;
     const center = player.renderPosition();
     const cameraX = center.x * this.tileSize + this.tileSize / 2 - canvas.width / 2;
@@ -27,8 +35,25 @@ export class CanvasRenderer {
 
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
     this.drawTiles(world, cameraX, cameraY, canvas.width, canvas.height);
+    for (const rock of fallingRocks) this.drawFallingRock(rock, cameraX, cameraY);
     for (const dynamite of dynamites) this.drawDynamite(dynamite, cameraX, cameraY);
     this.drawPlayer(center, cameraX, cameraY);
+    if (knockoutFlash > 0) this.drawKnockoutFlash(knockoutFlash);
+  }
+
+  private drawFallingRock(rock: FallingRock, cameraX: number, cameraY: number): void {
+    const wobble =
+      rock.phase === RockState.Wobbling ? Math.sin(performance.now() / 40) * (this.tileSize * 0.08) : 0;
+    const px = Math.round(rock.tile.x * this.tileSize - cameraX + wobble);
+    const py = Math.round((rock.tile.y + rock.fallProgress) * this.tileSize - cameraY);
+    this.ctx.fillStyle = this.assets.tileStyle(TileType.Rock).color;
+    this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
+  }
+
+  private drawKnockoutFlash(intensity: number): void {
+    const { canvas } = this.ctx;
+    this.ctx.fillStyle = `rgba(200,0,0,${Math.min(1, intensity) * 0.5})`;
+    this.ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
   private drawTiles(world: World, cameraX: number, cameraY: number, viewW: number, viewH: number): void {

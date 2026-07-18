@@ -12,11 +12,13 @@ import { worldFrom } from './helpers/worldFrom';
 
 const MOVE_DURATION = 0.1;
 const SURFACE_ROWS = 1;
+const FIXED_DT = 1 / 60;
+const SPAWN = new Vec2(0, 0);
 
 function newGame(rows: string[], tile: Vec2, options = {}): Game {
   const world = worldFrom(rows);
   const player = new Player(tile, { moveDuration: MOVE_DURATION, ...options });
-  return new Game(world, player, new PlayerProgress(), SURFACE_ROWS);
+  return new Game(world, player, new PlayerProgress(), SURFACE_ROWS, SPAWN);
 }
 
 describe('Game movement', () => {
@@ -150,6 +152,37 @@ describe('Game dynamite', () => {
     game.player.tile = new Vec2(1, 0); // return to surface
     game.step(MOVE_DURATION, null);
     expect(game.player.dynamite.remaining).toBe(3);
+  });
+});
+
+describe('Game falling rocks', () => {
+  const STEPS = 120; // plenty for wobble + fall at 60 Hz
+
+  it('drops an unsupported rock so it lands one tile lower', () => {
+    // Column: rock, empty, sand floor. Rock at (0,1) has empty (0,2) below it.
+    const game = newGame(['.', 'R', '.', 's'], new Vec2(0, 0), {});
+    for (let i = 0; i < STEPS; i++) game.step(FIXED_DT, null);
+    expect(game.world.getTile(0, 1)).toBe(TileType.Empty);
+    expect(game.world.getTile(0, 2)).toBe(TileType.Rock);
+    expect(game.activeFallingRocks.length).toBe(0);
+  });
+
+  it('knocks the miner out when a falling rock reaches its tile', () => {
+    // Miner stands at (0,2); rock at (0,1) is unsupported and falls onto it.
+    const game = newGame(['.', 'R', '.', 's'], new Vec2(0, 2), {});
+    game.progress.addMoney(100);
+    game.player.cargo.add(20);
+    for (let i = 0; i < STEPS; i++) game.step(FIXED_DT, null);
+    expect(game.player.tile.equals(SPAWN)).toBe(true); // respawned at surface
+    expect(game.player.cargo.isEmpty).toBe(true); // lost this run's cargo
+    expect(game.progress.money).toBe(100); // kept the bank
+  });
+
+  it('does not disturb a supported rock', () => {
+    const game = newGame(['.', 'R', 's'], new Vec2(0, 0), {});
+    for (let i = 0; i < STEPS; i++) game.step(FIXED_DT, null);
+    expect(game.world.getTile(0, 1)).toBe(TileType.Rock);
+    expect(game.activeFallingRocks.length).toBe(0);
   });
 });
 

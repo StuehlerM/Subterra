@@ -41,8 +41,11 @@ falling-rock and bat hazards, procedural generation, an upgrade economy, and gen
   polish shipped: keyboard-only shop (Z=cycle, X=buy at base; Z=dynamite underground),
   pictogram/emoji HUD + shop (no words), save on every surface arrival. 71 tests passing;
   typecheck + build clean.
-- **Phase 4 — Falling rocks**: Rock gravity system, "wobble" telegraph, knock-out + gentle
-  respawn (lose this run's cargo).
+- **Phase 4 — Falling rocks** ✅ DONE: a Rock with empty space below becomes unsupported →
+  short **wobble** tell → falls one tile at a time until it lands (re-becomes a Rock tile).
+  If a falling rock enters the miner's tile → gentle **knock-out**: respawn at the surface
+  spawn, clear this run's cargo, keep money + upgrades; brief red flash. Chains (stacked
+  rocks collapse in sequence). 82 tests passing; typecheck + build clean.
 - **Phase 5 — Bats**: Cave pockets in procgen, sleeping bats, wake/chase AI, instant
   knock-out, flares + flee/vanish + tire-and-resleep.
 - **Phase 6 — Return tech & polish**: Elevator (mid), teleport (late), battery low-warning,

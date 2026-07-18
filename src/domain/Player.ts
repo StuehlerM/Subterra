@@ -63,6 +63,15 @@ export class Player {
     return this.moving ? Vec2.lerp(this.from, this.to, this.progress) : this.tile;
   }
 
+  /** Teleports the miner to a tile and cancels any in-progress move (respawn). */
+  resetTo(tile: Vec2): void {
+    this.tile = tile;
+    this.from = tile;
+    this.to = tile;
+    this.moving = false;
+    this.progress = 0;
+  }
+
   /** Applies the effective stats/capacities derived from meta-progression. */
   applyProgress(progress: PlayerProgress): void {
     this.drillStrength = progress.drillStrength;

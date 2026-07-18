@@ -2,10 +2,16 @@ import { Direction } from '../domain/Direction';
 import { Dynamite } from '../domain/Dynamite';
 import { sellCargo } from '../domain/Economy';
 import { BLAST_RADIUS, explode } from '../domain/Explosion';
+import { FallingRock } from '../domain/FallingRock';
 import { Player } from '../domain/Player';
 import { PlayerProgress } from '../domain/PlayerProgress';
+import { Vec2 } from '../domain/Vec2';
+import { TileType } from '../domain/tiles';
 import { UpgradeType } from '../domain/upgrades';
 import { World } from '../domain/World';
+
+/** Seconds the red knock-out flash lingers. */
+const KNOCKOUT_FLASH_SECONDS = 0.6;
 
 /**
  * Orchestrates a single fixed logic step and owns the surface economy: when the
@@ -18,13 +24,16 @@ export class Game {
   private lastSale = 0;
   private menuOpen = false;
   private wasAtBase = false;
+  private knockoutTimer = 0;
   private readonly dynamites: Dynamite[] = [];
+  private readonly fallingRocks: FallingRock[] = [];
 
   constructor(
     public readonly world: World,
     public readonly player: Player,
     public readonly progress: PlayerProgress,
     private readonly surfaceRows: number,
+    private readonly spawn: Vec2,
   ) {
     this.player.applyProgress(progress);
   }
@@ -40,7 +49,9 @@ export class Game {
       this.player.tryStartMove(direction, this.world);
     }
     this.updateDynamites(dt);
+    this.updateFallingRocks(dt);
     this.handleBase();
+    if (this.knockoutTimer > 0) this.knockoutTimer = Math.max(0, this.knockoutTimer - dt);
     this.wasAtBase = atBase;
   }
 
@@ -69,6 +80,15 @@ export class Game {
 
   get activeDynamites(): readonly Dynamite[] {
     return this.dynamites;
+  }
+
+  get activeFallingRocks(): readonly FallingRock[] {
+    return this.fallingRocks;
+  }
+
+  /** 0..1 intensity of the fading knock-out flash (0 = none). */
+  get knockoutFlash(): number {
+    return this.knockoutTimer / KNOCKOUT_FLASH_SECONDS;
   }
 
   /**
@@ -103,6 +123,40 @@ export class Game {
     for (let i = this.dynamites.length - 1; i >= 0; i--) {
       if (this.dynamites[i].hasExploded) this.dynamites.splice(i, 1);
     }
+  }
+
+  private updateFallingRocks(dt: number): void {
+    this.freeUnsupportedRocks();
+    for (const rock of this.fallingRocks) {
+      rock.update(dt, this.world);
+      if (rock.tile.equals(this.player.tile)) this.knockout();
+    }
+    for (let i = this.fallingRocks.length - 1; i >= 0; i--) {
+      if (this.fallingRocks[i].hasLanded) this.fallingRocks.splice(i, 1);
+    }
+  }
+
+  /** Converts any Rock tile with empty space below it into a falling rock. */
+  private freeUnsupportedRocks(): void {
+    const { width, height } = this.world;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (
+          this.world.getTile(x, y) === TileType.Rock &&
+          this.world.getTile(x, y + 1) === TileType.Empty
+        ) {
+          this.world.setTile(x, y, TileType.Empty);
+          this.fallingRocks.push(new FallingRock(new Vec2(x, y)));
+        }
+      }
+    }
+  }
+
+  /** Gentle failure: wake at the surface, lose this run's cargo, keep the rest. */
+  private knockout(): void {
+    this.player.resetTo(this.spawn);
+    this.player.cargo.clear();
+    this.knockoutTimer = KNOCKOUT_FLASH_SECONDS;
   }
 
   private handleBase(): void {

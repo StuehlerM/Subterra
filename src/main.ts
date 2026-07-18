@@ -42,7 +42,7 @@ function bootstrap(): void {
     spawn: SPAWN_TILE,
   });
   const player = new Player(SPAWN_TILE);
-  const game = new Game(world, player, progress, SURFACE_ROWS);
+  const game = new Game(world, player, progress, SURFACE_ROWS, SPAWN_TILE);
 
   const input = new InputController();
   input.attach(window);
@@ -69,7 +69,7 @@ function bootstrap(): void {
     if (menuOpen && !wasMenuOpen) save.save(progress);
     wasMenuOpen = menuOpen;
 
-    renderer.render(world, player, game.activeDynamites);
+    renderer.render(world, player, game.activeDynamites, game.activeFallingRocks, game.knockoutFlash);
     hud.update(game);
     shop.update();
     requestAnimationFrame(frame);

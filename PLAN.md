@@ -25,8 +25,9 @@ falling-rock and bat hazards, procedural generation, an upgrade economy, and gen
 ## Proposed implementation roadmap (build in vertical slices)
 > Each phase is playable. Start rough (placeholder art), expand.
 
-- **Phase 0 — Skeleton**: Vite + TS project, game loop, Canvas renderer, asset registry,
-  input controller, fixed-timestep. Empty grid you can walk on.
+- **Phase 0 — Skeleton** ✅ DONE: Vite + TS project, fixed-timestep game loop, Canvas
+  renderer, asset registry, input controller, seeded world, grid movement with tween.
+  28 unit tests passing; typecheck clean.
 - **Phase 1 — Dig & world**: Tile grid, sand/bedrock, grid movement + digging, camera
   follows player, simple procedural sand/bedrock generation from a seed.
 - **Phase 2 — Ore & economy**: Ore tiles + values, cargo, surface base zone, shop UI,

@@ -91,7 +91,7 @@ function handleActions(game: Game, shop: Shop, input: InputController): void {
       nav = input.consumeNav();
     }
     if (input.consumeConfirm()) shop.confirm();
-    input.consumeDynamite();
+    if (input.consumeDynamite()) game.closeMenu(); // Z is a quick "drill again"
   } else {
     while (input.consumeNav()) {
       /* discard buffered nav during play */

@@ -26,7 +26,8 @@ interface Cell {
  * Surface menu, keyboard-driven and word-free. Opens when the game reports the
  * menu is open (on surface arrival) and freezes the miner. Left/Right pick an
  * upgrade; Down selects the "Drill again" button, Up returns to the row; X
- * confirms (buy the upgrade, or leave via "Drill again").
+ * confirms (buy the upgrade, or leave via "Drill again"). Z closes the menu
+ * outright (a quick "drill again"), handled by the caller.
  */
 export class Shop {
   private readonly overlay: HTMLDivElement;

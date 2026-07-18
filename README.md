@@ -21,7 +21,7 @@ Controls: move/drill with **Arrow keys** or **WASD**. **Z** = place dynamite, **
 (also the flare key, reserved). Reaching the surface auto-sells ore, recharges and restocks,
 and pops open a **modal upgrade menu** (the miner is frozen): **Left/Right** pick an upgrade,
 **Down** selects **Drill again ⛏️⬇️** (below the row), **Up** goes back, **X** confirms (buy,
-or Drill again to leave). The UI is pictograms only (🪙 money · 📦 cargo · 🔋 battery ·
+or Drill again to leave). **Z** closes the menu instantly (quick "drill again"). The UI is pictograms only (🪙 money · 📦 cargo · 🔋 battery ·
 🧨 dynamite · ⬇️ depth).
 
 ## Scripts

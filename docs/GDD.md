@@ -135,6 +135,10 @@ Things that differ from the first draft above, decided during build/playtest:
   arrival and **freezes the miner**; navigated with arrows, **X** confirms, **Z** closes.
   Owner preference (no mouse; pictograms only for ages 5–6).
 - **UI is pictograms/emoji + numbers, no words** (🪙 📦 🔋 🧨 ⬇️; ●/○ level pips; 🪙cost; ⭐ maxed).
+- **Walking is faster than drilling**: moving through open/dug tiles is a fixed fast speed
+  (0.07 s/tile, = the fastest drill level); drilling solid ground uses the Drill Speed
+  upgrade value (0.25 s → 0.07 s). So exploring tunnels feels quick while breaking new
+  ground is the thing you upgrade.
 - **Battery drains per drill only** (not per move) for now — avoids stranding kids; the
   "little per move" from §6 is deferred/optional tuning.
 - **Dynamite blasts preserve ore** (and bedrock); they clear rock + sand only, so ore is

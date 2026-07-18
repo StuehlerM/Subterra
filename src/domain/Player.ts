@@ -7,7 +7,10 @@ import { Vec2 } from './Vec2';
 import { World } from './World';
 import { TileType, isDiggable, isSolid, tileHardness, tileValue } from './tiles';
 
-const DEFAULT_MOVE_DURATION = 0.14;
+/** Fixed walking speed through open tiles (matches the fastest drill level). */
+const DEFAULT_WALK_DURATION = 0.07;
+/** Fallback drilling speed (overridden by the Drill Speed upgrade). */
+const DEFAULT_DRILL_DURATION = 0.14;
 const DEFAULT_DRILL_STRENGTH = 1;
 const DEFAULT_CARGO_CAPACITY = 8;
 const DEFAULT_BATTERY_CAPACITY = 30;
@@ -17,7 +20,10 @@ const DIG_BATTERY_COST = 1;
 
 export interface PlayerOptions {
   drillStrength?: number;
+  /** Convenience: sets both walk and drill durations to the same value. */
   moveDuration?: number;
+  walkDuration?: number;
+  drillDuration?: number;
   cargo?: Cargo;
   battery?: Battery;
   dynamite?: Consumable;
@@ -34,12 +40,16 @@ export class Player {
   readonly battery: Battery;
   readonly dynamite: Consumable;
   drillStrength: number;
-  moveDuration: number;
+  /** Seconds per tile while drilling solid ground (set by the upgrade). */
+  drillDuration: number;
+  /** Seconds per tile while walking through open tiles (fixed, fast). */
+  walkDuration: number;
 
   private moving = false;
   private from: Vec2;
   private to: Vec2;
   private progress = 0;
+  private activeDuration = DEFAULT_WALK_DURATION;
   private lastDug: Vec2 | null = null;
 
   constructor(
@@ -47,7 +57,8 @@ export class Player {
     options: PlayerOptions = {},
   ) {
     this.drillStrength = options.drillStrength ?? DEFAULT_DRILL_STRENGTH;
-    this.moveDuration = options.moveDuration ?? DEFAULT_MOVE_DURATION;
+    this.walkDuration = options.walkDuration ?? options.moveDuration ?? DEFAULT_WALK_DURATION;
+    this.drillDuration = options.drillDuration ?? options.moveDuration ?? DEFAULT_DRILL_DURATION;
     this.cargo = options.cargo ?? new Cargo(DEFAULT_CARGO_CAPACITY);
     this.battery = options.battery ?? new Battery(DEFAULT_BATTERY_CAPACITY);
     this.dynamite = options.dynamite ?? new Consumable(DEFAULT_DYNAMITE_CAPACITY);
@@ -81,7 +92,7 @@ export class Player {
   /** Applies the effective stats/capacities derived from meta-progression. */
   applyProgress(progress: PlayerProgress): void {
     this.drillStrength = progress.drillStrength;
-    this.moveDuration = progress.moveDuration;
+    this.drillDuration = progress.moveDuration; // walking stays fixed-fast
     this.cargo.setCapacity(progress.cargoCapacity);
     this.battery.setCapacity(progress.batteryCapacity);
     this.dynamite.setCapacity(progress.dynamiteCapacity);
@@ -97,6 +108,7 @@ export class Player {
     if (this.moving) return false;
     const target = this.tile.add(new Vec2(direction.dx, direction.dy));
     if (!this.tryDig(target, world)) return false;
+    this.activeDuration = this.lastDug ? this.drillDuration : this.walkDuration;
     this.from = this.tile;
     this.to = target;
     this.moving = true;
@@ -107,7 +119,7 @@ export class Player {
   /** Advance the current move animation by `dt` seconds. */
   update(dt: number): void {
     if (!this.moving) return;
-    this.progress += dt / this.moveDuration;
+    this.progress += dt / this.activeDuration;
     if (this.progress >= 1) {
       this.tile = this.to;
       this.moving = false;

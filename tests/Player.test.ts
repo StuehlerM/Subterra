@@ -3,6 +3,7 @@ import { Battery } from '../src/domain/Battery';
 import { Cargo } from '../src/domain/Cargo';
 import { DOWN, RIGHT } from '../src/domain/Direction';
 import { Player } from '../src/domain/Player';
+import { PlayerProgress } from '../src/domain/PlayerProgress';
 import { Vec2 } from '../src/domain/Vec2';
 import { TileType } from '../src/domain/tiles';
 import { worldFrom } from './helpers/worldFrom';
@@ -105,5 +106,37 @@ describe('Player battery', () => {
     const world = worldFrom(['..']);
     const player = miner(new Vec2(0, 0), { battery: new Battery(0) });
     expect(player.tryStartMove(RIGHT, world)).toBe(true);
+  });
+});
+
+describe('Player walk vs drill speed', () => {
+  const WALK = 0.05;
+  const DRILL = 0.2;
+
+  it('crosses an open tile at walking speed', () => {
+    const world = worldFrom(['..']);
+    const player = new Player(new Vec2(0, 0), { walkDuration: WALK, drillDuration: DRILL });
+    player.tryStartMove(RIGHT, world);
+    player.update(WALK);
+    expect(player.isMoving).toBe(false); // walked across quickly
+  });
+
+  it('crosses a solid tile at the slower drilling speed', () => {
+    const world = worldFrom(['.s']);
+    const player = new Player(new Vec2(0, 0), { walkDuration: WALK, drillDuration: DRILL });
+    player.tryStartMove(RIGHT, world);
+    player.update(WALK);
+    expect(player.isMoving).toBe(true); // still drilling (drill is slower)
+    player.update(DRILL);
+    expect(player.isMoving).toBe(false);
+  });
+
+  it('keeps walking fast even at the slowest drill upgrade level', () => {
+    const world = worldFrom(['..']);
+    const player = new Player(new Vec2(0, 0));
+    player.applyProgress(new PlayerProgress()); // level 1 drill = 0.25s
+    player.tryStartMove(RIGHT, world);
+    player.update(0.07); // fixed walk speed
+    expect(player.isMoving).toBe(false);
   });
 });

@@ -36,6 +36,7 @@ export class Game {
     private readonly spawn: Vec2,
   ) {
     this.player.applyProgress(progress);
+    this.settleWorld();
   }
 
   step(dt: number, direction: Direction | null): void {
@@ -47,6 +48,8 @@ export class Game {
     // The miner is frozen while the surface menu is open.
     if (direction && !this.player.isMoving && !this.menuOpen) {
       this.player.tryStartMove(direction, this.world);
+      const dug = this.player.justDug;
+      if (dug) this.freeRocksAbove(dug.x, dug.y);
     }
     this.updateDynamites(dt);
     this.updateFallingRocks(dt);
@@ -117,7 +120,8 @@ export class Game {
     for (const dynamite of this.dynamites) {
       dynamite.update(dt);
       if (dynamite.hasExploded) {
-        explode(this.world, dynamite.tile, BLAST_RADIUS);
+        const cleared = explode(this.world, dynamite.tile, BLAST_RADIUS);
+        for (const cell of cleared) this.freeRocksAbove(cell.x, cell.y);
       }
     }
     for (let i = this.dynamites.length - 1; i >= 0; i--) {
@@ -126,7 +130,7 @@ export class Game {
   }
 
   private updateFallingRocks(dt: number): void {
-    this.freeUnsupportedRocks();
+    if (this.fallingRocks.length === 0) return;
     for (const rock of this.fallingRocks) {
       rock.update(dt, this.world);
       if (rock.tile.equals(this.player.tile)) this.knockout();
@@ -136,10 +140,24 @@ export class Game {
     }
   }
 
-  /** Converts any Rock tile with empty space below it into a falling rock. */
-  private freeUnsupportedRocks(): void {
+  /**
+   * Frees the contiguous column of rocks resting on the tile just below (x, y),
+   * which has become empty. Cascades upward so stacks collapse in sequence.
+   * Called only when a tile is emptied (drill/blast) — no per-frame scanning.
+   */
+  private freeRocksAbove(x: number, y: number): void {
+    let ry = y - 1;
+    while (this.world.getTile(x, ry) === TileType.Rock) {
+      this.world.setTile(x, ry, TileType.Empty);
+      this.fallingRocks.push(new FallingRock(new Vec2(x, ry)));
+      ry -= 1;
+    }
+  }
+
+  /** One-time pass at startup: free any rock generated without support below. */
+  private settleWorld(): void {
     const { width, height } = this.world;
-    for (let y = 0; y < height; y++) {
+    for (let y = height - 1; y >= 0; y--) {
       for (let x = 0; x < width; x++) {
         if (
           this.world.getTile(x, y) === TileType.Rock &&

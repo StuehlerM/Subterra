@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Game } from '../src/app/Game';
 import { Battery } from '../src/domain/Battery';
 import { Consumable } from '../src/domain/Consumable';
-import { RIGHT } from '../src/domain/Direction';
+import { RIGHT, UP } from '../src/domain/Direction';
 import { Player } from '../src/domain/Player';
 import { PlayerProgress } from '../src/domain/PlayerProgress';
 import { TileType } from '../src/domain/tiles';
@@ -183,6 +183,14 @@ describe('Game falling rocks', () => {
     for (let i = 0; i < STEPS; i++) game.step(FIXED_DT, null);
     expect(game.world.getTile(0, 1)).toBe(TileType.Rock);
     expect(game.activeFallingRocks.length).toBe(0);
+  });
+
+  it('frees a rock when the miner drills out the tile supporting it', () => {
+    // Rock (0,1) rests on sand (0,2); miner at (0,3) drills up into that sand.
+    const game = newGame(['.', 'R', 's', '.'], new Vec2(0, 3), {});
+    expect(game.activeFallingRocks.length).toBe(0); // supported at start
+    game.step(FIXED_DT, UP); // drills (0,2), freeing the rock above
+    expect(game.activeFallingRocks.length).toBe(1);
   });
 });
 

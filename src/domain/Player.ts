@@ -40,6 +40,7 @@ export class Player {
   private from: Vec2;
   private to: Vec2;
   private progress = 0;
+  private lastDug: Vec2 | null = null;
 
   constructor(
     public tile: Vec2,
@@ -56,6 +57,11 @@ export class Player {
 
   get isMoving(): boolean {
     return this.moving;
+  }
+
+  /** The tile drilled by the most recent tryStartMove, or null if none. */
+  get justDug(): Vec2 | null {
+    return this.lastDug;
   }
 
   /** Smooth position in tile units, for rendering. */
@@ -87,6 +93,7 @@ export class Player {
    * started.
    */
   tryStartMove(direction: Direction, world: World): boolean {
+    this.lastDug = null;
     if (this.moving) return false;
     const target = this.tile.add(new Vec2(direction.dx, direction.dy));
     if (!this.tryDig(target, world)) return false;
@@ -119,6 +126,7 @@ export class Player {
     if (value > 0 && this.cargo.isFull) return false;
 
     world.setTile(target.x, target.y, TileType.Empty);
+    this.lastDug = target;
     this.battery.drain(DIG_BATTERY_COST);
     if (value > 0) this.cargo.add(value);
     return true;

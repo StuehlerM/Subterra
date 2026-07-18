@@ -5,9 +5,10 @@ import { TileType } from '../src/domain/tiles';
 import { worldFrom } from './helpers/worldFrom';
 
 describe('explode', () => {
-  it('clears rock and sand within the radius', () => {
+  it('clears rock and sand within the radius and reports the cleared cells', () => {
     const world = worldFrom(['sss', 'sRs', 'sss']);
-    explode(world, new Vec2(1, 1), 1);
+    const cleared = explode(world, new Vec2(1, 1), 1);
+    expect(cleared.length).toBe(9);
     for (let y = 0; y < 3; y++) {
       for (let x = 0; x < 3; x++) {
         expect(world.getTile(x, y)).toBe(TileType.Empty);

@@ -45,7 +45,9 @@ falling-rock and bat hazards, procedural generation, an upgrade economy, and gen
   short **wobble** tell → falls one tile at a time until it lands (re-becomes a Rock tile).
   If a falling rock enters the miner's tile → gentle **knock-out**: respawn at the surface
   spawn, clear this run's cargo, keep money + upgrades; brief red flash. Chains (stacked
-  rocks collapse in sequence). 82 tests passing; typecheck + build clean.
+  rocks collapse in sequence). **Event-driven** (no per-frame scan): rocks are re-checked
+  only when a tile is emptied by a drill/blast, cascading up the column; a single settle
+  pass at startup catches pre-unsupported rocks. 83 tests passing; typecheck + build clean.
 - **Phase 5 — Bats**: Cave pockets in procgen, sleeping bats, wake/chase AI, instant
   knock-out, flares + flee/vanish + tire-and-resleep.
 - **Phase 6 — Return tech & polish**: Elevator (mid), teleport (late), battery low-warning,

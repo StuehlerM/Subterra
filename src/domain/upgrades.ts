@@ -35,8 +35,9 @@ export const UPGRADE_CATALOG: Record<UpgradeType, UpgradeSpec> = {
     costs: [50, 120, 250, 500],
   },
   [UpgradeType.DrillSpeed]: {
+    // Seconds per tile (lower = faster). Wide spread so each level is felt.
     label: 'Drill Speed',
-    values: [0.14, 0.12, 0.1, 0.085, 0.07],
+    values: [0.25, 0.2, 0.15, 0.1, 0.07],
     costs: [40, 90, 180, 350],
   },
   [UpgradeType.CargoCapacity]: {

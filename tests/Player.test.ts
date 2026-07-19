@@ -95,17 +95,47 @@ describe('Player battery', () => {
     expect(player.battery.current).toBe(4);
   });
 
-  it('cannot drill on an empty battery', () => {
-    const world = worldFrom(['.s']);
-    const player = miner(new Vec2(0, 0), { battery: new Battery(0) });
-    expect(player.tryStartMove(RIGHT, world)).toBe(false);
-    expect(world.getTile(1, 0)).toBe(TileType.Sand);
-  });
-
   it('still walks through open tunnels on an empty battery', () => {
     const world = worldFrom(['..']);
     const player = miner(new Vec2(0, 0), { battery: new Battery(0) });
     expect(player.tryStartMove(RIGHT, world)).toBe(true);
+  });
+});
+
+describe('Player emergency drill (empty battery)', () => {
+  it('slowly drills sand for free when out of battery', () => {
+    const world = worldFrom(['.s']);
+    const player = miner(new Vec2(0, 0), { battery: new Battery(0), emergencyDuration: 0.3 });
+    expect(player.tryStartMove(RIGHT, world)).toBe(true);
+    expect(world.getTile(1, 0)).toBe(TileType.Empty);
+    expect(player.battery.current).toBe(0); // free
+  });
+
+  it('can grind through rock and hard ore in an emergency', () => {
+    const rockWorld = worldFrom(['.R']);
+    const rockMiner = miner(new Vec2(0, 0), { battery: new Battery(0) });
+    expect(rockMiner.tryStartMove(RIGHT, rockWorld)).toBe(true);
+    expect(rockWorld.getTile(1, 0)).toBe(TileType.Empty);
+
+    const ironWorld = worldFrom(['.I']); // iron needs drill strength 2 normally
+    const ironMiner = miner(new Vec2(0, 0), { drillStrength: 1, battery: new Battery(0) });
+    expect(ironMiner.tryStartMove(RIGHT, ironWorld)).toBe(true);
+  });
+
+  it('never removes bedrock, even in an emergency', () => {
+    const world = worldFrom(['.#']);
+    const player = miner(new Vec2(0, 0), { battery: new Battery(0) });
+    expect(player.tryStartMove(RIGHT, world)).toBe(false);
+  });
+
+  it('is much slower than a normal drill', () => {
+    const world = worldFrom(['.s']);
+    const player = miner(new Vec2(0, 0), { battery: new Battery(0), emergencyDuration: 0.5 });
+    player.tryStartMove(RIGHT, world);
+    player.update(0.2);
+    expect(player.isMoving).toBe(true); // still grinding
+    player.update(0.5);
+    expect(player.isMoving).toBe(false);
   });
 });
 

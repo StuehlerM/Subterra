@@ -123,7 +123,8 @@
   multiple save slots, touch controls, real art/audio. All designed to slot in later.
 
 ## 15. Resolved Design Decisions (confirmed by owner)
-1. Battery at 0 = can walk, **cannot dig** → forced to go home to recharge/sleep. ✅
+1. Battery at 0 = can walk, and only the **super-slow emergency drill** works (see §16)
+   → strongly encouraged to go home to recharge, but never permanently trapped. ✅
 2. **Flares** are the anti-bat tool; bats tire and return to sleep if they lose you. ✅
 3. **No player gravity** — player walks everywhere, only rocks fall. ✅
 4. Controls limited to **6 keys** total (4 move/dig + dynamite + flare). ✅
@@ -139,6 +140,11 @@ Things that differ from the first draft above, decided during build/playtest:
   (0.07 s/tile, = the fastest drill level); drilling solid ground uses the Drill Speed
   upgrade value (0.25 s → 0.07 s). So exploring tunnels feels quick while breaking new
   ground is the thing you upgrade.
+- **Emergency drill (anti-soft-lock)**: at 0 battery the miner can still drill — very slowly
+  (~1.2s/tile) and for free — through **anything except bedrock** (sand, ore of any hardness,
+  even rock, ignoring drill strength). This prevents soft-locks (e.g. a fallen rock blocking
+  the way home with a dead battery). Normal drilling still needs battery + strength and can't
+  break rock (that's dynamite's job). HUD shows ⚠️ when the battery is empty.
 - **Battery drains per drill only** (not per move) for now — avoids stranding kids; the
   "little per move" from §6 is deferred/optional tuning.
 - **Dynamite blasts preserve ore** (and bedrock); they clear rock + sand only, so ore is

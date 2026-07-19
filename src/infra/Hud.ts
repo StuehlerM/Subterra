@@ -30,7 +30,7 @@ export class Hud {
     this.root.textContent = [
       `🪙 ${game.progress.money}`,
       `📦 ${cargo.count}/${cargo.capacity}`,
-      `🔋 ${battery.current}/${battery.capacity}`,
+      `🔋 ${battery.current}/${battery.capacity}${battery.isEmpty ? ' ⚠️' : ''}`,
       `🧨 ${dynamite.remaining}/${dynamite.capacity}`,
       `🔦 ${flare.remaining}/${flare.capacity}`,
       `⬇️ ${game.depth()}`,

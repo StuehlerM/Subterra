@@ -26,6 +26,25 @@ interface Camera {
   readonly y: number;
 }
 
+interface TorchCell {
+  readonly dx: number;
+  readonly dy: number;
+  readonly alpha: number;
+}
+
+/** Fixed blocky disc (in tile offsets) around the miner: clear core, 50% ring. */
+function buildTorchPattern(): TorchCell[] {
+  const cells: TorchCell[] = [];
+  for (let dy = -DIM_RADIUS; dy <= DIM_RADIUS; dy++) {
+    for (let dx = -DIM_RADIUS; dx <= DIM_RADIUS; dx++) {
+      const d2 = dx * dx + dy * dy;
+      if (d2 <= CLEAR_RADIUS * CLEAR_RADIUS) cells.push({ dx, dy, alpha: 1 });
+      else if (d2 <= DIM_RADIUS * DIM_RADIUS) cells.push({ dx, dy, alpha: 0.5 });
+    }
+  }
+  return cells;
+}
+
 /**
  * Draws the scene from the game state to a 2D canvas. The camera centers on the
  * miner's interpolated position. A fog mask (built on an offscreen canvas) keeps
@@ -35,6 +54,7 @@ interface Camera {
 export class CanvasRenderer {
   private readonly fog = document.createElement('canvas');
   private readonly fogCtx = this.fog.getContext('2d')!;
+  private readonly torchPattern = buildTorchPattern();
 
   constructor(
     private readonly ctx: CanvasRenderingContext2D,
@@ -135,13 +155,13 @@ export class CanvasRenderer {
   }
 
   private eraseTorch(cx: number, cy: number): void {
-    const inner = CLEAR_RADIUS * this.tileSize;
-    const outer = DIM_RADIUS * this.tileSize;
-    const gradient = this.fogCtx.createRadialGradient(cx, cy, inner, cx, cy, outer);
-    gradient.addColorStop(0, 'rgba(0,0,0,1)');
-    gradient.addColorStop(1, 'rgba(0,0,0,0)');
-    this.fogCtx.fillStyle = gradient;
-    this.fogCtx.fillRect(cx - outer, cy - outer, outer * 2, outer * 2);
+    const f = this.fogCtx;
+    const ts = this.tileSize;
+    const half = ts / 2;
+    for (const cell of this.torchPattern) {
+      f.fillStyle = `rgba(0,0,0,${cell.alpha})`;
+      f.fillRect(Math.round(cx + cell.dx * ts - half), Math.round(cy + cell.dy * ts - half), ts, ts);
+    }
   }
 
   private drawFallingRock(rock: FallingRock, camera: Camera): void {

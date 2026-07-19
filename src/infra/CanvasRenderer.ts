@@ -98,13 +98,16 @@ export class CanvasRenderer {
 
     for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
-        this.ctx.fillStyle = this.assets.tileStyle(world.getTile(x, y)).color;
-        this.ctx.fillRect(
-          Math.round(x * this.tileSize - camera.x),
-          Math.round(y * this.tileSize - camera.y),
-          this.tileSize,
-          this.tileSize,
-        );
+        const tile = world.getTile(x, y);
+        const px = Math.round(x * this.tileSize - camera.x);
+        const py = Math.round(y * this.tileSize - camera.y);
+        const image = this.assets.tileImage(tile);
+        if (image) {
+          this.ctx.drawImage(image, px, py, this.tileSize, this.tileSize);
+        } else {
+          this.ctx.fillStyle = this.assets.tileStyle(tile).color;
+          this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
+        }
       }
     }
   }
@@ -169,8 +172,13 @@ export class CanvasRenderer {
       rock.phase === RockState.Wobbling ? Math.sin(performance.now() / 40) * (this.tileSize * 0.08) : 0;
     const px = Math.round(rock.tile.x * this.tileSize - camera.x + wobble);
     const py = Math.round((rock.tile.y + rock.fallProgress) * this.tileSize - camera.y);
-    this.ctx.fillStyle = this.assets.tileStyle(TileType.Rock).color;
-    this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
+    const image = this.assets.tileImage(TileType.Rock);
+    if (image) {
+      this.ctx.drawImage(image, px, py, this.tileSize, this.tileSize);
+    } else {
+      this.ctx.fillStyle = this.assets.tileStyle(TileType.Rock).color;
+      this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
+    }
   }
 
   private drawDynamite(dynamite: Dynamite, camera: Camera): void {
@@ -179,6 +187,14 @@ export class CanvasRenderer {
     const blinkMs = dynamite.fuseRemaining < FUSE_URGENT_SECONDS ? BLINK_FAST_MS : BLINK_SLOW_MS;
     const lit = Math.floor(performance.now() / blinkMs) % 2 === 0;
 
+    const image = this.assets.entityImage('dynamite');
+    if (image) {
+      this.ctx.save();
+      this.ctx.globalAlpha = lit ? 1 : 0.7;
+      this.ctx.drawImage(image, px, py, this.tileSize, this.tileSize);
+      this.ctx.restore();
+      return;
+    }
     const inset = Math.round(this.tileSize * 0.2);
     this.ctx.fillStyle = lit ? '#ff5a3c' : '#b53218';
     this.ctx.fillRect(px + inset, py + inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
@@ -188,14 +204,20 @@ export class CanvasRenderer {
 
   private drawBat(bat: Bat, camera: Camera): void {
     const p = bat.renderPosition();
-    const cx = p.x * this.tileSize - camera.x + this.tileSize / 2;
-    const cy = p.y * this.tileSize - camera.y + this.tileSize / 2;
+    const px = Math.round(p.x * this.tileSize - camera.x);
+    const py = Math.round(p.y * this.tileSize - camera.y);
+    const asleep = bat.phase === BatState.Sleeping;
     this.ctx.save();
-    this.ctx.globalAlpha = bat.phase === BatState.Sleeping ? 0.55 : bat.phase === BatState.Fleeing ? 0.5 : 1;
-    this.ctx.font = `${Math.floor(this.tileSize * 0.8)}px serif`;
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(bat.phase === BatState.Sleeping ? '😴' : '🦇', cx, cy);
+    this.ctx.globalAlpha = asleep ? 0.7 : bat.phase === BatState.Fleeing ? 0.5 : 1;
+    const image = this.assets.entityImage(asleep ? 'bat_asleep' : 'bat');
+    if (image) {
+      this.ctx.drawImage(image, px, py, this.tileSize, this.tileSize);
+    } else {
+      this.ctx.font = `${Math.floor(this.tileSize * 0.8)}px serif`;
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText(asleep ? '😴' : '🦇', px + this.tileSize / 2, py + this.tileSize / 2);
+    }
     this.ctx.restore();
   }
 
@@ -211,21 +233,34 @@ export class CanvasRenderer {
     this.ctx.arc(cx, cy, radius, 0, Math.PI * 2);
     this.ctx.fill();
 
-    this.ctx.font = `${Math.floor(this.tileSize * 0.8)}px serif`;
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    this.ctx.fillText('🔥', cx, cy);
+    const image = this.assets.entityImage('flare');
+    if (image) {
+      this.ctx.drawImage(
+        image,
+        Math.round(flare.tile.x * this.tileSize - camera.x),
+        Math.round(flare.tile.y * this.tileSize - camera.y),
+        this.tileSize,
+        this.tileSize,
+      );
+    } else {
+      this.ctx.font = `${Math.floor(this.tileSize * 0.8)}px serif`;
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText('🔥', cx, cy);
+    }
   }
 
   private drawPlayer(center: Vec2, camera: Camera): void {
+    const px = Math.round(center.x * this.tileSize - camera.x);
+    const py = Math.round(center.y * this.tileSize - camera.y);
+    const image = this.assets.entityImage('player');
+    if (image) {
+      this.ctx.drawImage(image, px, py, this.tileSize, this.tileSize);
+      return;
+    }
     const padding = Math.round(this.tileSize * 0.12);
     this.ctx.fillStyle = this.assets.player;
-    this.ctx.fillRect(
-      Math.round(center.x * this.tileSize - camera.x) + padding,
-      Math.round(center.y * this.tileSize - camera.y) + padding,
-      this.tileSize - padding * 2,
-      this.tileSize - padding * 2,
-    );
+    this.ctx.fillRect(px + padding, py + padding, this.tileSize - padding * 2, this.tileSize - padding * 2);
   }
 
   private drawKnockoutFlash(intensity: number): void {

@@ -24,6 +24,13 @@ and pops open a **modal upgrade menu** (the miner is frozen): **Left/Right** pic
 or Drill again to leave). **Z** closes the menu instantly (quick "drill again"). The UI is pictograms only (🪙 money · 📦 cargo · 🔋 battery ·
 🧨 dynamite · ⬇️ depth).
 
+## Art / assets
+
+All game images live in **`public/assets/`** (`tiles/` and `entities/`). Replace any PNG
+with your own art (keep the same filename) and reload — no rebuild needed in `npm run dev`.
+Missing files fall back to flat colours (tiles) or emoji (entities). See
+`public/assets/README.md` for the file list. Regenerate placeholders with `npm run assets`.
+
 ## Scripts
 
 | Command             | What it does                          |
@@ -34,6 +41,7 @@ or Drill again to leave). **Z** closes the menu instantly (quick "drill again").
 | `npm test`          | Run the unit tests once (Vitest).     |
 | `npm run test:watch`| Run tests in watch mode.              |
 | `npm run typecheck` | Typecheck without emitting.           |
+| `npm run assets`    | Regenerate placeholder art in public/assets. |
 
 ## Architecture (short)
 

@@ -48,20 +48,21 @@ export class CanvasRenderer {
       y: center.y * this.tileSize + this.tileSize / 2 - canvas.height / 2,
     };
 
-    const playerTile = game.player.tile;
+    // Center the fog on the smooth (interpolated) position so the lit area tracks
+    // the miner instead of snapping a whole tile each step (which looked like flicker).
     this.revealAround(game, fog);
 
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-    this.drawTiles(game.world, camera, canvas.width, canvas.height, fog, playerTile);
+    this.drawTiles(game.world, camera, canvas.width, canvas.height, fog, center);
     for (const flare of game.activeFlares) this.drawFlare(flare, camera);
     for (const rock of game.activeFallingRocks) {
-      if (this.discovered(rock.tile, playerTile, fog)) this.drawFallingRock(rock, camera);
+      if (this.discovered(rock.tile, center, fog)) this.drawFallingRock(rock, camera);
     }
     for (const dynamite of game.activeDynamites) {
-      if (this.discovered(dynamite.tile, playerTile, fog)) this.drawDynamite(dynamite, camera);
+      if (this.discovered(dynamite.tile, center, fog)) this.drawDynamite(dynamite, camera);
     }
     for (const bat of game.activeBats) {
-      if (this.discovered(bat.tile, playerTile, fog)) this.drawBat(bat, camera);
+      if (this.discovered(bat.tile, center, fog)) this.drawBat(bat, camera);
     }
     this.drawPlayer(center, camera);
     if (game.knockoutFlash > 0) this.drawKnockoutFlash(game.knockoutFlash);

@@ -5,7 +5,7 @@ import { FallingRock, RockState } from '../domain/FallingRock';
 import { FLARE_RADIUS, Flare } from '../domain/Flare';
 import { Vec2 } from '../domain/Vec2';
 import { World } from '../domain/World';
-import { TileType, isOre } from '../domain/tiles';
+import { TileType } from '../domain/tiles';
 import { AssetRegistry } from './AssetRegistry';
 import { FogOfWar } from './FogOfWar';
 
@@ -102,12 +102,14 @@ export class CanvasRenderer {
         const tile = world.getTile(x, y);
         const px = Math.round(x * this.tileSize - camera.x);
         const py = Math.round(y * this.tileSize - camera.y);
-        // Fill a base colour first so transparent tile art composites over dirt
-        // (ore/rock) or its own colour, never over bare black.
-        this.ctx.fillStyle = this.tileBacking(tile);
-        this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
         const image = this.assets.tileImage(tile);
-        if (image) this.ctx.drawImage(image, px, py, this.tileSize, this.tileSize);
+        if (image) {
+          // Draw the art as-is so its transparency shows through (no backing fill).
+          this.ctx.drawImage(image, px, py, this.tileSize, this.tileSize);
+        } else {
+          this.ctx.fillStyle = this.assets.tileStyle(tile).color;
+          this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
+        }
       }
     }
   }
@@ -165,11 +167,6 @@ export class CanvasRenderer {
       f.fillStyle = `rgba(0,0,0,${cell.alpha})`;
       f.fillRect(Math.round(cx + cell.dx * ts - half), Math.round(cy + cell.dy * ts - half), ts, ts);
     }
-  }
-
-  private tileBacking(tile: TileType): string {
-    const backing = isOre(tile) || tile === TileType.Rock ? TileType.Sand : tile;
-    return this.assets.tileStyle(backing).color;
   }
 
   private drawPortal(tile: Vec2, camera: Camera): void {

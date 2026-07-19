@@ -20,6 +20,9 @@ const DIM_RADIUS = 8;
 const FLARE_REVEAL_RADIUS = 5;
 /** Colour of undiscovered ground (a soft navy, not pitch black). */
 const HIDDEN_COLOR = '#0a0b16';
+/** Parallax factor for the backdrop (moves slower than the world). */
+const BACKGROUND_PARALLAX = 0.5;
+const SKY_TOP_COLOR = '#3f7cc0';
 
 interface Camera {
   readonly x: number;
@@ -73,6 +76,7 @@ export class CanvasRenderer {
     this.revealAround(game, fog);
 
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+    this.drawBackground(camera, game.surfaceRow);
     this.drawTiles(game.world, camera, canvas.width, canvas.height);
     for (const portal of game.activePortals) this.drawPortal(portal, camera);
     for (const flare of game.activeFlares) this.drawFlare(flare, camera);
@@ -100,6 +104,7 @@ export class CanvasRenderer {
     for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
         const tile = world.getTile(x, y);
+        if (tile === TileType.Empty) continue; // open space: show the backdrop
         const px = Math.round(x * this.tileSize - camera.x);
         const py = Math.round(y * this.tileSize - camera.y);
         const image = this.assets.tileImage(tile);
@@ -166,6 +171,62 @@ export class CanvasRenderer {
     for (const cell of this.torchPattern) {
       f.fillStyle = `rgba(0,0,0,${cell.alpha})`;
       f.fillRect(Math.round(cx + cell.dx * ts - half), Math.round(cy + cell.dy * ts - half), ts, ts);
+    }
+  }
+
+  /**
+   * Backdrop: a tiled cave layer everywhere, with the sky drawn over the region
+   * above the surface line. Open tiles are skipped so this shows through them.
+   */
+  private drawBackground(camera: Camera, surfaceRow: number): void {
+    const { canvas } = this.ctx;
+    const surfaceY = Math.round(surfaceRow * this.tileSize - camera.y * BACKGROUND_PARALLAX);
+
+    const cave = this.assets.background('cave');
+    if (cave) {
+      this.tileBackdrop(cave, camera);
+    } else {
+      const gradient = this.ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, '#123138');
+      gradient.addColorStop(1, '#06121a');
+      this.ctx.fillStyle = gradient;
+      this.ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    if (surfaceY > 0) {
+      this.ctx.save();
+      this.ctx.beginPath();
+      this.ctx.rect(0, 0, canvas.width, surfaceY);
+      this.ctx.clip();
+      const sky = this.assets.background('sky');
+      if (sky) {
+        const h = Math.round((canvas.width / sky.naturalWidth) * sky.naturalHeight);
+        if (surfaceY - h > 0) {
+          this.ctx.fillStyle = SKY_TOP_COLOR;
+          this.ctx.fillRect(0, 0, canvas.width, surfaceY - h);
+        }
+        this.ctx.drawImage(sky, 0, surfaceY - h, canvas.width, h);
+      } else {
+        const gradient = this.ctx.createLinearGradient(0, 0, 0, surfaceY);
+        gradient.addColorStop(0, SKY_TOP_COLOR);
+        gradient.addColorStop(1, '#cfeaf6');
+        this.ctx.fillStyle = gradient;
+        this.ctx.fillRect(0, 0, canvas.width, surfaceY);
+      }
+      this.ctx.restore();
+    }
+  }
+
+  private tileBackdrop(image: HTMLImageElement, camera: Camera): void {
+    const { canvas } = this.ctx;
+    const iw = image.naturalWidth;
+    const ih = image.naturalHeight;
+    const startX = -((((camera.x * BACKGROUND_PARALLAX) % iw) + iw) % iw);
+    const startY = -((((camera.y * BACKGROUND_PARALLAX) % ih) + ih) % ih);
+    for (let y = startY; y < canvas.height; y += ih) {
+      for (let x = startX; x < canvas.width; x += iw) {
+        this.ctx.drawImage(image, Math.round(x), Math.round(y));
+      }
     }
   }
 

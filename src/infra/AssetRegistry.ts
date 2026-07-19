@@ -29,6 +29,12 @@ const ENTITY_FILES: Record<string, string> = {
   portal: 'entities/portal.png',
 };
 
+/** Filenames (under public/assets/) for backdrop layers. */
+const BACKGROUND_FILES: Record<string, string> = {
+  sky: 'background/sky.png',
+  cave: 'background/cave.png',
+};
+
 /**
  * Central place that maps game concepts to how they are drawn. Loads swappable
  * PNGs from public/assets/** (replace a file + reload to see it), and keeps flat
@@ -67,6 +73,12 @@ export class AssetRegistry {
     return file ? this.ready(file) : null;
   }
 
+  /** The loaded backdrop image (sky/cave), or null (use the gradient fallback). */
+  background(name: string): HTMLImageElement | null {
+    const file = BACKGROUND_FILES[name];
+    return file ? this.ready(file) : null;
+  }
+
   /** Registers placeholder colours and kicks off loading the swappable images. */
   static withDefaults(): AssetRegistry {
     const registry = new AssetRegistry();
@@ -86,7 +98,12 @@ export class AssetRegistry {
 
   private loadImages(): void {
     const base = import.meta.env.BASE_URL;
-    for (const file of [...Object.values(TILE_FILES), ...Object.values(ENTITY_FILES)]) {
+    const files = [
+      ...Object.values(TILE_FILES),
+      ...Object.values(ENTITY_FILES),
+      ...Object.values(BACKGROUND_FILES),
+    ];
+    for (const file of files) {
       if (!file) continue;
       const image = new Image();
       image.src = `${base}assets/${file}`;

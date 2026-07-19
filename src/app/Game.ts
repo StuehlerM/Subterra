@@ -77,6 +77,11 @@ export class Game {
     return this.player.tile.y < this.surfaceRows;
   }
 
+  /** World row where the ground begins (rows above it are open sky). */
+  get surfaceRow(): number {
+    return this.surfaceRows;
+  }
+
   isMenuOpen(): boolean {
     return this.menuOpen;
   }

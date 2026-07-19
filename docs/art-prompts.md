@@ -70,6 +70,15 @@ Combine as: **Style Anchor** + **Subject** + **Technical suffix** + (negative pr
 - **gold.png** — `stone block with rich glinting gold nuggets`
 - **gem.png** — `stone block with sparkling cyan crystal gems`
 
+### Backgrounds (`public/assets/background/`)
+- **sky.png** — `wide pixel-art side-scroller sky backdrop: blue gradient sky, fluffy clouds,
+  layered snowy mountains in the distance, a silhouetted pine forest along the bottom, a strip
+  of bright grass; retro 16-bit, no characters` (aspect ~16:9; scaled to screen width, shown
+  above the ground line)
+- **cave.png** — `seamless tileable dark underground cave-wall texture, deep teal-green rock,
+  subtle cracks and moss, moody, pixel-art, low detail, tiles edge-to-edge` (make it seamless;
+  128×128 works well; tiled behind the tunnels)
+
 ### Entities (`public/assets/entities/`)
 - **player.png** — `a cheerful little cartoon miner with a round helmet and a glowing headlamp,
   holding a small drill, chibi proportions, big friendly eyes, side view`

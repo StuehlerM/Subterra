@@ -20,6 +20,14 @@ the same name** (keep the filename) and reload the game — no rebuild needed
 | `bedrock.png` | Bedrock (indestructible) |
 | `coal.png` `copper.png` `iron.png` `silver.png` `gold.png` `gem.png` | Ores (cheap → valuable) |
 
+### `background/` (the setting behind everything)
+| File | Layer |
+|------|-------|
+| `sky.png` | Surface backdrop (sky, mountains, trees) shown above the ground line. Any wide image; scaled to screen width. |
+| `cave.png` | Underground backdrop, **tiled** behind your tunnels. Make it **seamless** (e.g. 128×128). |
+
+Open/dug tiles are see-through, so this backdrop shows through your tunnels.
+
 ### `entities/` (transparent background recommended)
 | File | Entity |
 |------|--------|

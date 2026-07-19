@@ -14,13 +14,12 @@ const FUSE_URGENT_SECONDS = 0.6;
 const BLINK_SLOW_MS = 260;
 const BLINK_FAST_MS = 110;
 
-/** Fog: clear within CLEAR, 50% dim out to DIM (double), navy beyond. */
+/** Fog: clear within CLEAR tiles of the miner, fading to hidden by DIM (double). */
 const CLEAR_RADIUS = 4;
 const DIM_RADIUS = 8;
-const DIM_ALPHA = 0.5;
-const DIM_COLOR = 'rgba(10,11,22,';
-const HIDDEN_COLOR = '#0a0b16';
 const FLARE_REVEAL_RADIUS = 5;
+/** Colour of undiscovered ground (a soft navy, not pitch black). */
+const HIDDEN_COLOR = '#0a0b16';
 
 interface Camera {
   readonly x: number;
@@ -28,12 +27,15 @@ interface Camera {
 }
 
 /**
- * Draws the whole scene from the game state to a 2D canvas. The camera centers
- * on the player's (interpolated) position; only visible tiles are drawn.
- * Undiscovered tiles (per the fog) render pitch black; explored tiles stay
- * visible. Entities are hidden while on undiscovered tiles.
+ * Draws the scene from the game state to a 2D canvas. The camera centers on the
+ * miner's interpolated position. A fog mask (built on an offscreen canvas) keeps
+ * explored tiles visible and reveals a smooth, fixed-shape circle around the
+ * miner; everything else is hidden under a soft navy.
  */
 export class CanvasRenderer {
+  private readonly fog = document.createElement('canvas');
+  private readonly fogCtx = this.fog.getContext('2d')!;
+
   constructor(
     private readonly ctx: CanvasRenderingContext2D,
     private readonly assets: AssetRegistry,
@@ -48,23 +50,16 @@ export class CanvasRenderer {
       y: center.y * this.tileSize + this.tileSize / 2 - canvas.height / 2,
     };
 
-    // Center the fog on the smooth (interpolated) position so the lit area tracks
-    // the miner instead of snapping a whole tile each step (which looked like flicker).
     this.revealAround(game, fog);
 
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-    this.drawTiles(game.world, camera, canvas.width, canvas.height, fog, center);
+    this.drawTiles(game.world, camera, canvas.width, canvas.height);
     for (const flare of game.activeFlares) this.drawFlare(flare, camera);
-    for (const rock of game.activeFallingRocks) {
-      if (this.discovered(rock.tile, center, fog)) this.drawFallingRock(rock, camera);
-    }
-    for (const dynamite of game.activeDynamites) {
-      if (this.discovered(dynamite.tile, center, fog)) this.drawDynamite(dynamite, camera);
-    }
-    for (const bat of game.activeBats) {
-      if (this.discovered(bat.tile, center, fog)) this.drawBat(bat, camera);
-    }
+    for (const rock of game.activeFallingRocks) this.drawFallingRock(rock, camera);
+    for (const dynamite of game.activeDynamites) this.drawDynamite(dynamite, camera);
+    for (const bat of game.activeBats) this.drawBat(bat, camera);
     this.drawPlayer(center, camera);
+    this.drawFogMask(camera, fog);
     if (game.knockoutFlash > 0) this.drawKnockoutFlash(game.knockoutFlash);
   }
 
@@ -75,28 +70,7 @@ export class CanvasRenderer {
     }
   }
 
-  /** Whether an entity's tile should be drawn (explored or within the dim ring). */
-  private discovered(tile: Vec2, player: Vec2, fog: FogOfWar): boolean {
-    return fog.isExplored(tile.x, tile.y) || Math.hypot(tile.x - player.x, tile.y - player.y) <= DIM_RADIUS;
-  }
-
-  /** 0 = clear, 0<..<1 = dim overlay, 1 = fully hidden (navy). */
-  private tileDarkness(x: number, y: number, player: Vec2, fog: FogOfWar): number {
-    if (fog.isExplored(x, y)) return 0;
-    const d = Math.hypot(x - player.x, y - player.y);
-    if (d <= CLEAR_RADIUS) return 0;
-    if (d <= DIM_RADIUS) return DIM_ALPHA;
-    return 1;
-  }
-
-  private drawTiles(
-    world: World,
-    camera: Camera,
-    viewW: number,
-    viewH: number,
-    fog: FogOfWar,
-    player: Vec2,
-  ): void {
+  private drawTiles(world: World, camera: Camera, viewW: number, viewH: number): void {
     const minX = Math.floor(camera.x / this.tileSize);
     const minY = Math.floor(camera.y / this.tileSize);
     const maxX = Math.ceil((camera.x + viewW) / this.tileSize);
@@ -104,22 +78,70 @@ export class CanvasRenderer {
 
     for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
-        const px = Math.round(x * this.tileSize - camera.x);
-        const py = Math.round(y * this.tileSize - camera.y);
-        const darkness = this.tileDarkness(x, y, player, fog);
-        if (darkness >= 1) {
-          this.ctx.fillStyle = HIDDEN_COLOR;
-          this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
-          continue;
-        }
         this.ctx.fillStyle = this.assets.tileStyle(world.getTile(x, y)).color;
-        this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
-        if (darkness > 0) {
-          this.ctx.fillStyle = `${DIM_COLOR}${darkness})`;
-          this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
-        }
+        this.ctx.fillRect(
+          Math.round(x * this.tileSize - camera.x),
+          Math.round(y * this.tileSize - camera.y),
+          this.tileSize,
+          this.tileSize,
+        );
       }
     }
+  }
+
+  /**
+   * Builds the fog on an offscreen canvas: solid navy, then "erases" explored
+   * tiles (blocky memory) and a smooth circle around the miner (screen center),
+   * then composites it over the scene. The circle is drawn in pixels, so it is a
+   * fixed shape that never wobbles as the miner moves sub-tile.
+   */
+  private drawFogMask(camera: Camera, fog: FogOfWar): void {
+    const { canvas } = this.ctx;
+    if (this.fog.width !== canvas.width || this.fog.height !== canvas.height) {
+      this.fog.width = canvas.width;
+      this.fog.height = canvas.height;
+    }
+    const f = this.fogCtx;
+    f.globalCompositeOperation = 'source-over';
+    f.fillStyle = HIDDEN_COLOR;
+    f.fillRect(0, 0, canvas.width, canvas.height);
+
+    f.globalCompositeOperation = 'destination-out';
+    this.eraseExploredTiles(camera, fog);
+    this.eraseTorch(canvas.width / 2, canvas.height / 2);
+    f.globalCompositeOperation = 'source-over';
+
+    this.ctx.drawImage(this.fog, 0, 0);
+  }
+
+  private eraseExploredTiles(camera: Camera, fog: FogOfWar): void {
+    const f = this.fogCtx;
+    f.fillStyle = 'rgba(0,0,0,1)';
+    const minX = Math.floor(camera.x / this.tileSize);
+    const minY = Math.floor(camera.y / this.tileSize);
+    const maxX = Math.ceil((camera.x + this.fog.width) / this.tileSize);
+    const maxY = Math.ceil((camera.y + this.fog.height) / this.tileSize);
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        if (!fog.isExplored(x, y)) continue;
+        f.fillRect(
+          Math.round(x * this.tileSize - camera.x),
+          Math.round(y * this.tileSize - camera.y),
+          this.tileSize,
+          this.tileSize,
+        );
+      }
+    }
+  }
+
+  private eraseTorch(cx: number, cy: number): void {
+    const inner = CLEAR_RADIUS * this.tileSize;
+    const outer = DIM_RADIUS * this.tileSize;
+    const gradient = this.fogCtx.createRadialGradient(cx, cy, inner, cx, cy, outer);
+    gradient.addColorStop(0, 'rgba(0,0,0,1)');
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    this.fogCtx.fillStyle = gradient;
+    this.fogCtx.fillRect(cx - outer, cy - outer, outer * 2, outer * 2);
   }
 
   private drawFallingRock(rock: FallingRock, camera: Camera): void {

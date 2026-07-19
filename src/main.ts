@@ -38,12 +38,12 @@ function bootstrap(): void {
   const save = new SaveRepository(SAVE_KEY, window.localStorage);
   const progress = save.load() ?? new PlayerProgress();
 
-  const { world, batSpawns } = World.generateMap(WORLD_WIDTH, WORLD_HEIGHT, DEFAULT_SEED, {
+  const { world, batSpawns, portalSpawns } = World.generateMap(WORLD_WIDTH, WORLD_HEIGHT, DEFAULT_SEED, {
     surfaceRows: SURFACE_ROWS,
     spawn: SPAWN_TILE,
   });
   const player = new Player(SPAWN_TILE);
-  const game = new Game(world, player, progress, SURFACE_ROWS, SPAWN_TILE, batSpawns);
+  const game = new Game(world, player, progress, SURFACE_ROWS, SPAWN_TILE, batSpawns, portalSpawns);
 
   const input = new InputController();
   input.attach(window);

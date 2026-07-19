@@ -54,6 +54,14 @@ describe('World generation', () => {
     }
   });
 
+  it('places return portals on open tiles deep underground', () => {
+    const { world, portalSpawns } = World.generateMap(40, 80, 7);
+    expect(portalSpawns.length).toBeGreaterThan(0);
+    for (const portal of portalSpawns) {
+      expect(world.getTile(portal.x, portal.y)).toBe(TileType.Empty);
+    }
+  });
+
   it('scatters ore into the ground (deterministically for a seed)', () => {
     const world = World.generate(40, 80, 2024);
     let oreCount = 0;

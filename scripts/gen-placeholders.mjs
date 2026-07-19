@@ -3,7 +3,7 @@
 // (same filename) and reload — the game will pick it up. Re-run with:
 //   node scripts/gen-placeholders.mjs
 import { deflateSync } from 'node:zlib';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -28,6 +28,7 @@ const ENTITIES = {
   bat_asleep: '#8a8f98',
   dynamite: '#ff5a3c',
   flare: '#ffa53c',
+  portal: '#a85bd8',
 };
 
 function hexToRgb(hex) {
@@ -103,9 +104,13 @@ function makeBuffer(color, shape) {
 function write(folder, name, color, shape) {
   const dir = join(ROOT, folder);
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, `${name}.png`), encodePng(SIZE, SIZE, makeBuffer(color, shape)));
+  const path = join(dir, `${name}.png`);
+  if (existsSync(path)) return false; // never clobber existing (possibly custom) art
+  writeFileSync(path, encodePng(SIZE, SIZE, makeBuffer(color, shape)));
+  return true;
 }
 
-for (const [name, color] of Object.entries(TILES)) write('tiles', name, color, 'square');
-for (const [name, color] of Object.entries(ENTITIES)) write('entities', name, color, 'circle');
-console.log(`Wrote ${Object.keys(TILES).length} tiles and ${Object.keys(ENTITIES).length} entities to ${ROOT}`);
+let created = 0;
+for (const [name, color] of Object.entries(TILES)) if (write('tiles', name, color, 'square')) created++;
+for (const [name, color] of Object.entries(ENTITIES)) if (write('entities', name, color, 'circle')) created++;
+console.log(`Created ${created} missing placeholder(s) in ${ROOT} (existing files kept).`);

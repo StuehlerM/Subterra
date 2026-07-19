@@ -26,6 +26,7 @@ const ENTITY_FILES: Record<string, string> = {
   bat_asleep: 'entities/bat_asleep.png',
   dynamite: 'entities/dynamite.png',
   flare: 'entities/flare.png',
+  portal: 'entities/portal.png',
 };
 
 /**

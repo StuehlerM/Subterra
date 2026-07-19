@@ -5,7 +5,7 @@ import { FallingRock, RockState } from '../domain/FallingRock';
 import { FLARE_RADIUS, Flare } from '../domain/Flare';
 import { Vec2 } from '../domain/Vec2';
 import { World } from '../domain/World';
-import { TileType } from '../domain/tiles';
+import { TileType, isOre } from '../domain/tiles';
 import { AssetRegistry } from './AssetRegistry';
 import { FogOfWar } from './FogOfWar';
 
@@ -74,6 +74,7 @@ export class CanvasRenderer {
 
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
     this.drawTiles(game.world, camera, canvas.width, canvas.height);
+    for (const portal of game.activePortals) this.drawPortal(portal, camera);
     for (const flare of game.activeFlares) this.drawFlare(flare, camera);
     for (const rock of game.activeFallingRocks) this.drawFallingRock(rock, camera);
     for (const dynamite of game.activeDynamites) this.drawDynamite(dynamite, camera);
@@ -101,13 +102,12 @@ export class CanvasRenderer {
         const tile = world.getTile(x, y);
         const px = Math.round(x * this.tileSize - camera.x);
         const py = Math.round(y * this.tileSize - camera.y);
+        // Fill a base colour first so transparent tile art composites over dirt
+        // (ore/rock) or its own colour, never over bare black.
+        this.ctx.fillStyle = this.tileBacking(tile);
+        this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
         const image = this.assets.tileImage(tile);
-        if (image) {
-          this.ctx.drawImage(image, px, py, this.tileSize, this.tileSize);
-        } else {
-          this.ctx.fillStyle = this.assets.tileStyle(tile).color;
-          this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
-        }
+        if (image) this.ctx.drawImage(image, px, py, this.tileSize, this.tileSize);
       }
     }
   }
@@ -164,6 +164,41 @@ export class CanvasRenderer {
     for (const cell of this.torchPattern) {
       f.fillStyle = `rgba(0,0,0,${cell.alpha})`;
       f.fillRect(Math.round(cx + cell.dx * ts - half), Math.round(cy + cell.dy * ts - half), ts, ts);
+    }
+  }
+
+  private tileBacking(tile: TileType): string {
+    const backing = isOre(tile) || tile === TileType.Rock ? TileType.Sand : tile;
+    return this.assets.tileStyle(backing).color;
+  }
+
+  private drawPortal(tile: Vec2, camera: Camera): void {
+    const cx = tile.x * this.tileSize - camera.x + this.tileSize / 2;
+    const cy = tile.y * this.tileSize - camera.y + this.tileSize / 2;
+    const radius = this.tileSize * 1.1;
+    const pulse = 0.35 + 0.15 * Math.sin(performance.now() / 300);
+    const gradient = this.ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+    gradient.addColorStop(0, `rgba(168,91,216,${pulse})`);
+    gradient.addColorStop(1, 'rgba(168,91,216,0)');
+    this.ctx.fillStyle = gradient;
+    this.ctx.beginPath();
+    this.ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    const image = this.assets.entityImage('portal');
+    if (image) {
+      this.ctx.drawImage(
+        image,
+        Math.round(tile.x * this.tileSize - camera.x),
+        Math.round(tile.y * this.tileSize - camera.y),
+        this.tileSize,
+        this.tileSize,
+      );
+    } else {
+      this.ctx.font = `${Math.floor(this.tileSize * 0.8)}px serif`;
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText('🌀', cx, cy);
     }
   }
 

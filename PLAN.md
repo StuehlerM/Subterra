@@ -54,8 +54,10 @@ falling-rock and bat hazards, procedural generation, an upgrade economy, and gen
   Flares are a consumable (X underground): light one → nearby bats flee and vanish. Awake
   bats tire and re-sleep after losing you for 3s. New Flare-capacity upgrade (🔦). Renderer
   refactored to take the Game; bats 🦇/😴 and flare 🔥 glow drawn. 100 tests passing; build clean.
-- **Phase 6 — Return tech & polish**: Elevator (mid), teleport (late), battery low-warning,
-  depth-scaled ore/hazard tuning, SFX hooks, art-swap pass.
+- **Phase 6 — Return tech & polish** (IN PROGRESS): swappable image assets in public/assets
+  (done); random **return-to-surface portals** (fantasy teleport, cargo kept) placed deep
+  underground (done); tuning — more bedrock + fewer ores so progression is slower (done).
+  Remaining: battery low-warning polish, elevator (optional), SFX hooks, more depth tuning.
 
 ## Menu rework (post-Phase 3) ✅ DONE (76 tests, build clean)
 Surface shop becomes a modal menu that freezes the miner:

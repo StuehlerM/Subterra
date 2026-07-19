@@ -28,6 +28,7 @@ the same name** (keep the filename) and reload the game — no rebuild needed
 | `bat_asleep.png` | Sleeping bat |
 | `dynamite.png` | Placed dynamite (blinks) |
 | `flare.png` | Lit flare (has a glow behind it) |
+| `portal.png` | Return-to-surface portal (has a purple glow behind it) |
 
 The current files are auto-generated placeholders. Regenerate them any time with:
 

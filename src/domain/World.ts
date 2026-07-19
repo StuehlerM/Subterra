@@ -2,7 +2,7 @@ import { Rng } from './Rng';
 import { Vec2 } from './Vec2';
 import { TileType, isSolid } from './tiles';
 
-const DEFAULT_PILLAR_CHANCE = 0.08;
+const DEFAULT_PILLAR_CHANCE = 0.16;
 const DEFAULT_ROCK_CHANCE = 0.05;
 const DEFAULT_SURFACE_ROWS = 3;
 const DEFAULT_SPAWN = new Vec2(1, 1);
@@ -13,10 +13,16 @@ const MIN_CAVE_DEPTH = 8; // rows below the surface before caves may appear
 const CAVE_MAX_WIDTH = 4;
 const CAVE_MAX_HEIGHT = 3;
 
+// Portal tuning: magic gateways that whisk the miner back to the surface.
+const DEFAULT_PORTAL_COUNT = 6;
+const MIN_PORTAL_DEPTH = 10;
+
 export interface GeneratedWorld {
   readonly world: World;
   /** Tiles where a sleeping bat should be placed (cave floors). */
   readonly batSpawns: Vec2[];
+  /** Tiles that hold a return-to-surface portal. */
+  readonly portalSpawns: Vec2[];
 }
 
 interface OreSpec {
@@ -28,13 +34,14 @@ interface OreSpec {
 }
 
 // Rarer/deeper ores first so they claim the low end of the random roll.
+// Chances kept deliberately low so money (and upgrades) come at a steady pace.
 const ORE_SPECS: readonly OreSpec[] = [
-  { tile: TileType.Gem, minDepth: 30, chance: 0.02 },
-  { tile: TileType.Gold, minDepth: 20, chance: 0.04 },
-  { tile: TileType.Silver, minDepth: 12, chance: 0.05 },
-  { tile: TileType.Iron, minDepth: 6, chance: 0.07 },
-  { tile: TileType.Copper, minDepth: 2, chance: 0.08 },
-  { tile: TileType.Coal, minDepth: 1, chance: 0.1 },
+  { tile: TileType.Gem, minDepth: 30, chance: 0.01 },
+  { tile: TileType.Gold, minDepth: 20, chance: 0.02 },
+  { tile: TileType.Silver, minDepth: 12, chance: 0.03 },
+  { tile: TileType.Iron, minDepth: 6, chance: 0.04 },
+  { tile: TileType.Copper, minDepth: 2, chance: 0.05 },
+  { tile: TileType.Coal, minDepth: 1, chance: 0.06 },
 ];
 
 export interface WorldGenOptions {
@@ -101,8 +108,34 @@ export class World {
     }
 
     const batSpawns = World.carveCaves(tiles, width, height, surfaceRows, rng);
+    const portalSpawns = World.placePortals(tiles, width, height, surfaceRows, rng);
     tiles[spawn.y * width + spawn.x] = TileType.Empty;
-    return { world: new World(width, height, tiles), batSpawns };
+    return { world: new World(width, height, tiles), batSpawns, portalSpawns };
+  }
+
+  /**
+   * Scatters return-to-surface portals in the deeper ground. Each portal tile is
+   * carved open so the miner can step onto it once they dig their way in.
+   */
+  private static placePortals(
+    tiles: Uint8Array,
+    width: number,
+    height: number,
+    surfaceRows: number,
+    rng: Rng,
+  ): Vec2[] {
+    const portals: Vec2[] = [];
+    const minY = surfaceRows + MIN_PORTAL_DEPTH;
+    const maxY = height - 2;
+    if (minY > maxY || width < 4) return portals;
+
+    for (let i = 0; i < DEFAULT_PORTAL_COUNT; i++) {
+      const x = rng.range(1, width - 1);
+      const y = rng.range(minY, maxY + 1);
+      tiles[y * width + x] = TileType.Empty;
+      portals.push(new Vec2(x, y));
+    }
+    return portals;
   }
 
   /**

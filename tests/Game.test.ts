@@ -15,10 +15,16 @@ const SURFACE_ROWS = 1;
 const FIXED_DT = 1 / 60;
 const SPAWN = new Vec2(0, 0);
 
-function newGame(rows: string[], tile: Vec2, options = {}, batSpawns: Vec2[] = []): Game {
+function newGame(
+  rows: string[],
+  tile: Vec2,
+  options = {},
+  batSpawns: Vec2[] = [],
+  portalSpawns: Vec2[] = [],
+): Game {
   const world = worldFrom(rows);
   const player = new Player(tile, { moveDuration: MOVE_DURATION, ...options });
-  return new Game(world, player, new PlayerProgress(), SURFACE_ROWS, SPAWN, batSpawns);
+  return new Game(world, player, new PlayerProgress(), SURFACE_ROWS, SPAWN, batSpawns, portalSpawns);
 }
 
 describe('Game movement', () => {
@@ -251,6 +257,16 @@ describe('Game bats and flares', () => {
 
     const atBase = newGame(TUNNEL, new Vec2(0, 0), {});
     expect(atBase.useFlare()).toBe(false);
+  });
+});
+
+describe('Game portals', () => {
+  it('sends the miner home (cargo kept, then sold) when on a portal', () => {
+    const game = newGame(['....', '....', '....'], new Vec2(2, 2), {}, [], [new Vec2(2, 2)]);
+    game.player.cargo.add(15);
+    game.step(FIXED_DT, null);
+    expect(game.player.tile.equals(SPAWN)).toBe(true); // whisked to the surface
+    expect(game.progress.money).toBe(15); // cargo kept and sold, not lost
   });
 });
 

@@ -35,6 +35,7 @@ export class Game {
   private readonly fallingRocks: FallingRock[] = [];
   private readonly bats: Bat[] = [];
   private readonly flares: Flare[] = [];
+  private readonly portals: Vec2[];
 
   constructor(
     public readonly world: World,
@@ -43,10 +44,12 @@ export class Game {
     private readonly surfaceRows: number,
     private readonly spawn: Vec2,
     batSpawns: readonly Vec2[] = [],
+    portalSpawns: readonly Vec2[] = [],
   ) {
     this.player.applyProgress(progress);
     this.settleWorld();
     for (const tile of batSpawns) this.bats.push(new Bat(tile));
+    this.portals = portalSpawns.map((tile) => tile);
   }
 
   step(dt: number, direction: Direction | null): void {
@@ -64,6 +67,7 @@ export class Game {
     this.updateDynamites(dt);
     this.updateFallingRocks(dt);
     this.updateBatsAndFlares(dt);
+    this.usePortalIfStandingOnOne();
     this.handleBase();
     if (this.knockoutTimer > 0) this.knockoutTimer = Math.max(0, this.knockoutTimer - dt);
     this.wasAtBase = atBase;
@@ -106,6 +110,10 @@ export class Game {
 
   get activeFlares(): readonly Flare[] {
     return this.flares;
+  }
+
+  get activePortals(): readonly Vec2[] {
+    return this.portals;
   }
 
   /** 0..1 intensity of the fading knock-out flash (0 = none). */
@@ -228,6 +236,17 @@ export class Game {
     }
     for (let i = this.flares.length - 1; i >= 0; i--) {
       if (this.flares[i].isDone) this.flares.splice(i, 1);
+    }
+  }
+
+  /** Stepping onto a portal instantly whisks the miner home (cargo kept). */
+  private usePortalIfStandingOnOne(): void {
+    if (this.player.isMoving) return;
+    for (const portal of this.portals) {
+      if (this.player.tile.equals(portal)) {
+        this.player.resetTo(this.spawn);
+        return;
+      }
     }
   }
 

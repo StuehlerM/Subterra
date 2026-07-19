@@ -14,10 +14,13 @@ const FUSE_URGENT_SECONDS = 0.6;
 const BLINK_SLOW_MS = 260;
 const BLINK_FAST_MS = 110;
 
-/** Fog reveal radii (in tiles) around the player and around lit flares. */
-const PLAYER_REVEAL_RADIUS = 4;
+/** Fog: clear within CLEAR, 50% dim out to DIM (double), navy beyond. */
+const CLEAR_RADIUS = 4;
+const DIM_RADIUS = 8;
+const DIM_ALPHA = 0.5;
+const DIM_COLOR = 'rgba(10,11,22,';
+const HIDDEN_COLOR = '#0a0b16';
 const FLARE_REVEAL_RADIUS = 5;
-const UNDISCOVERED_COLOR = '#000000';
 
 interface Camera {
   readonly x: number;
@@ -45,32 +48,54 @@ export class CanvasRenderer {
       y: center.y * this.tileSize + this.tileSize / 2 - canvas.height / 2,
     };
 
-    if (fog.enabled) this.revealAround(game, fog);
+    const playerTile = game.player.tile;
+    this.revealAround(game, fog);
 
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-    this.drawTiles(game.world, camera, canvas.width, canvas.height, fog);
+    this.drawTiles(game.world, camera, canvas.width, canvas.height, fog, playerTile);
     for (const flare of game.activeFlares) this.drawFlare(flare, camera);
     for (const rock of game.activeFallingRocks) {
-      if (fog.isVisible(rock.tile.x, rock.tile.y)) this.drawFallingRock(rock, camera);
+      if (this.discovered(rock.tile, playerTile, fog)) this.drawFallingRock(rock, camera);
     }
     for (const dynamite of game.activeDynamites) {
-      if (fog.isVisible(dynamite.tile.x, dynamite.tile.y)) this.drawDynamite(dynamite, camera);
+      if (this.discovered(dynamite.tile, playerTile, fog)) this.drawDynamite(dynamite, camera);
     }
     for (const bat of game.activeBats) {
-      if (fog.isVisible(bat.tile.x, bat.tile.y)) this.drawBat(bat, camera);
+      if (this.discovered(bat.tile, playerTile, fog)) this.drawBat(bat, camera);
     }
     this.drawPlayer(center, camera);
     if (game.knockoutFlash > 0) this.drawKnockoutFlash(game.knockoutFlash);
   }
 
   private revealAround(game: Game, fog: FogOfWar): void {
-    fog.reveal(game.player.tile.x, game.player.tile.y, PLAYER_REVEAL_RADIUS);
+    fog.reveal(game.player.tile.x, game.player.tile.y, CLEAR_RADIUS);
     for (const flare of game.activeFlares) {
       fog.reveal(flare.tile.x, flare.tile.y, FLARE_REVEAL_RADIUS);
     }
   }
 
-  private drawTiles(world: World, camera: Camera, viewW: number, viewH: number, fog: FogOfWar): void {
+  /** Whether an entity's tile should be drawn (explored or within the dim ring). */
+  private discovered(tile: Vec2, player: Vec2, fog: FogOfWar): boolean {
+    return fog.isExplored(tile.x, tile.y) || Math.hypot(tile.x - player.x, tile.y - player.y) <= DIM_RADIUS;
+  }
+
+  /** 0 = clear, 0<..<1 = dim overlay, 1 = fully hidden (navy). */
+  private tileDarkness(x: number, y: number, player: Vec2, fog: FogOfWar): number {
+    if (fog.isExplored(x, y)) return 0;
+    const d = Math.hypot(x - player.x, y - player.y);
+    if (d <= CLEAR_RADIUS) return 0;
+    if (d <= DIM_RADIUS) return DIM_ALPHA;
+    return 1;
+  }
+
+  private drawTiles(
+    world: World,
+    camera: Camera,
+    viewW: number,
+    viewH: number,
+    fog: FogOfWar,
+    player: Vec2,
+  ): void {
     const minX = Math.floor(camera.x / this.tileSize);
     const minY = Math.floor(camera.y / this.tileSize);
     const maxX = Math.ceil((camera.x + viewW) / this.tileSize);
@@ -78,15 +103,20 @@ export class CanvasRenderer {
 
     for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
-        this.ctx.fillStyle = fog.isVisible(x, y)
-          ? this.assets.tileStyle(world.getTile(x, y)).color
-          : UNDISCOVERED_COLOR;
-        this.ctx.fillRect(
-          Math.round(x * this.tileSize - camera.x),
-          Math.round(y * this.tileSize - camera.y),
-          this.tileSize,
-          this.tileSize,
-        );
+        const px = Math.round(x * this.tileSize - camera.x);
+        const py = Math.round(y * this.tileSize - camera.y);
+        const darkness = this.tileDarkness(x, y, player, fog);
+        if (darkness >= 1) {
+          this.ctx.fillStyle = HIDDEN_COLOR;
+          this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
+          continue;
+        }
+        this.ctx.fillStyle = this.assets.tileStyle(world.getTile(x, y)).color;
+        this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
+        if (darkness > 0) {
+          this.ctx.fillStyle = `${DIM_COLOR}${darkness})`;
+          this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
+        }
       }
     }
   }

@@ -1,11 +1,10 @@
 /**
- * Remembers which tiles the player has discovered. Unexplored tiles render
- * pitch black; explored tiles stay visible even after you leave. Rendering-only
- * (no effect on game rules). Reveal is a filled circle around a point.
+ * Remembers which tiles the player has discovered. Explored tiles stay clear
+ * even after you leave; the renderer dims/hides the rest based on distance.
+ * Rendering-only (no effect on game rules).
  */
 export class FogOfWar {
   private readonly explored: Uint8Array;
-  private on = true;
 
   constructor(
     private readonly width: number,
@@ -14,14 +13,7 @@ export class FogOfWar {
     this.explored = new Uint8Array(width * height);
   }
 
-  get enabled(): boolean {
-    return this.on;
-  }
-
-  toggle(): void {
-    this.on = !this.on;
-  }
-
+  /** Marks a filled circle of tiles as discovered. */
   reveal(centerX: number, centerY: number, radius: number): void {
     const r2 = radius * radius;
     for (let dy = -radius; dy <= radius; dy++) {
@@ -36,9 +28,7 @@ export class FogOfWar {
     }
   }
 
-  /** Whether a tile should be drawn. When disabled, everything is visible. */
-  isVisible(x: number, y: number): boolean {
-    if (!this.on) return true;
+  isExplored(x: number, y: number): boolean {
     if (x < 0 || y < 0 || x >= this.width || y >= this.height) return false;
     return this.explored[y * this.width + x] === 1;
   }

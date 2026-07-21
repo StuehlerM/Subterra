@@ -57,4 +57,5 @@
 
 ## Status
 - [x] Plan written
-- [ ] **Awaiting explicit go-ahead**
+- [x] Implemented: 241 tests green, typecheck/build clean, committed
+- [ ] Owner playtest

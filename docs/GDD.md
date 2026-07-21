@@ -196,6 +196,14 @@ Things that differ from the first draft above, decided during build/playtest:
   player actually does the thing; progress saved per slot; legacy saves never see it.
   The stated goal stays **soft** for now — a real win condition (legendary gem at the
   bottom + win screen) is a future-phase idea (§14).
+- **Big UI round (playtest)**: UI scale doubled to 4× (64px icons, ~20px text). The HUD
+  battery is now a **wide segmented battery** (5 discrete blocks, transparent shell from
+  the text-sprite system) that **blinks red on the last segment** and flashes the whole
+  shell when empty. The title got a real menu (START GAME / OPTIONS). **Options**: sound
+  on/off and **language: English / Svenska / Deutsch** — full i18n string tables switched
+  live and persisted; pixel font gained Å Ä Ö Ü (diacritics in the top row); German ß
+  written SS. **Slot delete**: Down on an occupied slot shows a DELETE button, X opens a
+  DELETE? dialog (X = yes, Z = no).
 - **HUD corners polish (playtest)**: money pouch alone top-right; cargo crate bottom-right
   showing its **contents** (mini ore chips + counts, via new `Cargo.contents`); dynamite +
   flare counts beside it; battery + depth top-left. Shop shows all seven **single-word

@@ -82,8 +82,17 @@ describe('Game base economy', () => {
 });
 
 describe('Game surface menu', () => {
-  it('opens the menu on arrival at the surface', () => {
+  it('does not open the menu at game start (you spawn at the surface)', () => {
     const game = newGame(['....', 'ssss'], new Vec2(0, 0));
+    game.step(MOVE_DURATION, null);
+    expect(game.isMenuOpen()).toBe(false);
+  });
+
+  it('opens the menu when arriving at the surface from below', () => {
+    const game = newGame(['....', 'ssss', 'ssss'], new Vec2(0, 1));
+    game.step(MOVE_DURATION, null);
+    expect(game.isMenuOpen()).toBe(false); // still underground
+    game.player.tile = new Vec2(0, 0); // climb to the surface
     game.step(MOVE_DURATION, null);
     expect(game.isMenuOpen()).toBe(true);
   });
@@ -95,14 +104,16 @@ describe('Game surface menu', () => {
   });
 
   it('freezes the miner while the menu is open', () => {
-    const game = newGame(['....', 'ssss'], new Vec2(0, 0));
-    game.step(MOVE_DURATION, null); // opens the menu
+    const game = newGame(['....', 'ssss', 'ssss'], new Vec2(0, 1));
+    game.player.tile = new Vec2(0, 0);
+    game.step(MOVE_DURATION, null); // arrives at the surface -> opens
     game.step(MOVE_DURATION, RIGHT);
     expect(game.player.isMoving).toBe(false);
   });
 
   it('lets the miner move again after Drill again closes the menu', () => {
-    const game = newGame(['....', 'ssss'], new Vec2(0, 0));
+    const game = newGame(['....', 'ssss', 'ssss'], new Vec2(0, 1));
+    game.player.tile = new Vec2(0, 0);
     game.step(MOVE_DURATION, null); // opens the menu
     game.closeMenu();
     game.step(MOVE_DURATION, RIGHT);
@@ -110,7 +121,8 @@ describe('Game surface menu', () => {
   });
 
   it('reopens the menu on the next surface arrival', () => {
-    const game = newGame(['....', 'ssss', 'ssss'], new Vec2(0, 0));
+    const game = newGame(['....', 'ssss', 'ssss'], new Vec2(0, 1));
+    game.player.tile = new Vec2(0, 0);
     game.step(MOVE_DURATION, null); // opens
     game.closeMenu();
     game.player.tile = new Vec2(0, 1); // go underground

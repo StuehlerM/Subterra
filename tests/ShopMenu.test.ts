@@ -16,7 +16,7 @@ function openShop(money = RICH): { game: Game; menu: ShopMenu; purchases: () => 
   const world = worldFrom(['..', 'ss']);
   const player = new Player(new Vec2(0, 0));
   const game = new Game(world, player, new PlayerProgress(money), 1, new Vec2(0, 0), [], []);
-  game.step(FIXED_DT, null); // arrival at base pops the menu
+  (game as unknown as { menuOpen: boolean }).menuOpen = true; // open the surface menu
   let count = 0;
   const menu = new ShopMenu(game, () => count++);
   menu.update();

@@ -55,6 +55,9 @@ export class Game {
     this.settleWorld();
     for (const tile of batSpawns) this.bats.push(new Bat(tile));
     this.portals = portalSpawns.map((tile) => tile);
+    // The miner spawns at the surface, but that shouldn't pop the shop: the
+    // menu only opens when *arriving* at the base after being away.
+    this.wasAtBase = this.isAtBase();
   }
 
   step(dt: number, direction: Direction | null): void {

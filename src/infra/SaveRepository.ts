@@ -49,6 +49,11 @@ export class SaveRepository {
     this.storage.setItem(this.slotKey(slot), JSON.stringify(data));
   }
 
+  /** Wipes a slot back to "NEW GAME". */
+  deleteSlot(slot: number): void {
+    this.storage.removeItem(this.slotKey(slot));
+  }
+
   /** One entry per slot: its money, or null while the slot is empty. */
   slotSummaries(): (SlotSummary | null)[] {
     return Array.from({ length: SLOT_COUNT }, (_, slot) => {

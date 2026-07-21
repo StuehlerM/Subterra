@@ -44,6 +44,99 @@ describe('AppFlow screens', () => {
   });
 });
 
+describe('AppFlow title menu', () => {
+  it('up/down move between start and options, clamped', () => {
+    const flow = new AppFlow(SLOT_COUNT);
+    expect(flow.titleCursor).toBe(0);
+    flow.moveVertical(-1);
+    expect(flow.titleCursor).toBe(0);
+    flow.moveVertical(1);
+    expect(flow.titleCursor).toBe(1);
+    flow.moveVertical(1);
+    expect(flow.titleCursor).toBe(1);
+  });
+
+  it('confirm opens the slot picker from START and options from OPTIONS', () => {
+    const start = new AppFlow(SLOT_COUNT);
+    start.pressConfirm();
+    expect(start.screen).toBe(Screen.SlotSelect);
+
+    const options = new AppFlow(SLOT_COUNT);
+    options.moveVertical(1);
+    options.pressConfirm();
+    expect(options.screen).toBe(Screen.Options);
+  });
+
+  it('options: up/down move over the two entries and Z goes back', () => {
+    const flow = new AppFlow(SLOT_COUNT);
+    flow.moveVertical(1);
+    flow.pressConfirm();
+    expect(flow.optionsCursor).toBe(0);
+    flow.moveVertical(1);
+    expect(flow.optionsCursor).toBe(1);
+    flow.moveVertical(1);
+    expect(flow.optionsCursor).toBe(1);
+    flow.pressBack();
+    expect(flow.screen).toBe(Screen.Title);
+  });
+});
+
+describe('AppFlow slot delete', () => {
+  function pickerWithOccupied(occupied: boolean[]): AppFlow {
+    const flow = new AppFlow(SLOT_COUNT);
+    flow.updateOccupancy(occupied);
+    flow.pressConfirm();
+    return flow;
+  }
+
+  it('down on an occupied slot highlights DELETE; up returns', () => {
+    const flow = pickerWithOccupied([true, false, false]);
+    flow.moveVertical(1);
+    expect(flow.onDeleteRow).toBe(true);
+    flow.moveVertical(-1);
+    expect(flow.onDeleteRow).toBe(false);
+  });
+
+  it('down on an empty slot does nothing', () => {
+    const flow = pickerWithOccupied([false, false, false]);
+    flow.moveVertical(1);
+    expect(flow.onDeleteRow).toBe(false);
+  });
+
+  it('confirm on DELETE asks for confirmation; confirm again returns to picker', () => {
+    const flow = pickerWithOccupied([true, false, false]);
+    flow.moveVertical(1);
+    flow.pressConfirm();
+    expect(flow.screen).toBe(Screen.ConfirmDelete);
+    flow.pressConfirm();
+    expect(flow.screen).toBe(Screen.SlotSelect);
+    expect(flow.onDeleteRow).toBe(false);
+  });
+
+  it('Z cancels the confirmation dialog', () => {
+    const flow = pickerWithOccupied([true, false, false]);
+    flow.moveVertical(1);
+    flow.pressConfirm();
+    flow.pressBack();
+    expect(flow.screen).toBe(Screen.SlotSelect);
+  });
+
+  it('moving to another slot leaves the delete row', () => {
+    const flow = pickerWithOccupied([true, true, false]);
+    flow.moveVertical(1);
+    flow.navigate(1);
+    expect(flow.onDeleteRow).toBe(false);
+    expect(flow.slotCursor).toBe(1);
+  });
+
+  it('never starts the game from the delete row', () => {
+    const flow = pickerWithOccupied([true, false, false]);
+    flow.moveVertical(1);
+    flow.pressConfirm();
+    expect(flow.screen).not.toBe(Screen.Playing);
+  });
+});
+
 describe('AppFlow pause', () => {
   function playingFlow(): AppFlow {
     const flow = new AppFlow(SLOT_COUNT);

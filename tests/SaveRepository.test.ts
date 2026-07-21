@@ -66,6 +66,15 @@ describe('SaveRepository slots', () => {
     expect(save.slotSummaries()[0]).toBeNull();
   });
 
+  it('deletes a slot back to empty without touching the others', () => {
+    const save = repo();
+    save.saveSlot(0, 42, new PlayerProgress(100));
+    save.saveSlot(1, 7, new PlayerProgress(50));
+    save.deleteSlot(0);
+    expect(save.loadSlot(0)).toBeNull();
+    expect(save.loadSlot(1)?.progress.money).toBe(50);
+  });
+
   it('rejects out-of-range slot indices', () => {
     expect(() => repo().loadSlot(3)).toThrow(/slot/i);
     expect(() => repo().loadSlot(-1)).toThrow(/slot/i);

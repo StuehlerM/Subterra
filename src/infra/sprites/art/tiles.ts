@@ -148,10 +148,14 @@ const ORE_VEIN_VARIANTS: TextureGrid[] = [
   ],
 ];
 
-/** Duller stone-sand ground the veins sit in (shared by all ores). */
+/**
+ * Cool stone-grey host rock the veins sit in (shared by all ores). Kept darker
+ * than iron's (#a7a19a) and silver's (#d7dce0) vein tones so those grey ores
+ * still read clearly against it.
+ */
 const ORE_GROUND = {
-  a: '#b89a52',
-  b: '#9c8140',
+  a: '#6f747b',
+  b: '#595e64',
 };
 
 function ore(vein: string, highlight: string, shadow: string): SpriteDefinition {

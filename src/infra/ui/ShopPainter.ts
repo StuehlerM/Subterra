@@ -24,7 +24,7 @@ const PIP_GAP = 5;
 const DIM_ALPHA = 0.55;
 const UNAFFORDABLE_ALPHA = 0.4;
 const PIP_ON = '#ffe36e';
-const PIP_OFF = '#3a2c1a';
+const PIP_OFF = '#5c626b';
 const COST_TEXT_SCALE = 2;
 const COST_COIN_SCALE = 2;
 

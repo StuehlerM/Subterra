@@ -79,9 +79,10 @@ const PANEL_SHAPE: TextureGrid = (() => {
 })();
 
 export const PANELS: Record<'wood' | 'stone', SpriteDefinition> = {
+  // 'wood' is the main UI panel — now a light-stone grey.
   wood: {
     frames: [PANEL_SHAPE],
-    palette: { o: '#3a2416', l: '#b8804a', w: '#8a5a30', d: '#5c3a1e' },
+    palette: { o: '#3f444c', l: '#d3d8de', w: '#9aa0a9', d: '#71767e' },
   },
   stone: {
     frames: [PANEL_SHAPE],

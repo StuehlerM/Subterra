@@ -109,13 +109,22 @@
   again** button, Up → back, **X** confirms (buy or leave), **Z** closes instantly.
 - (Touch on-screen D-pad + 2 buttons: later.)
 
-## 12. Art & Audio (text-grid sprites, zero image files)
+## 12. Art & Audio (text-grid sprites + text-notation sound, zero asset files)
 - Every sprite is a **text grid + palette in the source** (`src/infra/sprites/art/`);
   the **AssetRegistry** bakes each grid once onto a cached canvas at startup and the
   renderer blits those like decoded PNGs. Animation = extra frame grids; ores share one
   vein shape with per-ore palettes. `scripts/png-to-grid.mjs` converts pixel-editor PNGs
   into grids (with `--palette` matching onto shared named colours).
-- Audio: optional simple SFX later (dig, explosion, coin, bat).
+- Audio is **text too**, zero dependencies and zero sound files: notes like
+  `"C4 . E4 - G4 | ..."` (`.` sustains, `-` rests, `|` bar-checks) are parsed by a pure,
+  unit-tested notation module (`src/infra/audio/notation.ts`) and played by a thin
+  WebAudio synth (oscillators + filtered noise + envelopes). Instruments are named
+  presets — the sound equivalent of palettes. Three mild music loops (title / mining /
+  deep-cave, switched by depth with hysteresis) and ~19 SFX (walk tick every 2nd step,
+  drill, per-tier ore chimes, sell, upgrade, menu blips, dynamite, explosion, flare,
+  bat wake, knockout, portal) live as strings in `tracks.ts` / `sfx.ts`. Trigger rules
+  are a testable snapshot-diffing `AudioDirector`. **M** mutes (persisted); the pause
+  panel shows the speaker state; the AudioContext unlocks on the first keypress.
 
 ## 13. Save/Persistence
 - **localStorage** save: money, upgrades, world seed, base position. (Save the *meta*,

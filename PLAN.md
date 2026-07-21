@@ -1,78 +1,73 @@
-# PLAN — Text & tutorial (relaxing the no-words policy)
+# PLAN — Sound: text-notation music & SFX (zero dependencies)
 
-> Previous tasks (text-sprite system, canvas UI + save slots) are complete — see
-> git history. Sound/SFX remains the phase after this one.
+> Previous tasks (sprites, canvas UI, text & tutorial) complete — see git history.
 
 ## Task
-Add a small amount of **written text** to the UI plus a **contextual first-run
-tutorial**, while keeping the pictogram-first philosophy and the zero-asset
-pipeline (letters become new 3×5 text-grid glyphs — still no fonts, no images).
+Add audio with the same philosophy as the art: **sounds are text in the source**.
+A pure, unit-tested notation parser turns strings like `"C4 . E4 - G4"` into
+timed note events; a thin WebAudio synth plays them. No libraries, no audio
+files — the whole soundtrack ships inside the JS bundle.
 
-## Decisions (owner-approved defaults)
-- **Language: English**, but all strings live in one string table
-  (`src/app/strings.ts`) so translation later is a file swap.
-- **Where text appears** (supplement, not replacement):
-  - Title: game name **"DEEP DIGGERS"** + "PRESS X".
-  - Slot picker: **"NEW GAME"** on empty slots; money stays on used slots.
-  - Shop: the **highlighted** upgrade's name under the row; "DRILL AGAIN" on
-    the button.
-  - Pause: **"PAUSED"**.
-- **Tutorial**: contextual one-time hints during a slot's first run, shown in a
-  wood banner at the bottom; each advances when the action happens (or X):
-  1. On first spawn: "DIG DOWN WITH THE ARROWS!"
-  2. First ore collected: "ORE! FILL YOUR CARGO!"
-  3. Cargo full or battery low first time: "GO UP AND SELL AT THE TOP!"
-  4. First shop open: "BUY UPGRADES WITH X!"
-  5. After first purchase / shop close: "DIG DEEP AND GET RICH!" (soft goal)
-  - Tutorial progress is **saved per slot**; a finished tutorial never returns.
-- **Goal**: soft goal only for now ("dig deep and get rich"). A real win
-  condition (legendary gem at the bottom + win screen) is noted as a future
-  phase in the roadmap, not built now.
-- **Font**: extend the existing 3×5 pixel digit font with **A–Z and ! ' ?**,
-  uppercase only, rendered at 2× like the digits. No new render tech.
+## Decisions (owner-approved)
+- **Zero dependencies** (no ZzFX/Tone.js). WebAudio oscillators + noise +
+  envelopes, hand-rolled. If an effect ever feels weak we can vendor ZzFX later.
+- **Notation**: `C4`/`F#3`/`Bb2` notes with octave, `.` sustains the previous
+  note (like the sprite dots), `-` rest, `|` bar check. Tempo per track;
+  instruments are named presets (wave, attack, release, volume, noise, glide)
+  — "palettes for sound".
+- **Music: 3 mild loops** — `title` (calm), `mining` (light, main gameplay),
+  `deep` (sparse, below a depth threshold). Music volume well under SFX.
+- **SFX**: walk (very soft tick — "not annoying", tune at playtest), drill,
+  ore break (chime pitched by ore tier), sell/coins, upgrade purchase, menu
+  move/confirm, dynamite place + explosion, flare, bat wake, knockout, portal.
+- **Mute**: **M** toggles sound (classic), persisted in localStorage; the pause
+  panel shows the speaker state + an M hint. Speaker on/off = two new 16×16
+  icon grids.
+- **Autoplay rule**: AudioContext unlocks on the first keypress (the title's
+  "PRESS X"); music starts at the slot picker.
 
-## Architecture
-- `src/infra/sprites/art/ui.ts` — extend `DIGIT_FONT` → full `PIXEL_FONT`
-  (A–Z, 0–9, `/ ! ? '` and space); art-validation tests cover every glyph.
-- `src/app/strings.ts` — every user-facing string as a named constant.
-- `src/app/Tutorial.ts` — **pure, tested** step machine. Inputs are game
-  events/observations (`update(game)` derives: dug first tile? cargo has ore?
-  cargo full/battery low? menu open? bought something?); outputs
-  `currentHint(): string | null`. Serializes to a small `{ step }` blob.
-- `SaveRepository` — slot blob gains optional `tutorialStep` (backwards
-  compatible: missing field = tutorial finished for old saves, EXCEPT brand-new
-  slots start at step 0). Tested.
-- `src/infra/ui/` — `UiPainter.text()` learns letters (same code path);
-  `HintPainter` (bottom wood banner + text + blinking X key); ShopPainter adds
-  the selected upgrade's name; ScreenPainters add title/slot/pause labels.
-- `main.ts` — owns a `Tutorial` per session; saves step with the slot.
+## Architecture (dependencies stay infra → app → domain)
+- `src/infra/audio/notation.ts` — **pure, no WebAudio**: note→frequency
+  (A4 = 440), parser producing `NoteEvent { timeBeats, durationBeats, freq }`
+  per channel; errors carry token position; bar-length validation.
+- `src/infra/audio/instruments.ts` — preset table (typed params, no magic
+  numbers in the synth).
+- `src/infra/audio/tracks.ts` + `sfx.ts` — the actual "sheet music" as text.
+- `src/infra/audio/Synth.ts` — thin WebAudio layer: one voice = oscillator
+  (or noise buffer) + gain envelope; schedules a parsed event list at a time.
+- `src/infra/audio/AudioEngine.ts` — facade: `unlock()`, `playSfx(name)`,
+  `playMusic(name)` (loop scheduler with lookahead, tiny fade on switch),
+  `toggleMuted()` persisted via injected Storage.
+- `src/infra/audio/AudioDirector.ts` — observes per-frame game **snapshots**
+  (pure delta logic, testable): walk vs drill (via `player.lastDug`), ore
+  collected (cargo up + which tile), explosion (active dynamite gone), flare,
+  bat wake, knockout (flash rising edge), portal (position jump), arrival
+  (menu opens). Purchases/menu nav hook the existing main.ts call sites.
+- `main.ts` — engine + director wiring; music choice by screen/depth;
+  InputController gains `consumeMute()` (M key).
 
 ## Steps (TDD; commit per milestone)
-1. **Font glyphs** — RED: validation tests for A–Z/punctuation (3×5, distinct,
-   parse). GREEN: author the glyphs. Extend `UiPainter.text` width tests? (pure
-   `textWidth` already covered by logic — keep painter thin.)
-2. **Strings table** — trivial module + test that all tutorial/UI strings only
-   use characters the font has (great guard!).
-3. **Tutorial machine** — RED: step advancement from game states (dig → ore →
-   return → shop → done), X-skip, serialization round-trip, per-slot
-   persistence rules. GREEN: implement.
-4. **Save integration** — RED: slot blob round-trips `tutorialStep`; legacy
-   blobs load as finished. GREEN.
-5. **Painters + wiring** — HintPainter banner, shop upgrade names, title/pause
-   labels, slot "NEW GAME"; wire tutorial into main.ts session + save.
-6. **Playtest + polish** — owner checks readability (2× font) + hint pacing.
-7. **Docs** — GDD (§11 controls/UI, §16 deviations: no-words policy relaxed,
-   soft goal), HANDOVER, README; add legendary-gem win condition to roadmap
-   ideas.
+1. **Notation parser** — RED: note names/octaves/sharps/flats → Hz, sustain
+   dots merge into duration, rests, bar validation errors with position,
+   tempo→seconds helper, multi-channel alignment. GREEN: implement.
+2. **Instruments + tracks + SFX data** — RED: every track/sfx parses; channels
+   align; every SFX the director needs exists; SFX are short (≤ ~1.5 s);
+   ore-chime helper covers all 6 tiers. GREEN: compose the audio.
+3. **Mute store + AudioDirector** — RED: mute persistence round-trip (fake
+   Storage); director snapshot deltas fire the right SFX names exactly once.
+   GREEN: implement. (Synth/Engine stay thin, verified by ear.)
+4. **Wiring** — M key, pause-panel speaker + hint, unlock on first gesture,
+   music per screen (+ `deep` under depth threshold), director in the loop.
+5. **Playtest** — owner checks: music mildness, walk tick annoyance, mix
+   levels; tune text/presets (one-line edits).
+6. **Docs** — GDD §12 (audio = text notation), HANDOVER, README.
 
 ## Verification
-- All existing 179 tests stay green + new font/strings/tutorial/save tests.
-- Typecheck + build clean; still zero image/font files shipped.
-- Manual: new slot shows hints in order and never again after finishing;
-  old slot (migrated) shows no hints; all text readable at 1080p.
+- All existing 189 tests stay green + new parser/data/director/mute tests.
+- Typecheck + build clean; still zero binary assets of any kind.
+- Manual: title → music starts after first key; mining loop in game; deep loop
+  far down; M mutes everywhere and survives reload; pause shows speaker state.
 
 ## Status
 - [x] Plan written
-- [x] Steps 1–5 implemented (font letters, strings table, tutorial machine,
-      per-slot persistence, painters + wiring) — 189 tests, build clean
-- [ ] Owner playtest (step 6), then docs already updated (step 7)
+- [ ] **Awaiting explicit go-ahead — do not implement before owner approval**

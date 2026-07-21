@@ -1,13 +1,23 @@
 # Session Handover — Deep Diggers
 
-Last updated: after the **canvas game UI** (title + 3 save slots, HUD, shop, pause).
+Last updated: after **text-notation audio** (music + SFX, zero deps, zero files).
 
 ## TL;DR
 Kid-friendly 2D mining game (TypeScript + HTML5 Canvas, Vite, Vitest, **no engine**).
 Phases 0–5 done + text-sprite art system + canvas UI, committed locally (not pushed).
-**179 tests pass**, typecheck + build clean; `dist/` contains **zero image files**
-(~15.5 KiB gzipped total). Next planned phase: **sound/SFX**. Also open: battery
-low-warning polish, depth tuning.
+**222 tests pass**, typecheck + build clean; `dist/` contains **zero asset files of
+any kind** (~20 KiB gzipped total). Open: battery low-warning polish, depth tuning,
+legendary-gem win condition (GDD §14).
+
+## Audio system (current session)
+- `src/infra/audio/`: `notation.ts` pure parser ("C4 . E4 - | ..." → NoteEvents,
+  tested), `instruments.ts` presets, `tracks.ts` 3 music loops as text,
+  `sfx.ts` 19 SFX as text, `Synth.ts` + `AudioEngine.ts` thin WebAudio layer
+  (lookahead loop scheduler, bus gains, track fade), `AudioDirector.ts` tested
+  snapshot-diff trigger rules, `MuteStore.ts` persisted M-key mute.
+- Music: title (calm) / mining (light) / deep (sparse, depth >25, hysteresis <18).
+- Player gained `justCollected` (ore type) for per-tier chimes.
+- Unlock: first keydown resumes AudioContext (title "PRESS X" doubles as unlock).
 
 ## Canvas UI (current session)
 - `src/app/AppFlow.ts` — tested screen state machine Title → SlotSelect → Playing ⇄
@@ -57,6 +67,8 @@ Every sprite is a character grid + palette in source (`src/infra/sprites/art/`):
 | Fog of war | ✅ (playtest) | Rendering-only torch/vignette around the miner; flares light their area |
 | Text-sprite art | ✅ | All art as text grids baked to canvases; zero shipped images; PNG→grid converter |
 | Canvas game UI | ✅ | Title + 3 per-seed save slots, wood/stone panels, pixel HUD w/ battery gauge, canvas shop, Esc/blur pause |
+| Text & tutorial | ✅ | Pixel font A–Z, strings table, 5 contextual first-run hints saved per slot |
+| Audio | ✅ | Text-notation music (3 loops) + 19 SFX, zero deps/files, M mute, AudioDirector triggers |
 | 6 Return tech & polish | ⏭️ partial | Portals + tuning done; remaining: **sound/SFX (next)**, low-battery warning, elevator (opt.) |
 
 Roadmap: `PLAN.md`. Design + deviations: `docs/GDD.md` (§16 decisions log). ADRs: `docs/adr/`.
@@ -66,7 +78,7 @@ Node/npm are the **Windows** install. `npm` throws `EISDIR` on stderr under WSL 
 through `cmd.exe` with redirected stdio:
 ```bash
 cd /mnt/d/ProjectGame/MiningGame
-cmd.exe /c "npm test        < NUL 1> out.txt 2> err.txt"; cat out.txt   # 179 tests
+cmd.exe /c "npm test        < NUL 1> out.txt 2> err.txt"; cat out.txt   # 222 tests
 cmd.exe /c "npm run build    < NUL 1> out.txt 2> err.txt"; cat out.txt
 cmd.exe /c "npm run dev      < NUL 1> out.txt 2> err.txt" &            # open the printed URL
 ```

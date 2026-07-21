@@ -80,7 +80,7 @@ export class ScreenPainters {
     });
   }
 
-  pause(): void {
+  pause(muted: boolean): void {
     this.ui.dim(0.6);
     const { canvas } = this.ctx;
     const x = Math.round((canvas.width - PAUSE_PANEL) / 2);
@@ -95,6 +95,14 @@ export class ScreenPainters {
       y + PAUSE_PANEL - GLYPH_H * LABEL_TEXT_SCALE - 16,
       LABEL_TEXT_SCALE,
     );
+
+    // Sound state under the panel: speaker icon + the key that flips it.
+    const hintW = ICON_PX + 8 + this.ui.textWidth(STRINGS.pressM, LABEL_TEXT_SCALE);
+    const hintX = Math.round((canvas.width - hintW) / 2);
+    const hintY = y + PAUSE_PANEL + 16;
+    this.ui.icon(muted ? 'speaker_off' : 'speaker_on', hintX, hintY, SCALE);
+    const textY = hintY + Math.round((ICON_PX - GLYPH_H * LABEL_TEXT_SCALE) / 2);
+    this.ui.text(STRINGS.pressM, hintX + ICON_PX + 8, textY, LABEL_TEXT_SCALE);
   }
 
   /** Sky ramp above two rows of sand — the world the menus lead into. */

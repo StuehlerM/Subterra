@@ -405,6 +405,54 @@ const WARNING: SpriteDefinition = {
   palette: { t: '#ffcf3f', k: '#2b2b35' },
 };
 
+const SPEAKER_ON: SpriteDefinition = {
+  frames: [
+    [
+      '................',
+      '................',
+      '................',
+      '.......ss.......',
+      '......sss..w....',
+      '.....ssss.w.w...',
+      '..sssssss..w.w..',
+      '..sssssss.w.w.w.',
+      '..sssssss.w.w.w.',
+      '..sssssss.w.w.w.',
+      '..sssssss..w.w..',
+      '.....ssss.w.w...',
+      '......sss..w....',
+      '.......ss.......',
+      '................',
+      '................',
+    ],
+  ],
+  palette: { s: '#e8e0d0', w: '#9fd0ff' },
+};
+
+const SPEAKER_OFF: SpriteDefinition = {
+  frames: [
+    [
+      '................',
+      '................',
+      '................',
+      '.......ss.......',
+      '......sss.......',
+      '.....ssss.......',
+      '..sssssss.r..r..',
+      '..sssssss..rr...',
+      '..sssssss..rr...',
+      '..sssssss.r..r..',
+      '..sssssss.......',
+      '.....ssss.......',
+      '......sss.......',
+      '.......ss.......',
+      '................',
+      '................',
+    ],
+  ],
+  palette: { s: '#8a8f98', r: '#e04a3a' },
+};
+
 export const UI_ICONS: Record<string, SpriteDefinition> = {
   coin: COIN,
   crate: CRATE,
@@ -421,6 +469,8 @@ export const UI_ICONS: Record<string, SpriteDefinition> = {
   plus: PLUS,
   drill_down: DRILL_DOWN,
   warning: WARNING,
+  speaker_on: SPEAKER_ON,
+  speaker_off: SPEAKER_OFF,
 };
 
 // ------------------------------------------------------------------ emblem

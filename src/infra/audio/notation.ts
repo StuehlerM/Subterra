@@ -70,8 +70,8 @@ export function parseChannel(text: string, beatsPerBar?: number): ParsedChannel 
     }
     try {
       events.push({ timeBeats: time, durationBeats: 1, freq: noteToFrequency(token) });
-    } catch (cause) {
-      throw new Error(`Bad note at ${position}`, { cause });
+    } catch (error) {
+      throw new Error(`Bad note at ${position}: ${(error as Error).message}`);
     }
     lastWasNote = true;
     time++;

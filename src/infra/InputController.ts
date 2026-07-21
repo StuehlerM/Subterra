@@ -14,6 +14,7 @@ const KEY_DIRECTIONS: Record<string, Direction> = {
 const DYNAMITE_KEY = 'KeyZ';
 const CONFIRM_KEY = 'KeyX';
 const PAUSE_KEY = 'Escape';
+const MUTE_KEY = 'KeyM';
 const MAX_NAV_QUEUE = 8;
 
 /**
@@ -27,6 +28,7 @@ export class InputController {
   private dynamitePressed = false;
   private confirmPressed = false;
   private pausePressed = false;
+  private mutePressed = false;
 
   attach(target: Window): void {
     target.addEventListener('keydown', (event) => this.onKeyDown(event));
@@ -66,6 +68,13 @@ export class InputController {
     return pressed;
   }
 
+  /** M: the classic mute toggle (also a meta key). */
+  consumeMute(): boolean {
+    const pressed = this.mutePressed;
+    this.mutePressed = false;
+    return pressed;
+  }
+
   private onKeyDown(event: KeyboardEvent): void {
     const direction = KEY_DIRECTIONS[event.code];
     if (direction) {
@@ -84,6 +93,9 @@ export class InputController {
     } else if (event.code === PAUSE_KEY) {
       event.preventDefault();
       this.pausePressed = true;
+    } else if (event.code === MUTE_KEY) {
+      event.preventDefault();
+      this.mutePressed = true;
     }
   }
 

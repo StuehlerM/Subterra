@@ -10,6 +10,7 @@ export const STRINGS = {
   newGame: 'NEW GAME',
   paused: 'PAUSED',
   drillAgain: 'DRILL AGAIN',
+  pressM: 'PRESS M',
 } as const;
 
 /** Shown one at a time during a slot's first run (see app/Tutorial.ts). */

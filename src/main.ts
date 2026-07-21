@@ -13,10 +13,14 @@ import { FixedTimestep } from './app/FixedTimestep';
 import { Game } from './app/Game';
 import { ShopMenu } from './app/ShopMenu';
 import { Tutorial, TUTORIAL_DONE } from './app/Tutorial';
+import { BatState } from './domain/Bat';
 import { Player } from './domain/Player';
 import { PlayerProgress } from './domain/PlayerProgress';
 import { World } from './domain/World';
 import { AssetRegistry } from './infra/AssetRegistry';
+import { AudioDirector } from './infra/audio/AudioDirector';
+import { AudioEngine } from './infra/audio/AudioEngine';
+import { MuteStore } from './infra/audio/MuteStore';
 import { CanvasRenderer } from './infra/CanvasRenderer';
 import { FogOfWar } from './infra/FogOfWar';
 import { InputController } from './infra/InputController';
@@ -29,6 +33,11 @@ import { UiAssets } from './infra/ui/UiAssets';
 import { UiPainter } from './infra/ui/UiPainter';
 
 const SAVE_KEY = 'deep-diggers-save-v1';
+const MUTE_KEY = 'deep-diggers-muted';
+/** Below this depth (in tiles) the sparse cave music takes over... */
+const DEEP_MUSIC_DEPTH = 25;
+/** ...and only above this depth does the mining theme come back (hysteresis). */
+const MINING_MUSIC_DEPTH = 18;
 
 /** Everything belonging to one running game (one save slot). */
 interface Session {
@@ -38,6 +47,7 @@ interface Session {
   readonly menu: ShopMenu;
   readonly fog: FogOfWar;
   readonly tutorial: Tutorial;
+  readonly audioDirector: AudioDirector;
   wasMenuOpen: boolean;
   boughtSomething: boolean;
 }
@@ -46,7 +56,7 @@ function rollSeed(): number {
   return (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
 }
 
-function startSession(save: SaveRepository, slot: number): Session {
+function startSession(save: SaveRepository, slot: number, onPurchaseSound: () => void): Session {
   const stored = save.loadSlot(slot);
   const seed = stored?.seed ?? rollSeed();
   const progress = stored?.progress ?? new PlayerProgress();
@@ -66,10 +76,12 @@ function startSession(save: SaveRepository, slot: number): Session {
     game,
     menu: new ShopMenu(game, () => {
       session.boughtSomething = true;
+      onPurchaseSound();
       save.saveSlot(slot, seed, progress, session.tutorial.step);
     }),
     fog: new FogOfWar(WORLD_WIDTH, WORLD_HEIGHT),
     tutorial,
+    audioDirector: new AudioDirector(),
     wasMenuOpen: false,
     boughtSomething: false,
   };
@@ -77,15 +89,19 @@ function startSession(save: SaveRepository, slot: number): Session {
 }
 
 /** Routes edge-triggered keys while playing: shop menu vs gameplay actions. */
-function handlePlayingActions(session: Session, input: InputController): void {
+function handlePlayingActions(session: Session, input: InputController, audio: AudioEngine): void {
   const { game, menu } = session;
   if (game.isMenuOpen()) {
     let nav = input.consumeNav();
     while (nav) {
       menu.navigate(nav);
+      audio.playSfx('menu_move');
       nav = input.consumeNav();
     }
-    if (input.consumeConfirm()) menu.confirm();
+    if (input.consumeConfirm()) {
+      audio.playSfx('menu_confirm');
+      menu.confirm();
+    }
     if (input.consumeDynamite()) game.closeMenu(); // Z is a quick "drill again"
   } else {
     while (input.consumeNav()) {
@@ -97,14 +113,18 @@ function handlePlayingActions(session: Session, input: InputController): void {
 }
 
 /** Routes keys on the title / slot picker screens; returns a picked slot. */
-function handleMenuActions(flow: AppFlow, input: InputController): number | null {
+function handleMenuActions(flow: AppFlow, input: InputController, audio: AudioEngine): number | null {
   let chosenSlot: number | null = null;
   let nav = input.consumeNav();
   while (nav) {
-    if (nav.dx !== 0) flow.navigate(nav.dx as -1 | 1);
+    if (nav.dx !== 0) {
+      flow.navigate(nav.dx as -1 | 1);
+      audio.playSfx('menu_move');
+    }
     nav = input.consumeNav();
   }
   if (input.consumeConfirm()) {
+    audio.playSfx('menu_confirm');
     const before: Screen = flow.screen;
     flow.pressConfirm();
     if (before === Screen.SlotSelect && flow.screen === Screen.Playing) {
@@ -138,10 +158,13 @@ function bootstrap(): void {
   const hints = new HintPainter(ctx, ui);
   const screens = new ScreenPainters(ctx, ui, worldAssets);
 
+  const audio = new AudioEngine(new MuteStore(MUTE_KEY, window.localStorage));
   const flow = new AppFlow(SLOT_COUNT);
   const input = new InputController();
   input.attach(window);
   window.addEventListener('blur', () => flow.windowBlurred());
+  // Browsers only allow audio after a user gesture; the first key unlocks it.
+  window.addEventListener('keydown', () => audio.unlock(), { once: true });
 
   const timestep = new FixedTimestep(FIXED_DT);
   let session: Session | null = null;
@@ -152,18 +175,30 @@ function bootstrap(): void {
     last = now;
 
     if (input.consumePause()) flow.pressPause();
+    if (input.consumeMute()) audio.toggleMuted();
 
     if (flow.screen === Screen.Playing && session) {
       stepGame(session, frameDt);
     } else if (flow.screen === Screen.Title || flow.screen === Screen.SlotSelect) {
-      const chosen = handleMenuActions(flow, input);
-      if (chosen !== null) session = startSession(save, chosen);
+      const chosen = handleMenuActions(flow, input, audio);
+      if (chosen !== null) session = startSession(save, chosen, () => audio.playSfx('upgrade'));
     } else {
       drainInput();
     }
 
+    audio.playMusic(chooseMusic());
+    audio.keepPlaying();
     draw(now);
     requestAnimationFrame(frame);
+  };
+
+  let inDeepMusic = false;
+  const chooseMusic = (): string => {
+    if (flow.screen === Screen.Title || flow.screen === Screen.SlotSelect) return 'title';
+    const depth = session ? session.game.depth() : 0;
+    if (depth > DEEP_MUSIC_DEPTH) inDeepMusic = true;
+    else if (depth < MINING_MUSIC_DEPTH) inDeepMusic = false;
+    return inDeepMusic ? 'deep' : 'mining';
   };
 
   const stepGame = (active: Session, frameDt: number): void => {
@@ -171,8 +206,12 @@ function bootstrap(): void {
     for (let i = 0; i < steps; i++) {
       active.game.step(FIXED_DT, input.currentDirection());
     }
-    handlePlayingActions(active, input);
+    handlePlayingActions(active, input, audio);
     active.menu.update();
+
+    for (const sound of active.audioDirector.update(snapshotFor(active))) {
+      audio.playSfx(sound);
+    }
 
     active.tutorial.update({
       underground: active.game.depth() > 0,
@@ -189,6 +228,20 @@ function bootstrap(): void {
     }
     active.wasMenuOpen = menuOpen;
   };
+
+  const snapshotFor = (active: Session) => ({
+    moving: active.game.player.isMoving,
+    dug: active.game.player.justDug !== null,
+    collected: active.game.player.justCollected,
+    tileX: active.game.player.tile.x,
+    tileY: active.game.player.tile.y,
+    activeDynamites: active.game.activeDynamites.length,
+    activeFlares: active.game.activeFlares.length,
+    awakeBats: active.game.activeBats.filter((b) => b.phase !== BatState.Sleeping).length,
+    knockoutFlash: active.game.knockoutFlash,
+    menuOpen: active.game.isMenuOpen(),
+    money: active.game.progress.money,
+  });
 
   const drainInput = (): void => {
     while (input.consumeNav()) {
@@ -214,7 +267,7 @@ function bootstrap(): void {
         if (session.game.isMenuOpen()) shop.draw(session.game, session.menu);
         const hint = session.tutorial.currentHint();
         if (hint && flow.screen === Screen.Playing) hints.draw(hint);
-        if (flow.screen === Screen.Paused) screens.pause();
+        if (flow.screen === Screen.Paused) screens.pause(audio.muted);
         break;
     }
   };

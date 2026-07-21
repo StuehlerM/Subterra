@@ -17,7 +17,8 @@ function crc32(buf) {
   return c ^ 0xffffffff;
 }
 
-function chunk(type, data) {
+/** Builds one framed PNG chunk (length + type + data + CRC). */
+export function chunk(type, data) {
   const body = Buffer.concat([Buffer.from(type, 'ascii'), data]);
   const out = Buffer.alloc(8 + data.length + 4);
   out.writeUInt32BE(data.length, 0);

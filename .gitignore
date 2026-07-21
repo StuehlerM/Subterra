@@ -6,3 +6,10 @@ npm-debug.log*
 
 # WSL/Windows-npm redirected stdio scratch files
 *.txt
+
+# Working/process docs — not part of the published game
+PLAN.md
+HANDOVER.md
+
+# Inspiration screenshots (other games' art) — kept local only
+art_inspiraton/

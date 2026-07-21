@@ -35,10 +35,14 @@ function bootstrap(): void {
   resize();
   window.addEventListener('resize', resize);
 
+  // Interim wiring: play slot 0 until the title/slot-picker screens land.
   const save = new SaveRepository(SAVE_KEY, window.localStorage);
-  const progress = save.load() ?? new PlayerProgress();
+  save.migrateLegacy(SAVE_KEY, DEFAULT_SEED);
+  const slot = save.loadSlot(0);
+  const seed = slot?.seed ?? DEFAULT_SEED;
+  const progress = slot?.progress ?? new PlayerProgress();
 
-  const { world, batSpawns, portalSpawns } = World.generateMap(WORLD_WIDTH, WORLD_HEIGHT, DEFAULT_SEED, {
+  const { world, batSpawns, portalSpawns } = World.generateMap(WORLD_WIDTH, WORLD_HEIGHT, seed, {
     surfaceRows: SURFACE_ROWS,
     spawn: SPAWN_TILE,
   });
@@ -50,7 +54,7 @@ function bootstrap(): void {
 
   const renderer = new CanvasRenderer(ctx, AssetRegistry.withDefaults(), TILE_SIZE);
   const hud = new Hud(document.body);
-  const shop = new Shop(document.body, game, () => save.save(progress));
+  const shop = new Shop(document.body, game, () => save.saveSlot(0, seed, progress));
   const fog = new FogOfWar(WORLD_WIDTH, WORLD_HEIGHT);
   const timestep = new FixedTimestep(FIXED_DT);
 
@@ -68,7 +72,7 @@ function bootstrap(): void {
 
     // Save when the surface menu opens (i.e. on arrival, after auto-sell).
     const menuOpen = game.isMenuOpen();
-    if (menuOpen && !wasMenuOpen) save.save(progress);
+    if (menuOpen && !wasMenuOpen) save.saveSlot(0, seed, progress);
     wasMenuOpen = menuOpen;
 
     renderer.render(game, fog);

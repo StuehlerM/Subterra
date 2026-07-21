@@ -1,27 +1,81 @@
 import { PlayerProgress, PlayerProgressData } from '../domain/PlayerProgress';
 
+/** How many independent save slots the title screen offers. */
+export const SLOT_COUNT = 3;
+
+interface SlotData {
+  readonly seed: number;
+  readonly progress: PlayerProgressData;
+}
+
+export interface SlotSave {
+  readonly seed: number;
+  readonly progress: PlayerProgress;
+}
+
+/** What the slot picker shows for an occupied slot. */
+export interface SlotSummary {
+  readonly money: number;
+}
+
 /**
- * Persists meta-progression (money + upgrade levels) to a Storage backend
- * (localStorage in the browser). The world itself is regenerated from its seed,
- * so only this small blob is saved.
+ * Persists per-slot games to a Storage backend (localStorage in the browser).
+ * Each slot is its own game: a world seed plus meta-progression (money +
+ * upgrade levels). Worlds are regenerated from their seed, so the blob stays
+ * tiny. A pre-slot legacy save can be migrated into slot 0 once.
  */
 export class SaveRepository {
   constructor(
-    private readonly key: string,
+    private readonly baseKey: string,
     private readonly storage: Storage,
   ) {}
 
-  load(): PlayerProgress | null {
-    const raw = this.storage.getItem(this.key);
-    if (!raw) return null;
+  loadSlot(slot: number): SlotSave | null {
+    const data = this.read(slot);
+    return data && { seed: data.seed, progress: PlayerProgress.fromJSON(data.progress) };
+  }
+
+  saveSlot(slot: number, seed: number, progress: PlayerProgress): void {
+    this.storage.setItem(this.slotKey(slot), JSON.stringify({ seed, progress: progress.toJSON() }));
+  }
+
+  /** One entry per slot: its money, or null while the slot is empty. */
+  slotSummaries(): (SlotSummary | null)[] {
+    return Array.from({ length: SLOT_COUNT }, (_, slot) => {
+      const data = this.read(slot);
+      return data && { money: data.progress.money };
+    });
+  }
+
+  /** Moves the old single-save blob into slot 0 (once; never overwrites). */
+  migrateLegacy(legacyKey: string, legacySeed: number): void {
+    const raw = this.storage.getItem(legacyKey);
+    if (!raw) return;
+    this.storage.removeItem(legacyKey);
+    if (this.read(0)) return;
     try {
-      return PlayerProgress.fromJSON(JSON.parse(raw) as PlayerProgressData);
+      const progress = PlayerProgress.fromJSON(JSON.parse(raw) as PlayerProgressData);
+      this.saveSlot(0, legacySeed, progress);
     } catch {
-      return null;
+      // Corrupt legacy blob: nothing worth migrating.
     }
   }
 
-  save(progress: PlayerProgress): void {
-    this.storage.setItem(this.key, JSON.stringify(progress.toJSON()));
+  private slotKey(slot: number): string {
+    if (!Number.isInteger(slot) || slot < 0 || slot >= SLOT_COUNT) {
+      throw new Error(`Invalid save slot ${slot} (expected 0..${SLOT_COUNT - 1})`);
+    }
+    return `${this.baseKey}:slot${slot}`;
+  }
+
+  private read(slot: number): SlotData | null {
+    const raw = this.storage.getItem(this.slotKey(slot));
+    if (!raw) return null;
+    try {
+      const data = JSON.parse(raw) as SlotData;
+      return typeof data.seed === 'number' && data.progress ? data : null;
+    } catch {
+      return null;
+    }
   }
 }

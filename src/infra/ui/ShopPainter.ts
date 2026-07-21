@@ -6,17 +6,19 @@ import { UiPainter } from './UiPainter';
 
 const SCALE = 2;
 const ICON_PX = 16 * SCALE;
-const CELL_W = 56;
-const CELL_H = 78;
+const CELL_W = 64;
+const CELL_H = 96;
 const CELL_GAP = 8;
 const PANEL_PADDING = 16;
 const BUTTON_H = 44;
 const BUTTON_GAP = 12;
 const BUTTON_PADDING = 14;
 const BUTTON_ICON_GAP = 8;
-const NAME_ROW_H = 20;
 const NAME_TEXT_SCALE = 2;
 const GLYPH_H = 5;
+/** Vertical slots inside a cell: name on top, then icon, pips, cost. */
+const NAME_Y = 2;
+const CELL_ICON_Y = NAME_Y + GLYPH_H * NAME_TEXT_SCALE + 8;
 const PIP = 6;
 const PIP_GAP = 3;
 const DIM_ALPHA = 0.55;
@@ -53,7 +55,7 @@ export class ShopPainter {
 
     const rowWidth = menu.types.length * CELL_W + (menu.types.length - 1) * CELL_GAP;
     const panelW = rowWidth + PANEL_PADDING * 2;
-    const panelH = PANEL_PADDING * 2 + CELL_H + NAME_ROW_H + BUTTON_GAP + BUTTON_H;
+    const panelH = PANEL_PADDING * 2 + CELL_H + BUTTON_GAP + BUTTON_H;
     const panelX = Math.round((canvas.width - panelW) / 2);
     const panelY = Math.round((canvas.height - panelH) / 2);
     this.ui.nineSlice(this.ui.assets.panel('wood'), panelX, panelY, panelW, panelH, SCALE);
@@ -64,18 +66,11 @@ export class ShopPainter {
       this.drawCell(game, type, x, y, index === menu.selectedIndex && !menu.onDrillAgain);
     });
 
-    // The highlighted upgrade's name, centred under the row.
-    if (!menu.onDrillAgain) {
-      const name = UPGRADE_NAMES[menu.types[menu.selectedIndex]];
-      const nameW = this.ui.textWidth(name, NAME_TEXT_SCALE);
-      this.ui.text(name, panelX + Math.round((panelW - nameW) / 2), panelY + PANEL_PADDING + CELL_H + 4, NAME_TEXT_SCALE);
-    }
-
     const label = STRINGS.drillAgain;
     const labelW = this.ui.textWidth(label, NAME_TEXT_SCALE);
     const buttonW = BUTTON_PADDING * 2 + ICON_PX + BUTTON_ICON_GAP + labelW;
     const buttonX = panelX + Math.round((panelW - buttonW) / 2);
-    const buttonY = panelY + PANEL_PADDING + CELL_H + NAME_ROW_H + BUTTON_GAP;
+    const buttonY = panelY + PANEL_PADDING + CELL_H + BUTTON_GAP;
     this.ui.nineSlice(this.ui.assets.panel('stone'), buttonX, buttonY, buttonW, BUTTON_H, SCALE);
     this.ui.icon('drill_down', buttonX + BUTTON_PADDING, buttonY + (BUTTON_H - ICON_PX) / 2, SCALE);
     this.ui.text(
@@ -93,9 +88,12 @@ export class ShopPainter {
 
     this.ctx.save();
     if (cost !== null && !affordable) this.ctx.globalAlpha = UNAFFORDABLE_ALPHA;
-    this.ui.icon(UPGRADE_ICON[type], x + (CELL_W - ICON_PX) / 2, y + 4, SCALE);
-    this.drawPips(type, game.progress.level(type), x, y + ICON_PX + 10);
-    this.drawCost(cost, x, y + ICON_PX + 10 + PIP + 8);
+    const name = UPGRADE_NAMES[type];
+    const nameW = this.ui.textWidth(name, NAME_TEXT_SCALE);
+    this.ui.text(name, x + Math.round((CELL_W - nameW) / 2), y + NAME_Y, NAME_TEXT_SCALE);
+    this.ui.icon(UPGRADE_ICON[type], x + (CELL_W - ICON_PX) / 2, y + CELL_ICON_Y, SCALE);
+    this.drawPips(type, game.progress.level(type), x, y + CELL_ICON_Y + ICON_PX + 10);
+    this.drawCost(cost, x, y + CELL_ICON_Y + ICON_PX + 10 + PIP + 8);
     this.ctx.restore();
 
     if (selected) this.ui.highlight(x - 2, y - 2, CELL_W + 4, CELL_H + 4, SCALE);

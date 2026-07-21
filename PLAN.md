@@ -70,4 +70,14 @@ files — the whole soundtrack ships inside the JS bundle.
 
 ## Status
 - [x] Plan written
-- [ ] **Awaiting explicit go-ahead — do not implement before owner approval**
+- [x] Implemented (222 tests, build clean) — audio shipped
+
+## Playtest polish round (owner-requested, approved)
+1. **Audio**: rougher/bigger explosion; cooler flare sound; cooler bat sound
+   (data + instrument tweaks, validation tests keep passing).
+2. **Shop**: "DRILL AGAIN" → "DRILL!"; single-word upgrade names drawn **above
+   every cell** (all visible at once), cells widened to fit.
+3. **Cargo contents** (domain, TDD): Cargo tracks per-ore-type counts; HUD
+   shows what's inside with mini ore icons.
+4. **HUD layout**: coins alone top-right; cargo (with contents) + dynamite +
+   flares bottom-right; battery + depth stay top-left.

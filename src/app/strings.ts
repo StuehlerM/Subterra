@@ -9,7 +9,7 @@ export const STRINGS = {
   pressX: 'PRESS X',
   newGame: 'NEW GAME',
   paused: 'PAUSED',
-  drillAgain: 'DRILL AGAIN',
+  drillAgain: 'DRILL!',
   pressM: 'PRESS M',
 } as const;
 
@@ -22,12 +22,13 @@ export const TUTORIAL_HINTS: readonly string[] = [
   'DIG DEEP AND GET RICH!',
 ];
 
+/** One word each so all seven fit above their shop cells at once. */
 export const UPGRADE_NAMES: Record<UpgradeType, string> = {
-  [UpgradeType.DrillStrength]: 'DRILL POWER',
-  [UpgradeType.DrillSpeed]: 'DRILL SPEED',
+  [UpgradeType.DrillStrength]: 'POWER',
+  [UpgradeType.DrillSpeed]: 'SPEED',
   [UpgradeType.CargoCapacity]: 'CARGO',
   [UpgradeType.BatteryCapacity]: 'BATTERY',
   [UpgradeType.DynamiteCapacity]: 'DYNAMITE',
-  [UpgradeType.BlastRadius]: 'BLAST SIZE',
+  [UpgradeType.BlastRadius]: 'BLAST',
   [UpgradeType.FlareCapacity]: 'FLARES',
 };

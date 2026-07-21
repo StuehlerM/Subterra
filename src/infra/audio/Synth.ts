@@ -37,7 +37,10 @@ export class Synth {
     envelope.gain.linearRampToValueAtTime(0, stop + inst.release);
     envelope.connect(out);
 
-    const source = inst.wave === 'noise' ? this.noiseVoice(freq, envelope) : this.toneVoice(inst, freq, envelope);
+    const source =
+      inst.wave === 'noise'
+        ? this.noiseVoice(freq, inst.q ?? NOISE_FILTER_Q, envelope)
+        : this.toneVoice(inst, freq, envelope);
     source.start(start);
     source.stop(stop + inst.release);
   }
@@ -51,14 +54,14 @@ export class Synth {
   }
 
   /** Noise coloured by the note's pitch (band-pass), so C2 rumbles, C6 taps. */
-  private noiseVoice(freq: number, out: AudioNode): AudioScheduledSourceNode {
+  private noiseVoice(freq: number, q: number, out: AudioNode): AudioScheduledSourceNode {
     const source = this.ctx.createBufferSource();
     source.buffer = this.noise();
     source.loop = true;
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'bandpass';
     filter.frequency.value = freq;
-    filter.Q.value = NOISE_FILTER_Q;
+    filter.Q.value = q;
     source.connect(filter);
     filter.connect(out);
     return source;

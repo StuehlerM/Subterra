@@ -13,6 +13,8 @@ export interface Instrument {
   readonly release: number;
   /** Per-instrument gain (0..1); the mix keeps music under the SFX. */
   readonly volume: number;
+  /** Noise only: band-pass Q. Lower = wider band = rougher (default 1.2). */
+  readonly q?: number;
 }
 
 export const INSTRUMENTS: Record<string, Instrument> = {
@@ -30,8 +32,10 @@ export const INSTRUMENTS: Record<string, Instrument> = {
   tick: { wave: 'noise', attack: 0.001, release: 0.03, volume: 0.12 },
   /** Grinding noise burst (drilling). */
   grind: { wave: 'noise', attack: 0.01, release: 0.06, volume: 0.25 },
-  /** Big filtered-noise hit (explosion, knockout). */
-  boom: { wave: 'noise', attack: 0.005, release: 0.6, volume: 0.8 },
+  /** Big filtered-noise hit (explosion, knockout). Wide band = rough. */
+  boom: { wave: 'noise', attack: 0.005, release: 0.8, volume: 1.0, q: 0.4 },
+  /** Harsh mid-band crackle layered over the boom. */
+  crack: { wave: 'noise', attack: 0.002, release: 0.3, volume: 0.6, q: 0.7 },
   /** Airy noise whoosh (flare). */
   air: { wave: 'noise', attack: 0.05, release: 0.25, volume: 0.3 },
   /** Wobbly spooky square (bats, portal). */

@@ -51,8 +51,8 @@ describe('Game base economy', () => {
 
   it('auto-sells cargo when at base', () => {
     const game = newGame(['..', 'ss'], new Vec2(0, 0));
-    game.player.cargo.add(10);
-    game.player.cargo.add(5);
+    game.player.cargo.add(TileType.Gold, 10);
+    game.player.cargo.add(TileType.Coal, 5);
     game.step(MOVE_DURATION, null);
     expect(game.player.cargo.isEmpty).toBe(true);
     expect(game.progress.money).toBe(15);
@@ -61,7 +61,7 @@ describe('Game base economy', () => {
 
   it('does not sell while underground', () => {
     const game = newGame(['..', 'ss'], new Vec2(0, 1));
-    game.player.cargo.add(10);
+    game.player.cargo.add(TileType.Gold, 10);
     game.step(MOVE_DURATION, null);
     expect(game.progress.money).toBe(0);
     expect(game.player.cargo.count).toBe(1);
@@ -177,7 +177,7 @@ describe('Game falling rocks', () => {
     // Miner stands at (0,2); rock at (0,1) is unsupported and falls onto it.
     const game = newGame(['.', 'R', '.', 's'], new Vec2(0, 2), {});
     game.progress.addMoney(100);
-    game.player.cargo.add(20);
+    game.player.cargo.add(TileType.Gold, 20);
     for (let i = 0; i < STEPS; i++) game.step(FIXED_DT, null);
     expect(game.player.tile.equals(SPAWN)).toBe(true); // respawned at surface
     expect(game.player.cargo.isEmpty).toBe(true); // lost this run's cargo
@@ -233,7 +233,7 @@ describe('Game bats and flares', () => {
   it('a chasing bat that reaches the miner knocks them out', () => {
     const game = newGame(TUNNEL, new Vec2(6, 1), {}, [new Vec2(3, 1)]);
     game.progress.addMoney(50);
-    game.player.cargo.add(10);
+    game.player.cargo.add(TileType.Gold, 10);
     for (let i = 0; i < STEPS; i++) game.step(FIXED_DT, null);
     expect(game.player.tile.equals(SPAWN)).toBe(true); // respawned
     expect(game.player.cargo.isEmpty).toBe(true); // lost the run's cargo
@@ -263,7 +263,7 @@ describe('Game bats and flares', () => {
 describe('Game portals', () => {
   it('sends the miner home (cargo kept, then sold) when on a portal', () => {
     const game = newGame(['....', '....', '....'], new Vec2(2, 2), {}, [], [new Vec2(2, 2)]);
-    game.player.cargo.add(15);
+    game.player.cargo.add(TileType.Silver, 15);
     game.step(FIXED_DT, null);
     expect(game.player.tile.equals(SPAWN)).toBe(true); // whisked to the surface
     expect(game.progress.money).toBe(15); // cargo kept and sold, not lost

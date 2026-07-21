@@ -171,7 +171,7 @@ export class Player {
     this.lastDug = target;
     this.battery.drain(DIG_BATTERY_COST);
     if (value > 0) {
-      this.cargo.add(value);
+      this.cargo.add(tile, value);
       this.lastCollected = tile;
     }
     return true;

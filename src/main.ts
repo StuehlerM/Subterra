@@ -153,7 +153,7 @@ function bootstrap(): void {
   const worldAssets = AssetRegistry.withDefaults();
   const renderer = new CanvasRenderer(ctx, worldAssets, TILE_SIZE);
   const ui = new UiPainter(ctx, UiAssets.withDefaults());
-  const hud = new HudPainter(ctx, ui);
+  const hud = new HudPainter(ctx, ui, worldAssets);
   const shop = new ShopPainter(ctx, ui);
   const hints = new HintPainter(ctx, ui);
   const screens = new ScreenPainters(ctx, ui, worldAssets);

@@ -196,6 +196,12 @@ Things that differ from the first draft above, decided during build/playtest:
   player actually does the thing; progress saved per slot; legacy saves never see it.
   The stated goal stays **soft** for now — a real win condition (legendary gem at the
   bottom + win screen) is a future-phase idea (§14).
+- **HUD corners polish (playtest)**: money pouch alone top-right; cargo crate bottom-right
+  showing its **contents** (mini ore chips + counts, via new `Cargo.contents`); dynamite +
+  flare counts beside it; battery + depth top-left. Shop shows all seven **single-word
+  upgrade names above their cells** ("POWER", "BLAST", ...) and the button reads "DRILL!".
+  Explosion got a rougher two-layer bang (wide-band boom + crackle), flare an ignition
+  whoosh + sparkle, bats a falling shriek + wing flutter.
 - **Canvas game UI (post-sprite-system)**: DOM HUD/shop overlays replaced by a canvas
   UI drawn with text-grid sprites — wood/stone nine-slice panels, a 3×5 pixel digit
   font, 16×16 icons. The battery is drawn as a real battery whose fill lowers and

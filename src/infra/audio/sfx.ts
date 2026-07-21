@@ -24,9 +24,30 @@ export const SFX: Record<string, SfxDefinition> = {
   menu_confirm: sfx(480, 'blip', 'G5 C6'),
   menu_open: sfx(360, 'chime', 'C5 G5'),
   dynamite_place: sfx(480, 'blip', 'C3'),
-  explosion: sfx(240, 'boom', 'C1 . .'),
-  flare: sfx(240, 'air', 'C2 .'),
-  bat_wake: sfx(360, 'spook', 'F#5 C5'),
+  /** Low rumble + harsh crackle layered = a properly rough bang. */
+  explosion: {
+    bpm: 240,
+    channels: [
+      { instrument: 'boom', notes: 'C1 . . .' },
+      { instrument: 'crack', notes: 'G2 C2 . -' },
+    ],
+  },
+  /** Ignition whoosh with a sparkle flaring up over it. */
+  flare: {
+    bpm: 300,
+    channels: [
+      { instrument: 'air', notes: 'C2 . .' },
+      { instrument: 'chime', notes: '- G5 D6' },
+    ],
+  },
+  /** Falling shriek plus a burst of wing flutter. */
+  bat_wake: {
+    bpm: 360,
+    channels: [
+      { instrument: 'spook', notes: 'A5 F5 C5' },
+      { instrument: 'tick', notes: 'C7 C7 C7' },
+    ],
+  },
   knockout: sfx(300, 'spook', 'C4 G3 E3 C3'),
   portal: sfx(480, 'chime', 'C5 E5 G5 C6 G5 E5 C5'),
   ore_coal: sfx(360, 'chime', 'C4 E4'),

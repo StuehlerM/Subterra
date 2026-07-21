@@ -37,25 +37,6 @@ import { UiPainter } from './infra/ui/UiPainter';
 const SAVE_KEY = 'subterra-save-v1';
 const MUTE_KEY = 'subterra-muted';
 const LANGUAGE_KEY = 'subterra-language';
-
-/** One-time rename of the old "deep-diggers-*" keys so saves survive rebrand. */
-function migrateStorageKeys(storage: Storage): void {
-  const renames: [string, string][] = [
-    ['deep-diggers-save-v1', SAVE_KEY], // pre-slot single save
-    ['deep-diggers-save-v1:slot0', `${SAVE_KEY}:slot0`],
-    ['deep-diggers-save-v1:slot1', `${SAVE_KEY}:slot1`],
-    ['deep-diggers-save-v1:slot2', `${SAVE_KEY}:slot2`],
-    ['deep-diggers-muted', MUTE_KEY],
-    ['deep-diggers-language', LANGUAGE_KEY],
-  ];
-  for (const [oldKey, newKey] of renames) {
-    const value = storage.getItem(oldKey);
-    if (value !== null && storage.getItem(newKey) === null) {
-      storage.setItem(newKey, value);
-      storage.removeItem(oldKey);
-    }
-  }
-}
 /** Below this depth (in tiles) the sparse cave music takes over... */
 const DEEP_MUSIC_DEPTH = 25;
 /** ...and only above this depth does the mining theme come back (hysteresis). */
@@ -191,7 +172,6 @@ function bootstrap(): void {
   resize();
   window.addEventListener('resize', resize);
 
-  migrateStorageKeys(window.localStorage);
   const save = new SaveRepository(SAVE_KEY, window.localStorage);
   save.migrateLegacy(SAVE_KEY, DEFAULT_SEED);
 

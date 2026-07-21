@@ -88,7 +88,7 @@ export class HudPainter {
     const x = Math.round((canvas.width - w) / 2);
     const y = Math.round(canvas.height * 0.38);
     this.ctx.save();
-    this.ctx.globalAlpha = Math.min(1, intensity * 2); // hold, then fade out
+    this.ctx.globalAlpha = Math.min(1, intensity); // full while stunned, fades at the end
     this.ctx.filter = 'brightness(0)';
     this.ui.text(text, x + OUCH_SHADOW, y + OUCH_SHADOW, OUCH_SCALE);
     this.ctx.filter = 'none';

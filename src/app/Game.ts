@@ -12,8 +12,12 @@ import { TileType } from '../domain/tiles';
 import { UpgradeType } from '../domain/upgrades';
 import { World } from '../domain/World';
 
-/** Seconds the red knock-out flash + "OUCH!" banner linger. */
+/** Seconds the red knock-out flash lingers. */
 const KNOCKOUT_FLASH_SECONDS = 0.9;
+/** Seconds the miner lies stunned ("OUCH!") before being teleported home. */
+const KNOCKOUT_STUN_SECONDS = 2;
+/** Fraction of a second the "OUCH!" banner fades over at the end of the stun. */
+const BANNER_FADE_SECONDS = 0.3;
 
 function chebyshev(a: Vec2, b: Vec2): number {
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
@@ -31,6 +35,7 @@ export class Game {
   private menuOpen = false;
   private wasAtBase = false;
   private knockoutTimer = 0;
+  private knockoutStun = 0;
   private readonly dynamites: Dynamite[] = [];
   private readonly fallingRocks: FallingRock[] = [];
   private readonly bats: Bat[] = [];
@@ -53,6 +58,15 @@ export class Game {
   }
 
   step(dt: number, direction: Direction | null): void {
+    // Stunned after a hit: freeze the world, show "OUCH!", then teleport home.
+    if (this.knockoutStun > 0) {
+      this.player.update(dt); // let any in-progress move settle onto its tile
+      this.knockoutStun = Math.max(0, this.knockoutStun - dt);
+      if (this.knockoutTimer > 0) this.knockoutTimer = Math.max(0, this.knockoutTimer - dt);
+      if (this.knockoutStun === 0) this.respawn();
+      return;
+    }
+
     this.player.update(dt);
 
     const atBase = this.isAtBase();
@@ -126,13 +140,24 @@ export class Game {
     return this.knockoutTimer / KNOCKOUT_FLASH_SECONDS;
   }
 
+  /** 0..1 opacity for the "OUCH!" banner (full while stunned, fades at the end). */
+  get knockoutBanner(): number {
+    if (this.knockoutStun <= 0) return 0;
+    return Math.min(1, this.knockoutStun / BANNER_FADE_SECONDS);
+  }
+
+  /** Whether the miner is currently stunned (frozen, awaiting teleport home). */
+  get isStunned(): boolean {
+    return this.knockoutStun > 0;
+  }
+
   /**
    * Places a stick of dynamite on the miner's current tile (underground only,
    * while standing still, if supplies remain and the tile is free). Returns
    * whether one was placed.
    */
   placeDynamite(): boolean {
-    if (this.isAtBase() || this.player.isMoving) return false;
+    if (this.isStunned || this.isAtBase() || this.player.isMoving) return false;
     const at = this.player.tile;
     if (this.dynamites.some((d) => d.tile.equals(at))) return false;
     if (!this.player.dynamite.tryUse()) return false;
@@ -145,7 +170,7 @@ export class Game {
    * Nearby bats flee and vanish. Returns whether one was lit.
    */
   useFlare(): boolean {
-    if (this.isAtBase()) return false;
+    if (this.isStunned || this.isAtBase()) return false;
     if (!this.player.flare.tryUse()) return false;
     this.flares.push(new Flare(this.player.tile));
     return true;
@@ -213,11 +238,17 @@ export class Game {
     }
   }
 
-  /** Gentle failure: wake at the surface, lose this run's cargo, keep the rest. */
+  /** Gentle failure: a brief stun with an "OUCH!" tell, then teleport home. */
   private knockout(): void {
+    if (this.knockoutStun > 0) return; // already down; ignore further hits
+    this.knockoutStun = KNOCKOUT_STUN_SECONDS;
+    this.knockoutTimer = KNOCKOUT_FLASH_SECONDS;
+  }
+
+  /** The delayed part of a knock-out: wake home, lose this run's cargo. */
+  private respawn(): void {
     this.player.resetTo(this.spawn);
     this.player.cargo.clear();
-    this.knockoutTimer = KNOCKOUT_FLASH_SECONDS;
   }
 
   private updateBatsAndFlares(dt: number): void {

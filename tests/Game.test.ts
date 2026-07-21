@@ -162,7 +162,7 @@ describe('Game dynamite', () => {
 });
 
 describe('Game falling rocks', () => {
-  const STEPS = 120; // plenty for wobble + fall at 60 Hz
+  const STEPS = 240; // wobble + fall + the ~2s knock-out stun before teleport
 
   it('drops an unsupported rock so it lands one tile lower', () => {
     // Column: rock, empty, sand floor. Rock at (0,1) has empty (0,2) below it.
@@ -182,6 +182,22 @@ describe('Game falling rocks', () => {
     expect(game.player.tile.equals(SPAWN)).toBe(true); // respawned at surface
     expect(game.player.cargo.isEmpty).toBe(true); // lost this run's cargo
     expect(game.progress.money).toBe(100); // kept the bank
+  });
+
+  it('stays stunned in place for a moment before teleporting home', () => {
+    const game = newGame(['.', 'R', '.', 's'], new Vec2(0, 2), {});
+    game.player.cargo.add(TileType.Gold, 20);
+    let i = 0;
+    while (!game.isStunned && i < STEPS) {
+      game.step(FIXED_DT, null);
+      i++;
+    }
+    expect(game.isStunned).toBe(true);
+    expect(game.player.tile.equals(SPAWN)).toBe(false); // not teleported yet
+    expect(game.player.cargo.isEmpty).toBe(false); // still carrying during the stun
+    for (let j = 0; j < 130; j++) game.step(FIXED_DT, null); // wait out the ~2s stun
+    expect(game.player.tile.equals(SPAWN)).toBe(true); // now home
+    expect(game.player.cargo.isEmpty).toBe(true);
   });
 
   it('does not disturb a supported rock', () => {

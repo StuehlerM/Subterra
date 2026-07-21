@@ -1,8 +1,9 @@
 {
-  "name": "deep-diggers",
+  "name": "subterra",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "license": "MIT",
   "description": "Kid-friendly 2D mining game (dig, collect, return, upgrade).",
   "scripts": {
     "dev": "vite",

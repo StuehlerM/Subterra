@@ -26,6 +26,9 @@ const BLINK_RED = '#e04a3a';
 const BATTERY_ART_W = 26;
 /** Segments left at which the battery starts blinking red. */
 const BLINK_AT_SEGMENTS = 1;
+/** The big "OUCH!" knock-out banner. */
+const OUCH_SCALE = 14;
+const OUCH_SHADOW = 5;
 /** The controls legend is drawn smaller so it stays unobtrusive. */
 const LEGEND_SCALE = 3;
 const LEGEND_ICON_PX = ICON_ART * LEGEND_SCALE;
@@ -74,6 +77,23 @@ export class HudPainter {
 
     this.bottomRight(game, dynamite.remaining, dynamite.capacity, flare.remaining, flare.capacity);
     if (!game.isMenuOpen()) this.controlsLegend();
+  }
+
+  /** Big centered "OUCH!" while the knock-out flash fades (rock or bat hit). */
+  knockout(intensity: number): void {
+    if (intensity <= 0) return;
+    const { canvas } = this.ctx;
+    const text = str().ouch;
+    const w = this.ui.textWidth(text, OUCH_SCALE);
+    const x = Math.round((canvas.width - w) / 2);
+    const y = Math.round(canvas.height * 0.38);
+    this.ctx.save();
+    this.ctx.globalAlpha = Math.min(1, intensity * 2); // hold, then fade out
+    this.ctx.filter = 'brightness(0)';
+    this.ui.text(text, x + OUCH_SHADOW, y + OUCH_SHADOW, OUCH_SCALE);
+    this.ctx.filter = 'none';
+    this.ui.text(text, x, y, OUCH_SCALE);
+    this.ctx.restore();
   }
 
   /** Bottom-left: which key does what (arrows, Z, X). */

@@ -31,6 +31,8 @@ export interface UiStrings {
   readonly ctrlMove: string;
   readonly ctrlDynamite: string;
   readonly ctrlFlare: string;
+  /** Shown big on a knock-out (rock or bat). */
+  readonly ouch: string;
 }
 
 const TABLES: Record<Language, UiStrings> = {
@@ -55,6 +57,7 @@ const TABLES: Record<Language, UiStrings> = {
     ctrlMove: 'MOVE',
     ctrlDynamite: 'DYNAMITE',
     ctrlFlare: 'FLARE',
+    ouch: 'OUCH!',
   },
   sv: {
     title: 'SUBTERRA',
@@ -77,6 +80,7 @@ const TABLES: Record<Language, UiStrings> = {
     ctrlMove: 'GÅ',
     ctrlDynamite: 'DYNAMIT',
     ctrlFlare: 'BLOSS',
+    ouch: 'AJ!',
   },
   de: {
     title: 'SUBTERRA',
@@ -99,6 +103,7 @@ const TABLES: Record<Language, UiStrings> = {
     ctrlMove: 'GEHEN',
     ctrlDynamite: 'DYNAMIT',
     ctrlFlare: 'FACKEL',
+    ouch: 'AUTSCH!',
   },
 };
 

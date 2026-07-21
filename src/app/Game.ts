@@ -12,8 +12,8 @@ import { TileType } from '../domain/tiles';
 import { UpgradeType } from '../domain/upgrades';
 import { World } from '../domain/World';
 
-/** Seconds the red knock-out flash lingers. */
-const KNOCKOUT_FLASH_SECONDS = 0.6;
+/** Seconds the red knock-out flash + "OUCH!" banner linger. */
+const KNOCKOUT_FLASH_SECONDS = 0.9;
 
 function chebyshev(a: Vec2, b: Vec2): number {
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));

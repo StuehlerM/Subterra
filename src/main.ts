@@ -307,6 +307,7 @@ function bootstrap(): void {
         if (!session) break;
         renderer.render(session.game, session.fog);
         hud.draw(session.game);
+        hud.knockout(session.game.knockoutFlash);
         if (session.game.isMenuOpen()) shop.draw(session.game, session.menu);
         const hintIndex = session.tutorial.currentHintIndex();
         if (hintIndex !== null && flow.screen === Screen.Playing) {

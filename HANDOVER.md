@@ -1,12 +1,31 @@
 # Session Handover — Deep Diggers
 
-Last updated: after Phase 5 (bats + flares), during a fog-of-war playtest.
+Last updated: after the **text-grid sprite system** (zero PNGs) replaced the asset pipeline.
 
 ## TL;DR
 Kid-friendly 2D mining game (TypeScript + HTML5 Canvas, Vite, Vitest, **no engine**).
-Phases 0–5 are done, committed locally (not pushed). **100 tests pass**, typecheck + build
-clean. A quick **fog of war** was added for playtesting (rendering-only). Next up:
-**Phase 6 — return tech & polish**.
+Phases 0–5 done + text-sprite art system, committed locally (not pushed). **134 tests
+pass**, typecheck + build clean; `dist/` contains **zero image files** (~12 KiB gzipped
+total). Remaining Phase 6 polish: SFX hooks, battery low-warning, depth tuning.
+
+## Text-grid sprite system (current session)
+Every sprite is a character grid + palette in source (`src/infra/sprites/art/`):
+- `grid.ts` pure parser (no DOM, unit-tested) → RGBA; `bake.ts` bakes to
+  OffscreenCanvas once; `animation.ts` pure frame timing; `AssetRegistry` bakes all
+  at startup, renderer blits canvases (smoothing off, 16 art px per tile).
+- Art: 16×16 tiles (6 ores = ONE vein shape × 6 palettes), 16×16 entities with
+  2-frame animations (player walk tied to isMoving, bat flap, sleeping-bat breathing,
+  dynamite spark @ fuse blink rate, flare flicker, portal swirl), sky = 1×16 stretched
+  ramp, cave = 32×32 tileable speckle.
+- `scripts/png-to-grid.mjs`: zero-dep converter with own PNG decoder (8-bit, color
+  types 0/2/3/4/6, all filters), `--frames`, `--palette` (strict, exact-coordinate
+  errors), `--tolerance`, `--force-nearest`, `--name`. Round-trip tested against
+  `scripts/png.mjs` encoder. `.d.mts` files give the JS tools types for TS tests.
+- Deleted: `public/assets/`, `gen-placeholders.mjs`, `gen-backgrounds.mjs`,
+  `npm run assets`, all HTMLImageElement loading + colour/emoji fallbacks.
+- PLAN.md now describes this task; old roadmap moved to `docs/ROADMAP.md`.
+- Note: Windows node.exe under WSL also hits EISDIR on stdout — wrap plain `node`
+  CLI runs in `cmd.exe /c "node ... 1> out.txt 2> err.txt"` too.
 
 ## Where we are
 | Phase | Status | Summary |
@@ -19,7 +38,8 @@ clean. A quick **fog of war** was added for playtesting (rendering-only). Next u
 | 4 Falling rocks | ✅ | Wobble tell → fall → settle; touch = knock-out; **event-driven** freeing (no per-frame scan) |
 | 5 Bats + flares | ✅ | Cave bats (sleep/chase/flee/resleep), touch=knock-out; flare (X) banishes; Flare-capacity upgrade |
 | Fog of war | ✅ (playtest) | Rendering-only torch/vignette around the miner; flares light their area |
-| 6 Return tech & polish | ⏭️ NEXT | Elevator, teleport, low-battery warning, depth tuning, SFX hooks, real-art pass |
+| Text-sprite art | ✅ | All art as text grids baked to canvases; zero shipped images; PNG→grid converter |
+| 6 Return tech & polish | ⏭️ partial | Portals + tuning done; remaining: low-battery warning, SFX hooks, elevator (opt.) |
 
 Roadmap: `PLAN.md`. Design + deviations: `docs/GDD.md` (§16 decisions log). ADRs: `docs/adr/`.
 
@@ -28,7 +48,7 @@ Node/npm are the **Windows** install. `npm` throws `EISDIR` on stderr under WSL 
 through `cmd.exe` with redirected stdio:
 ```bash
 cd /mnt/d/ProjectGame/MiningGame
-cmd.exe /c "npm test        < NUL 1> out.txt 2> err.txt"; cat out.txt   # 100 tests
+cmd.exe /c "npm test        < NUL 1> out.txt 2> err.txt"; cat out.txt   # 134 tests
 cmd.exe /c "npm run build    < NUL 1> out.txt 2> err.txt"; cat out.txt
 cmd.exe /c "npm run dev      < NUL 1> out.txt 2> err.txt" &            # open the printed URL
 ```

@@ -24,12 +24,23 @@ and pops open a **modal upgrade menu** (the miner is frozen): **Left/Right** pic
 or Drill again to leave). **Z** closes the menu instantly (quick "drill again"). The UI is pictograms only (🪙 money · 📦 cargo · 🔋 battery ·
 🧨 dynamite · ⬇️ depth).
 
-## Art / assets
+## Art / assets — the game ships zero image files
 
-All game images live in **`public/assets/`** (`tiles/` and `entities/`). Replace any PNG
-with your own art (keep the same filename) and reload — no rebuild needed in `npm run dev`.
-Missing files fall back to flat colours (tiles) or emoji (entities). See
-`public/assets/README.md` for the file list. Regenerate placeholders with `npm run assets`.
+Every sprite is a **text grid + palette in the source code** (`src/infra/sprites/art/`).
+Each character is one pixel; `.` is transparent; a letter looks up a hex colour in the
+sprite's palette. At startup each grid is **baked once** onto a cached canvas and the
+renderer blits it like a decoded PNG — so the art rides inside the JS bundle (the whole
+game is ~12 KiB gzipped), is diffable in git, greppable, and a one-character edit away.
+
+Animation = extra frames (a second grid with the bat's wings down, the flame leaning the
+other way…). All six ores share **one vein shape** and differ only by a three-colour
+palette. Editing art:
+
+- **Type it**: change a letter/dot in a grid, or a hex value in a palette, and reload.
+- **Draw it**: make a PNG in any pixel editor (frames as a horizontal strip) and run
+  `node scripts/png-to-grid.mjs sprite.png --frames 2`, then paste the output into
+  `src/infra/sprites/art/`. `--palette shared.json` matches pixels onto existing named
+  colours (strict; `--tolerance N` allows drift, `--force-nearest` snaps everything).
 
 ## Scripts
 
@@ -41,7 +52,9 @@ Missing files fall back to flat colours (tiles) or emoji (entities). See
 | `npm test`          | Run the unit tests once (Vitest).     |
 | `npm run test:watch`| Run tests in watch mode.              |
 | `npm run typecheck` | Typecheck without emitting.           |
-| `npm run assets`    | Regenerate placeholder art in public/assets. |
+
+Art tooling: `node scripts/png-to-grid.mjs` converts PNGs to text-grid sprites (it has
+its own tiny PNG decoder, zero dependencies).
 
 ## Architecture (short)
 
@@ -49,7 +62,7 @@ Missing files fall back to flat colours (tiles) or emoji (entities). See
   generation, player movement, RNG, vectors. Fully unit-tested.
 - `src/app/` — orchestration: fixed-timestep loop, `Game` step, tuning constants.
 - `src/infra/` — browser adapters: canvas renderer, keyboard input, asset registry
-  (the swap point for real sprites later).
+  (bakes the text-grid sprites in `src/infra/sprites/`).
 
 Dependencies point inward (infra → app → domain), so rules stay testable and art/input/
 storage are replaceable. See `docs/adr/0002-architecture.md`.

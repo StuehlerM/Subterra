@@ -13,6 +13,7 @@ const KEY_DIRECTIONS: Record<string, Direction> = {
 
 const DYNAMITE_KEY = 'KeyZ';
 const CONFIRM_KEY = 'KeyX';
+const PAUSE_KEY = 'Escape';
 const MAX_NAV_QUEUE = 8;
 
 /**
@@ -25,6 +26,7 @@ export class InputController {
   private readonly navQueue: Direction[] = [];
   private dynamitePressed = false;
   private confirmPressed = false;
+  private pausePressed = false;
 
   attach(target: Window): void {
     target.addEventListener('keydown', (event) => this.onKeyDown(event));
@@ -57,6 +59,13 @@ export class InputController {
     return pressed;
   }
 
+  /** Esc: the meta pause key (not part of the 6 gameplay keys). */
+  consumePause(): boolean {
+    const pressed = this.pausePressed;
+    this.pausePressed = false;
+    return pressed;
+  }
+
   private onKeyDown(event: KeyboardEvent): void {
     const direction = KEY_DIRECTIONS[event.code];
     if (direction) {
@@ -72,6 +81,9 @@ export class InputController {
     } else if (event.code === CONFIRM_KEY) {
       event.preventDefault();
       this.confirmPressed = true;
+    } else if (event.code === PAUSE_KEY) {
+      event.preventDefault();
+      this.pausePressed = true;
     }
   }
 

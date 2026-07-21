@@ -18,11 +18,13 @@ npm run dev       # start the dev server, then open the printed URL
 ```
 
 Controls: move/drill with **Arrow keys** or **WASD**. **Z** = place dynamite, **X** = confirm
-(also the flare key, reserved). Reaching the surface auto-sells ore, recharges and restocks,
-and pops open a **modal upgrade menu** (the miner is frozen): **Left/Right** pick an upgrade,
-**Down** selects **Drill again ⛏️⬇️** (below the row), **Up** goes back, **X** confirms (buy,
-or Drill again to leave). **Z** closes the menu instantly (quick "drill again"). The UI is pictograms only (🪙 money · 📦 cargo · 🔋 battery ·
-🧨 dynamite · ⬇️ depth).
+/ flare. **Esc** pauses (the game also auto-pauses when the window loses focus). The game
+boots to a **title screen** → **3 save slots** (Left/Right pick, X start, Z back); each slot
+is its own world (own seed) with its own money/upgrades. Reaching the surface auto-sells
+ore, recharges and restocks, and opens the **shop menu** (the miner is frozen): **Left/Right**
+pick an upgrade, **Down** selects **Drill again**, **Up** goes back, **X** confirms, **Z**
+closes instantly. The whole UI is canvas-drawn pictograms — wood/stone panels, a pixel digit
+font, and a battery gauge that visibly drains from green to red.
 
 ## Art / assets — the game ships zero image files
 

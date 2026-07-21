@@ -174,3 +174,12 @@ Things that differ from the first draft above, decided during build/playtest:
   the renderer picks a variant per tile via a deterministic position hash, so ore fields
   don't look stamped. Tile sprites with multiple grids mean *variants*; entity sprites
   with multiple grids mean *animation frames*.
+- **Canvas game UI (post-sprite-system)**: DOM HUD/shop overlays replaced by a canvas
+  UI drawn with text-grid sprites — wood/stone nine-slice panels, a 3×5 pixel digit
+  font, 16×16 icons. The battery is drawn as a real battery whose fill lowers and
+  shifts green→yellow→red; cargo is a crate with a fill bar. **Title screen** (gem
+  emblem + blinking X key) leads to a **3-save-slot picker**: each slot is its own
+  game with its own random world seed and progress (owner decision); the legacy
+  single save migrated into slot 1. **Esc** toggles pause (meta key; the 6 gameplay
+  keys unchanged) and the game auto-pauses when the window loses focus. Sound/SFX
+  is the next planned phase.

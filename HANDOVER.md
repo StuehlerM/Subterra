@@ -1,12 +1,29 @@
 # Session Handover — Deep Diggers
 
-Last updated: after the **text-grid sprite system** (zero PNGs) replaced the asset pipeline.
+Last updated: after the **canvas game UI** (title + 3 save slots, HUD, shop, pause).
 
 ## TL;DR
 Kid-friendly 2D mining game (TypeScript + HTML5 Canvas, Vite, Vitest, **no engine**).
-Phases 0–5 done + text-sprite art system, committed locally (not pushed). **134 tests
-pass**, typecheck + build clean; `dist/` contains **zero image files** (~12 KiB gzipped
-total). Remaining Phase 6 polish: SFX hooks, battery low-warning, depth tuning.
+Phases 0–5 done + text-sprite art system + canvas UI, committed locally (not pushed).
+**179 tests pass**, typecheck + build clean; `dist/` contains **zero image files**
+(~15.5 KiB gzipped total). Next planned phase: **sound/SFX**. Also open: battery
+low-warning polish, depth tuning.
+
+## Canvas UI (current session)
+- `src/app/AppFlow.ts` — tested screen state machine Title → SlotSelect → Playing ⇄
+  Paused; Esc = meta pause key (InputController.consumePause), auto-pause on blur.
+- `src/app/ShopMenu.ts` — shop selection/buy logic extracted from the old DOM Shop
+  (tested); Game menu-open state unchanged.
+- `SaveRepository` — 3 slots (`deep-diggers-save-v1:slot{0..2}`), each `{seed,
+  progress}`; **per-slot worlds** (new slot rolls a fresh seed, zero upgrades);
+  legacy single save auto-migrates to slot 0 with the old fixed seed.
+- `src/infra/sprites/art/ui.ts` — 3×5 digit font, 16×16 icons, one 24×24 nine-slice
+  panel grid (wood + stone palettes), 32×32 gem emblem, BATTERY_INTERIOR rect.
+- `src/infra/ui/` — UiAssets (bakes), UiPainter (nine-slice/text/icons/dim/highlight),
+  HudPainter (battery drains green→yellow→red behind hollow shell; crate fill bar),
+  ShopPainter, ScreenPainters (title/slots/pause share a sky+sand backdrop),
+  gauge.ts (pure, tested). DOM `Hud.ts`/`Shop.ts` **deleted**.
+- `main.ts` — session-per-slot wiring; game only steps while Playing.
 
 ## Text-grid sprite system (current session)
 Every sprite is a character grid + palette in source (`src/infra/sprites/art/`):
@@ -39,7 +56,8 @@ Every sprite is a character grid + palette in source (`src/infra/sprites/art/`):
 | 5 Bats + flares | ✅ | Cave bats (sleep/chase/flee/resleep), touch=knock-out; flare (X) banishes; Flare-capacity upgrade |
 | Fog of war | ✅ (playtest) | Rendering-only torch/vignette around the miner; flares light their area |
 | Text-sprite art | ✅ | All art as text grids baked to canvases; zero shipped images; PNG→grid converter |
-| 6 Return tech & polish | ⏭️ partial | Portals + tuning done; remaining: low-battery warning, SFX hooks, elevator (opt.) |
+| Canvas game UI | ✅ | Title + 3 per-seed save slots, wood/stone panels, pixel HUD w/ battery gauge, canvas shop, Esc/blur pause |
+| 6 Return tech & polish | ⏭️ partial | Portals + tuning done; remaining: **sound/SFX (next)**, low-battery warning, elevator (opt.) |
 
 Roadmap: `PLAN.md`. Design + deviations: `docs/GDD.md` (§16 decisions log). ADRs: `docs/adr/`.
 
@@ -48,7 +66,7 @@ Node/npm are the **Windows** install. `npm` throws `EISDIR` on stderr under WSL 
 through `cmd.exe` with redirected stdio:
 ```bash
 cd /mnt/d/ProjectGame/MiningGame
-cmd.exe /c "npm test        < NUL 1> out.txt 2> err.txt"; cat out.txt   # 134 tests
+cmd.exe /c "npm test        < NUL 1> out.txt 2> err.txt"; cat out.txt   # 179 tests
 cmd.exe /c "npm run build    < NUL 1> out.txt 2> err.txt"; cat out.txt
 cmd.exe /c "npm run dev      < NUL 1> out.txt 2> err.txt" &            # open the printed URL
 ```

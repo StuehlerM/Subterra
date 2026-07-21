@@ -85,24 +85,66 @@ const ROCK_PALETTE = {
   d: '#5d646e', // bottom shade
 };
 
-/** One vein shape shared by every ore; palettes make it coal/copper/... */
-const ORE_VEINS: TextureGrid = [
-  'aaaaabaaaaaaaaaa',
-  'aavvaaaaaabaaaaa',
-  'avwvvaaaaaaavvaa',
-  'avvuvaaabaavwvva',
-  'aavvaaaaaaavvuva',
-  'aaaabaaaaaaavvaa',
-  'abaaaaavaaaaabaa',
-  'aaaaaavwvaaaaaaa',
-  'aaaavvvuvvaabaaa',
-  'aabavwvvvuaaaaaa',
-  'aaaavuvavaaaaaba',
-  'abaaaavaaaavaaaa',
-  'aaaaabaaaavwvaba',
-  'aavaaaaaaavvuvaa',
-  'avwvaabaaaavvaaa',
-  'aavaaaaaaabaaaaa',
+/**
+ * Vein shapes shared by every ore; palettes make them coal/copper/...
+ * Several variants exist so an ore field doesn't look stamped — the renderer
+ * picks one per tile with a position hash.
+ */
+const ORE_VEIN_VARIANTS: TextureGrid[] = [
+  [
+    'aaaaabaaaaaaaaaa',
+    'aavvaaaaaabaaaaa',
+    'avwvvaaaaaaavvaa',
+    'avvuvaaabaavwvva',
+    'aavvaaaaaaavvuva',
+    'aaaabaaaaaaavvaa',
+    'abaaaaavaaaaabaa',
+    'aaaaaavwvaaaaaaa',
+    'aaaavvvuvvaabaaa',
+    'aabavwvvvuaaaaaa',
+    'aaaavuvavaaaaaba',
+    'abaaaavaaaavaaaa',
+    'aaaaabaaaavwvaba',
+    'aavaaaaaaavvuvaa',
+    'avwvaabaaaavvaaa',
+    'aavaaaaaaabaaaaa',
+  ],
+  [
+    'aabaaaaaavaaaaaa',
+    'aaaaavaaavwvaaba',
+    'aaaavwvaavvaaaaa',
+    'abaavvuvaaaaabaa',
+    'aaaaavvaaaaaaaaa',
+    'aaaaaaaaabaavvaa',
+    'aavaaaaaaaavwvva',
+    'avwvaaabaaavvuva',
+    'avuvvaaaaaaavvaa',
+    'aavvaabaaaaaaaba',
+    'aaaaaaaaavaaaaaa',
+    'abaaaaaavwvaabaa',
+    'aaaavaavvuvaaaaa',
+    'aaavwvaavvaaaaba',
+    'aaavvaaaaabaaaaa',
+    'abaaaaaaaaaaavaa',
+  ],
+  [
+    'aaaaaaavaaaabaaa',
+    'aabaaavwvaaaaaaa',
+    'aaaaavvuvaaavaaa',
+    'aaaaaavvaaavwvaa',
+    'abaaaaaaaaavvuva',
+    'aaaaabaaaaaavvaa',
+    'aavvaaaaaaaaaaba',
+    'avwvvaaabaaaaaaa',
+    'avvuvaaaaaavaaaa',
+    'aavvaaaaaavwvaba',
+    'aaaaaaaaaavvuvaa',
+    'aabaavaaaavvaaaa',
+    'aaaaavwvaaaaaaba',
+    'abaaavvuvaaaaaaa',
+    'aaaaaavvaaabaava',
+    'aaabaaaaaaaaaaaa',
+  ],
 ];
 
 /** Duller stone-sand ground the veins sit in (shared by all ores). */
@@ -113,7 +155,7 @@ const ORE_GROUND = {
 
 function ore(vein: string, highlight: string, shadow: string): SpriteDefinition {
   return {
-    frames: [ORE_VEINS],
+    frames: ORE_VEIN_VARIANTS,
     palette: { ...ORE_GROUND, v: vein, w: highlight, u: shadow },
   };
 }

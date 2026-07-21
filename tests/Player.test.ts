@@ -111,15 +111,16 @@ describe('Player emergency drill (empty battery)', () => {
     expect(player.battery.current).toBe(0); // free
   });
 
-  it('can grind through rock and hard ore in an emergency', () => {
+  it('digs sand only: rock and ore stay put in an emergency', () => {
     const rockWorld = worldFrom(['.R']);
     const rockMiner = miner(new Vec2(0, 0), { battery: new Battery(0) });
-    expect(rockMiner.tryStartMove(RIGHT, rockWorld)).toBe(true);
-    expect(rockWorld.getTile(1, 0)).toBe(TileType.Empty);
+    expect(rockMiner.tryStartMove(RIGHT, rockWorld)).toBe(false);
+    expect(rockWorld.getTile(1, 0)).toBe(TileType.Rock);
 
-    const ironWorld = worldFrom(['.I']); // iron needs drill strength 2 normally
-    const ironMiner = miner(new Vec2(0, 0), { drillStrength: 1, battery: new Battery(0) });
-    expect(ironMiner.tryStartMove(RIGHT, ironWorld)).toBe(true);
+    const ironWorld = worldFrom(['.I']);
+    const ironMiner = miner(new Vec2(0, 0), { battery: new Battery(0) });
+    expect(ironMiner.tryStartMove(RIGHT, ironWorld)).toBe(false);
+    expect(ironWorld.getTile(1, 0)).toBe(TileType.Iron);
   });
 
   it('never removes bedrock, even in an emergency', () => {

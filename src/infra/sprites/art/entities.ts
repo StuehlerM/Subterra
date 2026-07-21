@@ -5,20 +5,21 @@ import { SpriteDefinition, TextureGrid } from '../grid';
  * several frames; the renderer flips between them by frame index.
  */
 
+/** The miner: a girl with a pink bob under her hard hat. */
 const PLAYER_BODY: TextureGrid = [
   '......oooo......',
   '.....oyyyyo.....',
   '....oyyyyyyo....',
   '....oyylyyyo....',
   '....oYYYYYYo....',
+  '...oppppppppo...',
+  '...opffffffpo...',
+  '...opfoffofpo...',
+  '...opffffffpo...',
   '....offffffo....',
-  '....ofoffofo....',
-  '....offffffo....',
-  '.....offffo.....',
   '...occccccco....',
-  '...occCcCcco....',
+  '..ofccCcCccfo...',
   '..ofcccccccfo...',
-  '..ofcCcccCcfo...',
   '...oCCCCCCCo....',
 ];
 
@@ -32,6 +33,7 @@ const PLAYER_PALETTE = {
   y: '#ffd34d', // helmet
   Y: '#d9a92e', // helmet brim
   l: '#fff7d1', // headlamp
+  p: '#ff7bc2', // pink hair
   f: '#f2c9a0', // skin
   c: '#3f6fb0', // overalls
   C: '#2d5288', // overall shade / belt

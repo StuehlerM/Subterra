@@ -69,4 +69,14 @@ ore tiles, grid-based backgrounds, and a PNG→grid converter script.
 
 ## Status
 - [x] Plan written
-- [ ] **Awaiting explicit go-ahead — do not implement before owner approval**
+- [x] Steps 1–6 implemented, tested, committed (134 tests, build clean, zero images)
+
+## Playtest change requests (owner, approved)
+1. **Emergency drill digs sand only** (was: anything but bedrock). Domain change +
+   tests; note the anti-soft-lock tradeoff in the GDD deviations log.
+2. **Miner is a girl with pink hair** — rework the player sprite (pink bob under
+   the helmet), both walk frames.
+3. **Ore visual variants** — 3 vein-shape variants shared by all ores; the renderer
+   picks one per tile by a deterministic (x, y) hash so fields don't look stamped.
+
+## Next task (after the above): proper menus / real game UI — to be planned.

@@ -10,6 +10,7 @@ import { AssetRegistry } from './AssetRegistry';
 import { FogOfWar } from './FogOfWar';
 import { frameIndexAt } from './sprites/animation';
 import { BakedSprite } from './sprites/bake';
+import { variantIndexAt } from './sprites/variants';
 
 /** Below this many seconds of fuse left, the dynamite blinks faster. */
 const FUSE_URGENT_SECONDS = 0.6;
@@ -118,8 +119,10 @@ export class CanvasRenderer {
         if (!sprite) continue;
         const px = Math.round(x * this.tileSize - camera.x);
         const py = Math.round(y * this.tileSize - camera.y);
+        // Tiles with several grids are position-hashed variants, not animation.
+        const variant = variantIndexAt(x, y, sprite.frameCount);
         // Draw the art as-is so its transparency shows through (no backing fill).
-        this.ctx.drawImage(sprite.frame(0), px, py, this.tileSize, this.tileSize);
+        this.ctx.drawImage(sprite.frame(variant), px, py, this.tileSize, this.tileSize);
       }
     }
   }

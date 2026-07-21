@@ -75,12 +75,15 @@ describe('sprite art', () => {
     }
   });
 
-  it('ore tiles share one shape but have distinct palettes', () => {
-    const shape = TILE_SPRITES[TileType.Coal]!.frames[0].join('\n');
+  it('ore tiles share the same shape variants but have distinct palettes', () => {
+    const coal = TILE_SPRITES[TileType.Coal]!;
+    expect(coal.frames.length).toBeGreaterThanOrEqual(2); // visual variety
+    const shapes = coal.frames.map((f) => f.join('\n')).join('\n\n');
+    expect(new Set(coal.frames.map((f) => f.join('\n'))).size).toBe(coal.frames.length);
     const seenPalettes = new Set<string>();
     for (const ore of ORE_TILES) {
       const sprite = TILE_SPRITES[ore]!;
-      expect(sprite.frames[0].join('\n'), TileType[ore]).toBe(shape);
+      expect(sprite.frames.map((f) => f.join('\n')).join('\n\n'), TileType[ore]).toBe(shapes);
       seenPalettes.add(JSON.stringify(sprite.palette));
     }
     expect(seenPalettes.size).toBe(ORE_TILES.length);

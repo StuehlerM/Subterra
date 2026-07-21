@@ -144,10 +144,10 @@ Things that differ from the first draft above, decided during build/playtest:
   upgrade value (0.25 s → 0.07 s). So exploring tunnels feels quick while breaking new
   ground is the thing you upgrade.
 - **Emergency drill (anti-soft-lock)**: at 0 battery the miner can still drill — very slowly
-  (~1.2s/tile) and for free — through **anything except bedrock** (sand, ore of any hardness,
-  even rock, ignoring drill strength). This prevents soft-locks (e.g. a fallen rock blocking
-  the way home with a dead battery). Normal drilling still needs battery + strength and can't
-  break rock (that's dynamite's job). HUD shows ⚠️ when the battery is empty.
+  (~1.2s/tile) and for free — but **only through plain sand** (owner decision after playtest;
+  was "anything except bedrock"). Ore and rock stay put, so the emergency drill can't harvest
+  for free. Tradeoff accepted: a dead battery behind a fallen rock can now strand the miner
+  until dynamite is used — revisit in tuning if kids get stuck. HUD shows ⚠️ when empty.
 - **Battery drains per drill only** (not per move) for now — avoids stranding kids; the
   "little per move" from §6 is deferred/optional tuning.
 - **Dynamite blasts preserve ore** (and bedrock); they clear rock + sand only, so ore is
@@ -168,3 +168,9 @@ Things that differ from the first draft above, decided during build/playtest:
   (player walk, bat flap, sleeping-bat breathing, dynamite spark, flare flicker, portal
   swirl), a 1×16 stretched sky ramp and a 32×32 tileable cave speckle. The whole game
   (code + art) ships as one ~12 KiB gzipped JS file with zero image requests.
+- **Miner is a girl with pink hair** (owner decision after playtest): pink bob under the
+  hard hat, both walk frames.
+- **Ore variants**: all ores share **three** vein-shape variants (one palette per ore);
+  the renderer picks a variant per tile via a deterministic position hash, so ore fields
+  don't look stamped. Tile sprites with multiple grids mean *variants*; entity sprites
+  with multiple grids mean *animation frames*.

@@ -149,9 +149,12 @@ export class Player {
     if (!isSolid(tile)) return true; // walking into open space
     if (tile === TileType.Bedrock) return false; // never removable
 
-    // Out of battery: fall back to the slow, free emergency drill (any non-bedrock
-    // tile, ignoring hardness) so the miner can never be permanently trapped.
-    if (this.battery.isEmpty) return this.emergencyDig(target, tile, world);
+    // Out of battery: fall back to the slow, free emergency drill. It only
+    // chews through plain sand — ore and rock stay put — so the miner can
+    // still crawl home through soft ground but can't harvest for free.
+    if (this.battery.isEmpty) {
+      return tile === TileType.Sand ? this.emergencyDig(target, world) : false;
+    }
 
     if (!isDiggable(tile) || this.drillStrength < tileHardness(tile)) return false;
     const value = tileValue(tile);
@@ -164,12 +167,10 @@ export class Player {
     return true;
   }
 
-  private emergencyDig(target: Vec2, tile: TileType, world: World): boolean {
+  private emergencyDig(target: Vec2, world: World): boolean {
     world.setTile(target.x, target.y, TileType.Empty);
     this.lastDug = target;
     this.lastEmergency = true;
-    const value = tileValue(tile);
-    if (value > 0 && !this.cargo.isFull) this.cargo.add(value);
     return true;
   }
 }

@@ -366,6 +366,31 @@ const X_KEY: SpriteDefinition = {
   palette: { o: '#2b2b35', c: '#e8e0d0', x: '#2b2b35' },
 };
 
+/** The four arrow keys as one compact cluster (controls legend). */
+const ARROWS: SpriteDefinition = {
+  frames: [
+    [
+      '................',
+      '.......aa.......',
+      '......aaaa......',
+      '.....aaaaaa.....',
+      '.......aa.......',
+      '................',
+      '...aa......aa...',
+      '..aaa......aaa..',
+      '.aaaa......aaaa.',
+      '..aaa......aaa..',
+      '...aa......aa...',
+      '................',
+      '.......aa.......',
+      '.....aaaaaa.....',
+      '......aaaa......',
+      '.......aa.......',
+    ],
+  ],
+  palette: { a: '#e8e0d0' },
+};
+
 const PAUSE: SpriteDefinition = {
   frames: [
     [
@@ -530,6 +555,7 @@ export const UI_ICONS: Record<string, SpriteDefinition> = {
   speaker_off: SPEAKER_OFF,
   z_key: Z_KEY,
   battery_wide: BATTERY_WIDE,
+  arrows: ARROWS,
 };
 
 // ------------------------------------------------------------------ emblem

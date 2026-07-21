@@ -1,4 +1,5 @@
 import { Game } from '../../app/Game';
+import { str } from '../../app/strings';
 import { CargoEntry } from '../../domain/Cargo';
 import { AssetRegistry } from '../AssetRegistry';
 import { BATTERY_SEGMENTS } from '../sprites/art/ui';
@@ -25,6 +26,12 @@ const BLINK_RED = '#e04a3a';
 const BATTERY_ART_W = 26;
 /** Segments left at which the battery starts blinking red. */
 const BLINK_AT_SEGMENTS = 1;
+/** The controls legend is drawn smaller so it stays unobtrusive. */
+const LEGEND_SCALE = 3;
+const LEGEND_ICON_PX = ICON_ART * LEGEND_SCALE;
+const LEGEND_TEXT_SCALE = 2;
+const LEGEND_GAP = 6;
+const LEGEND_ROW_GAP = 6;
 
 interface HudRow {
   readonly icon: string;
@@ -66,6 +73,25 @@ export class HudPainter {
     this.panel(canvas.width - MARGIN - coinW, MARGIN, coinRows);
 
     this.bottomRight(game, dynamite.remaining, dynamite.capacity, flare.remaining, flare.capacity);
+    if (!game.isMenuOpen()) this.controlsLegend();
+  }
+
+  /** Bottom-left: which key does what (arrows, Z, X). */
+  private controlsLegend(): void {
+    const { canvas } = this.ctx;
+    const rows: [string, string][] = [
+      ['arrows', str().ctrlMove],
+      ['z_key', str().ctrlDynamite],
+      ['x_key', str().ctrlFlare],
+    ];
+    const height = rows.length * (LEGEND_ICON_PX + LEGEND_ROW_GAP) - LEGEND_ROW_GAP;
+    let y = canvas.height - MARGIN - height;
+    for (const [icon, label] of rows) {
+      this.ui.icon(icon, MARGIN, y, LEGEND_SCALE);
+      const textY = y + Math.round((LEGEND_ICON_PX - GLYPH_H * LEGEND_TEXT_SCALE) / 2);
+      this.ui.text(label, MARGIN + LEGEND_ICON_PX + LEGEND_GAP, textY, LEGEND_TEXT_SCALE);
+      y += LEGEND_ICON_PX + LEGEND_ROW_GAP;
+    }
   }
 
   // ------------------------------------------------------------- battery

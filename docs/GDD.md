@@ -196,6 +196,12 @@ Things that differ from the first draft above, decided during build/playtest:
   player actually does the thing; progress saved per slot; legacy saves never see it.
   The stated goal stays **soft** for now — a real win condition (legendary gem at the
   bottom + win screen) is a future-phase idea (§14).
+- **Translation & legend round (playtest)**: Swedish "options" corrected to
+  INSTÄLLNINGAR; German drill-again button is now the miners' greeting **GLÜCK AUF!**;
+  German/Swedish hint phrasing polished. Tutorial hints restyled: plain white pixel
+  text with a drop shadow, **top-center** (the wood banner blended in too much). New
+  **controls legend** bottom-left during play (arrows = move, Z = dynamite, X = flare,
+  localized), hidden while the shop menu is open.
 - **Big UI round (playtest)**: UI scale doubled to 4× (64px icons, ~20px text). The HUD
   battery is now a **wide segmented battery** (5 discrete blocks, transparent shell from
   the text-sprite system) that **blinks red on the last segment** and flashes the whole

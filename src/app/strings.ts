@@ -27,6 +27,10 @@ export interface UiStrings {
   readonly deleteConfirm: string;
   readonly yes: string;
   readonly no: string;
+  /** Controls legend (bottom-left during play). */
+  readonly ctrlMove: string;
+  readonly ctrlDynamite: string;
+  readonly ctrlFlare: string;
 }
 
 const TABLES: Record<Language, UiStrings> = {
@@ -48,6 +52,9 @@ const TABLES: Record<Language, UiStrings> = {
     deleteConfirm: 'DELETE?',
     yes: 'YES',
     no: 'NO',
+    ctrlMove: 'MOVE',
+    ctrlDynamite: 'DYNAMITE',
+    ctrlFlare: 'FLARE',
   },
   sv: {
     title: 'DEEP DIGGERS',
@@ -57,7 +64,7 @@ const TABLES: Record<Language, UiStrings> = {
     drillAgain: 'BORRA!',
     pressM: 'TRYCK M',
     startGame: 'STARTA SPEL',
-    options: 'ALTERNATIV',
+    options: 'INSTÄLLNINGAR',
     sound: 'LJUD',
     on: 'PÅ',
     off: 'AV',
@@ -67,13 +74,16 @@ const TABLES: Record<Language, UiStrings> = {
     deleteConfirm: 'RADERA?',
     yes: 'JA',
     no: 'NEJ',
+    ctrlMove: 'GÅ',
+    ctrlDynamite: 'DYNAMIT',
+    ctrlFlare: 'BLOSS',
   },
   de: {
     title: 'DEEP DIGGERS',
     pressX: 'DRÜCK X',
     newGame: 'NEUES SPIEL',
     paused: 'PAUSE',
-    drillAgain: 'BOHR!',
+    drillAgain: 'GLÜCK AUF!', // the classic German miners' greeting
     pressM: 'DRÜCK M',
     startGame: 'SPIEL STARTEN',
     options: 'OPTIONEN',
@@ -86,6 +96,9 @@ const TABLES: Record<Language, UiStrings> = {
     deleteConfirm: 'LÖSCHEN?',
     yes: 'JA',
     no: 'NEIN',
+    ctrlMove: 'GEHEN',
+    ctrlDynamite: 'DYNAMIT',
+    ctrlFlare: 'FACKEL',
   },
 };
 
@@ -100,14 +113,14 @@ const TUTORIAL_TABLES: Record<Language, readonly string[]> = {
   sv: [
     'GRÄV NER MED PILARNA!',
     'MALM! FYLL DIN LAST!',
-    'GÅ UPP OCH SÄLJ DÄR UPPE!',
+    'GÅ UPP OCH SÄLJ!',
     'KÖP UPPGRADERINGAR MED X!',
     'GRÄV DJUPT OCH BLI RIK!',
   ],
   de: [
-    'GRAB NACH UNTEN MIT DEN PFEILEN!',
+    'GRAB MIT DEN PFEILEN NACH UNTEN!',
     'ERZ! FÜLL DEINE LADUNG!',
-    'GEH HOCH UND VERKAUF OBEN!',
+    'GEH NACH OBEN UND VERKAUFE!',
     'KAUF UPGRADES MIT X!',
     'GRAB TIEF UND WERDE REICH!',
   ],

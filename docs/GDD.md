@@ -1,18 +1,18 @@
 # Game Design Document — "Subterra" (working title)
 
-> A kid-friendly 2D mining game. Drill down, collect ore, return to the surface to
+> A minimalist 2D mining game. Drill down, collect ore, return to the surface to
 > sell and upgrade, then dig deeper. Inspired by a time-based museum game (Tekniska),
 > but reworked into a relaxed, no-timer, upgrade-driven loop.
 
 ## 1. Vision & Pillars
 - **Relaxed exploration**: No time limit. Progress at your own pace.
 - **Satisfying loop**: Dig → collect → return → sell → upgrade → dig deeper.
-- **Kid-friendly stakes**: Failure is gentle (lose *this run's* loot, never your bank/upgrades).
+- **Minimalist stakes**: Failure is gentle (lose *this run's* loot, never your bank/upgrades).
 - **Easy to expand**: Simple tiles + entities so we can keep adding ores, tools, hazards.
 - **Swappable art**: Start with flat-color/emoji placeholders; replace with real sprites later.
 
 ## 2. Target & Platform
-- **Audience**: Kids (and the parent who builds it 🙂).
+- **Audience**: Anyone who likes a simple, approachable game.
 - **Platform**: Web browser. HTML5 Canvas + TypeScript, **no game engine**.
 - **Input**: Keyboard (WASD/Arrows). Touch controls planned later for tablets.
 
@@ -27,7 +27,7 @@
 ## 4. World & Movement
 - **Grid-based**, tile-by-tile movement in **4 directions** (up/down/left/right).
 - Moving into a diggable tile **digs it** (consuming Battery); moving into empty space walks.
-- **No player gravity** (kid-friendly): the miner can climb freely through any dug/empty
+- **No player gravity** (minimalist): the miner can climb freely through any dug/empty
   tunnel. *Only freed rocks fall* (see Hazards). This avoids fall-death frustration.
 - World is effectively **infinite downward**, generated in chunks.
 
@@ -60,7 +60,7 @@
 - **Dynamite**: starts at **3 carried**, auto-restocked at base, upgradeable capacity.
   - Placed on a tile, short fuse, then explodes with a **small blast radius**.
   - Destroys destructible rock (and sand/ore) in radius; **never harms the player
-    (no friendly fire)** — kid-friendly. Bedrock is immune.
+    (no friendly fire)** — minimalist. Bedrock is immune.
 - **Flares** (banish bats): consumable light source. Light one to create a bright zone that
   makes nearby bats flee & vanish. Upgradeable flashlight later.
 
@@ -68,15 +68,15 @@
 - **Falling rocks**: A destructible rock becomes "freed" when the tile directly below it
   becomes empty (you dug under it, or dynamite cleared below). It falls until it hits
   something. If it falls onto the player → **knock-out** (see Failure). Telegraphed by a
-  brief "wobble" before falling so kids can react.
+  brief "wobble" before falling so the player can react.
 - **Bats**: Sleep in natural cave pockets deeper down. Proximity/noise (digging nearby)
   **wakes** them. Awake bats chase the player.
-  - Touch = **instant knock-out** (kid-friendly wording, not "death").
+  - Touch = **instant knock-out** (minimalist wording, not "death").
   - **Escape**: outrun them (player can break line-of-sight/close distance via tunnels),
     or use a **flare/light** to make them flee and vanish. Bats tire and return to sleep
     if they lose the player for a few seconds.
 
-## 8. Failure (kid-friendly rogue-lite)
+## 8. Failure (minimalist rogue-lite)
 - On knock-out (crushed or bat touch): screen fades, miner "wakes up" at base.
 - **Penalty**: lose **only the ore/cargo collected this run** (not yet sold).
 - **Kept**: money already banked, all upgrades, and consumable *capacity* (restocked).
@@ -149,7 +149,7 @@
 Things that differ from the first draft above, decided during build/playtest:
 - **Shop is a keyboard modal, not a mouse/touch overlay** (§11). It opens on surface
   arrival and **freezes the miner**; navigated with arrows, **X** confirms, **Z** closes.
-  Owner preference (no mouse; pictograms only for ages 5–6).
+  Owner preference (no mouse; pictograms only, minimalist).
 - **UI is pictograms/emoji + numbers, no words** (🪙 📦 🔋 🧨 ⬇️; ●/○ level pips; 🪙cost; ⭐ maxed).
 - **Walking is faster than drilling**: moving through open/dug tiles is a fixed fast speed
   (0.07 s/tile, = the fastest drill level); drilling solid ground uses the Drill Speed
@@ -159,8 +159,8 @@ Things that differ from the first draft above, decided during build/playtest:
   (~1.2s/tile) and for free — but **only through plain sand** (owner decision after playtest;
   was "anything except bedrock"). Ore and rock stay put, so the emergency drill can't harvest
   for free. Tradeoff accepted: a dead battery behind a fallen rock can now strand the miner
-  until dynamite is used — revisit in tuning if kids get stuck. HUD shows ⚠️ when empty.
-- **Battery drains per drill only** (not per move) for now — avoids stranding kids; the
+  until dynamite is used — revisit in tuning if players get stuck. HUD shows ⚠️ when empty.
+- **Battery drains per drill only** (not per move) for now — avoids stranding the player; the
   "little per move" from §6 is deferred/optional tuning.
 - **Dynamite blasts preserve ore** (and bedrock); they clear rock + sand only, so ore is
   never wasted. Blast is a 3×3 area; **no friendly fire** (player never harmed).

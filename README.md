@@ -1,6 +1,6 @@
 # Subterra
 
-A kid-friendly 2D mining game: dig down, collect ore, return to the surface to sell and
+A minimalist 2D mining game: dig down, collect ore, return to the surface to sell and
 upgrade, then dig deeper. Built with TypeScript + HTML5 Canvas (no game engine).
 
 See [`docs/GDD.md`](docs/GDD.md) for the design and [`docs/adr/`](docs/adr) for the key

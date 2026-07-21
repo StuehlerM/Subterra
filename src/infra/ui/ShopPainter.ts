@@ -28,7 +28,7 @@ const PIP_OFF = '#3a2c1a';
 const COST_TEXT_SCALE = 2;
 const COST_COIN_SCALE = 2;
 
-/** Which UI icon shows each upgrade (no words, for young players). */
+/** Which UI icon shows each upgrade (no words, minimalist). */
 const UPGRADE_ICON: Record<UpgradeType, string> = {
   [UpgradeType.DrillStrength]: 'pickaxe',
   [UpgradeType.DrillSpeed]: 'lightning',

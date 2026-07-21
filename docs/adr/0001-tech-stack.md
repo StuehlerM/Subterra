@@ -1,7 +1,7 @@
 # ADR 0001: Tech Stack — TypeScript + HTML5 Canvas, no engine
 
 ## Context
-We need a 2D, browser-based mining game that is easy for the kids to run/share, cheap to
+We need a 2D, browser-based mining game that is easy to run/share, cheap to
 iterate on, and lets us start with placeholder graphics and swap in real art later.
 Constraints from the owner: web-based, HTML5 + TypeScript, **no game engine** (e.g. Godot).
 The game is a grid/tile world with simple 2D rendering and modest performance needs.

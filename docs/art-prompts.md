@@ -5,7 +5,7 @@ Use these to generate **consistent** fantasy artwork for the assets in
 every asset and only change the **Subject**. Reuse the same model, the same seed,
 and (if your tool supports it) a **style reference** image from your first good result.
 
-- Game look: **2D side-view (cross-section) mining game** for young kids (ages ~5–6).
+- Game look: **2D side-view (cross-section) mining game** in a minimalist pixel style.
 - Draw **one asset per image**, centered, filling the frame, **1:1 square**.
 - Export **PNG, 32×32 px** (or generate larger, e.g. 512×512, then downscale to 32).
 - **Tiles**: opaque, edge-to-edge, **seamlessly tileable** (no border, no drop shadow).
@@ -17,7 +17,7 @@ and (if your tool supports it) a **style reference** image from your first good 
 
 > Cute fantasy 2D game art, hand-painted storybook style, vibrant saturated colors,
 > bold readable silhouettes, thick clean outlines, soft cel shading, gentle rim light,
-> cozy underground mining theme, friendly and kid-appropriate, high contrast so it reads
+> cozy underground mining theme, friendly and minimalist, high contrast so it reads
 > at tiny sizes, centered, flat lighting from top-left, 1:1 square, game asset.
 
 ## Technical suffix (append to EVERY prompt)

@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "license": "MIT",
-  "description": "Kid-friendly 2D mining game (dig, collect, return, upgrade).",
+  "description": "Minimalist 2D mining game (dig, collect, return, upgrade).",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

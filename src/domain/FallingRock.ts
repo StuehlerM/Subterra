@@ -14,7 +14,7 @@ export enum RockState {
 }
 
 /**
- * A rock that has lost its support. It first wobbles in place (so kids can
+ * A rock that has lost its support. It first wobbles in place (so players can
  * react), then falls straight down one tile at a time until the tile below is
  * solid, at which point it settles back into the world as a Rock tile. While
  * transiting it is an entity, not a tile.

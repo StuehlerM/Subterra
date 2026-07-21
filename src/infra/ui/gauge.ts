@@ -10,7 +10,7 @@ const COMFORT_FRACTION = 0.5;
 const LOW_FRACTION = 0.2;
 
 /**
- * How many of `units` cells a gauge shows filled. Kid-friendly rules: any
+ * How many of `units` cells a gauge shows filled. Minimalist rules: any
  * non-zero charge shows at least one unit, and only a full charge shows all.
  */
 export function filledUnits(current: number, capacity: number, units: number): number {

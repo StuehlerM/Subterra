@@ -1,7 +1,7 @@
 # PLAN — Subterra (mining game)
 
 ## Task
-Design-first, then build a kid-friendly, web-based 2D mining game in TypeScript + HTML5
+Design-first, then build a minimalist, web-based 2D mining game in TypeScript + HTML5
 Canvas (no engine). Core loop: dig down → collect ore → return to surface base → sell &
 upgrade → dig deeper. Includes sand, destructible rocks (dynamite), indestructible bedrock,
 falling-rock and bat hazards, procedural generation, an upgrade economy, and gentle

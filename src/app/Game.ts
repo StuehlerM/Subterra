@@ -75,11 +75,15 @@ export class Game {
     const atBase = this.isAtBase();
     if (atBase && !this.wasAtBase) this.menuOpen = true; // pop the menu on arrival
 
-    // The miner is frozen while the surface menu is open.
+    // The miner is frozen while the surface menu is open, and can never climb
+    // above the surface/shop level into the open sky.
     if (direction && !this.player.isMoving && !this.menuOpen) {
-      this.player.tryStartMove(direction, this.world);
-      const dug = this.player.justDug;
-      if (dug) this.freeRocksAbove(dug.x, dug.y);
+      const climbingAboveSurface = direction.dy < 0 && this.player.tile.y <= this.surfaceRows - 1;
+      if (!climbingAboveSurface) {
+        this.player.tryStartMove(direction, this.world);
+        const dug = this.player.justDug;
+        if (dug) this.freeRocksAbove(dug.x, dug.y);
+      }
     }
     this.updateDynamites(dt);
     this.updateFallingRocks(dt);

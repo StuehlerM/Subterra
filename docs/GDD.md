@@ -200,6 +200,11 @@ Things that differ from the first draft above, decided during build/playtest:
   player actually does the thing; progress saved per slot; legacy saves never see it.
   The stated goal stays **soft** for now — a real win condition (legendary gem at the
   bottom + win screen) is a future-phase idea (§14).
+- **Valley surface + deeper world (playtest)**: the world is much deeper (180 rows) and
+  the miner spawns in the **centre of a valley**: sloped bedrock cliffs step down from
+  each wall to an open central floor, with **open sky above** (no ceiling). The miner
+  is clamped so they can't climb above the shop/surface level into that sky. Ore depths
+  were spread (coal 1 → gem 70) and caves/portals increased for the taller shaft.
 - **Translation & legend round (playtest)**: Swedish "options" corrected to
   INSTÄLLNINGAR; German drill-again button is now the miners' greeting **GLÜCK AUF!**;
   German/Swedish hint phrasing polished. Tutorial hints restyled: plain white pixel

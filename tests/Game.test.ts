@@ -81,6 +81,18 @@ describe('Game base economy', () => {
   });
 });
 
+describe('Game surface clamp', () => {
+  it('cannot climb above the surface/shop level into the open sky', () => {
+    // 3 sky rows over a sand floor; miner stands on the surface floor (row 2).
+    const world = worldFrom(['....', '....', '....', 'ssss']);
+    const player = new Player(new Vec2(1, 2), { moveDuration: MOVE_DURATION });
+    const game = new Game(world, player, new PlayerProgress(), 3, new Vec2(1, 2), [], []);
+    game.step(MOVE_DURATION, UP);
+    expect(player.isMoving).toBe(false); // blocked, even though the sky is open
+    expect(player.tile.equals(new Vec2(1, 2))).toBe(true);
+  });
+});
+
 describe('Game surface menu', () => {
   it('does not open the menu at game start (you spawn at the surface)', () => {
     const game = newGame(['....', 'ssss'], new Vec2(0, 0));

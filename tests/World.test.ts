@@ -5,6 +5,7 @@ import { TileType, isDiggable, isOre } from '../src/domain/tiles';
 
 const SIZE = 10;
 const SURFACE_ROWS = 3;
+const CENTER = Math.floor(SIZE / 2);
 
 describe('World generation', () => {
   it('generates identical worlds for the same seed', () => {
@@ -28,22 +29,34 @@ describe('World generation', () => {
     }
   });
 
-  it('leaves open-air surface rows at the top and diggable ground below', () => {
+  it('leaves open-air surface rows above the valley floor and diggable ground below', () => {
     const world = World.generate(SIZE, SIZE, 1, {
       surfaceRows: SURFACE_ROWS,
       pillarChance: 0,
       rockChance: 0,
     });
-    // Interior surface rows are open air.
+    // The central column is open air above the valley floor.
     for (let y = 0; y < SURFACE_ROWS; y++) {
-      expect(world.getTile(3, y)).toBe(TileType.Empty);
+      expect(world.getTile(CENTER, y)).toBe(TileType.Empty);
     }
     // Interior ground rows are diggable (sand or ore) with no bedrock pillars.
     for (let y = SURFACE_ROWS; y < SIZE - 1; y++) {
-      const tile = world.getTile(3, y);
+      const tile = world.getTile(CENTER, y);
       expect(tile).not.toBe(TileType.Empty);
       expect(isDiggable(tile)).toBe(true);
     }
+  });
+
+  it('raises sloped bedrock cliffs in the top corners, open sky in the middle', () => {
+    const world = World.generate(20, 20, 1, { surfaceRows: 6, pillarChance: 0, rockChance: 0 });
+    // Full-height rock beside each wall, sloping down toward the centre.
+    expect(world.getTile(1, 0)).toBe(TileType.Bedrock); // tall cliff by the left wall
+    expect(world.getTile(1, 5)).toBe(TileType.Bedrock);
+    expect(world.getTile(18, 0)).toBe(TileType.Bedrock); // and the right wall
+    expect(world.getTile(3, 1)).toBe(TileType.Empty); // sky above the lower slope
+    // No bedrock above the central valley floor.
+    expect(world.getTile(10, 0)).toBe(TileType.Empty);
+    expect(world.getTile(10, 5)).toBe(TileType.Empty);
   });
 
   it('carves caves and returns bat spawns on cave floors', () => {

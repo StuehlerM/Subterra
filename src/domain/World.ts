@@ -6,16 +6,22 @@ const DEFAULT_PILLAR_CHANCE = 0.16;
 const DEFAULT_ROCK_CHANCE = 0.05;
 const DEFAULT_SURFACE_ROWS = 3;
 const DEFAULT_SPAWN = new Vec2(1, 1);
+/**
+ * Fraction of the interior width that each side's sloped bedrock cliff spans,
+ * so the surface reads as a valley: tall rock by the walls stepping down to an
+ * open sky over the central floor.
+ */
+const VALLEY_SLOPE = 0.22;
 
 // Cave/bat tuning.
-const DEFAULT_CAVE_COUNT = 10;
+const DEFAULT_CAVE_COUNT = 22;
 const MIN_CAVE_DEPTH = 8; // rows below the surface before caves may appear
 const CAVE_MAX_WIDTH = 4;
 const CAVE_MAX_HEIGHT = 3;
 
 // Portal tuning: magic gateways that whisk the miner back to the surface.
-const DEFAULT_PORTAL_COUNT = 6;
-const MIN_PORTAL_DEPTH = 10;
+const DEFAULT_PORTAL_COUNT = 12;
+const MIN_PORTAL_DEPTH = 12;
 
 export interface GeneratedWorld {
   readonly world: World;
@@ -35,12 +41,13 @@ interface OreSpec {
 
 // Rarer/deeper ores first so they claim the low end of the random roll.
 // Chances kept deliberately low so money (and upgrades) come at a steady pace.
+// Depths spread over the (now much deeper) world so each tier gates a stretch.
 const ORE_SPECS: readonly OreSpec[] = [
-  { tile: TileType.Gem, minDepth: 30, chance: 0.01 },
-  { tile: TileType.Gold, minDepth: 20, chance: 0.02 },
-  { tile: TileType.Silver, minDepth: 12, chance: 0.03 },
-  { tile: TileType.Iron, minDepth: 6, chance: 0.04 },
-  { tile: TileType.Copper, minDepth: 2, chance: 0.05 },
+  { tile: TileType.Gem, minDepth: 70, chance: 0.01 },
+  { tile: TileType.Gold, minDepth: 45, chance: 0.02 },
+  { tile: TileType.Silver, minDepth: 26, chance: 0.03 },
+  { tile: TileType.Iron, minDepth: 12, chance: 0.04 },
+  { tile: TileType.Copper, minDepth: 4, chance: 0.05 },
   { tile: TileType.Coal, minDepth: 1, chance: 0.06 },
 ];
 
@@ -181,10 +188,26 @@ export class World {
   ): TileType {
     // Left/right walls and the bottom floor are indestructible; the top is open sky.
     if (x === 0 || x === width - 1 || y === height - 1) return TileType.Bedrock;
-    if (y < surfaceRows) return TileType.Empty;
+    // Above the ground: sloped cliffs by the walls, open sky over the valley.
+    if (y < surfaceRows) {
+      return World.isCliffBedrock(x, y, width, surfaceRows) ? TileType.Bedrock : TileType.Empty;
+    }
     if (rng.next() < pillarChance) return TileType.Bedrock;
     if (rng.next() < rockChance) return TileType.Rock;
     return World.pickOre(y - surfaceRows, rng);
+  }
+
+  /**
+   * Whether a sky-band tile belongs to a side cliff: tallest (full height)
+   * next to each wall, stepping down to the open centre over `span` columns.
+   */
+  private static isCliffBedrock(x: number, y: number, width: number, surfaceRows: number): boolean {
+    const span = Math.floor((width - 2) * VALLEY_SLOPE);
+    if (span < 1) return false;
+    const dist = Math.min(x, width - 1 - x); // 1 == column beside a wall
+    if (dist < 1 || dist > span) return false;
+    const cliffTopY = Math.round(((dist - 1) / span) * surfaceRows);
+    return y >= cliffTopY;
   }
 
   private static pickOre(depth: number, rng: Rng): TileType {

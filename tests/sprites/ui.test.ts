@@ -47,7 +47,7 @@ describe('ui icons', () => {
     const needed = [
       'coin', 'crate', 'battery', 'dynamite', 'flare', 'depth',
       'pickaxe', 'lightning', 'blast', 'star', 'x_key', 'pause', 'plus',
-      'drill_down', 'warning',
+      'drill_down', 'warning', 'speaker_on', 'speaker_off',
     ];
     for (const name of needed) expect(UI_ICONS[name], name).toBeDefined();
   });

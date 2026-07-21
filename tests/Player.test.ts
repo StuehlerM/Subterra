@@ -102,6 +102,26 @@ describe('Player battery', () => {
   });
 });
 
+describe('Player justCollected', () => {
+  it('reports the ore type it just drilled, then forgets it', () => {
+    const world = worldFrom(['.C']);
+    const player = miner(new Vec2(0, 0));
+    expect(player.tryStartMove(RIGHT, world)).toBe(true);
+    expect(player.justCollected).toBe(TileType.Coal);
+    player.update(1);
+    const openWorld = worldFrom(['..', '..']);
+    player.tryStartMove(RIGHT, openWorld);
+    expect(player.justCollected).toBeNull(); // walking collects nothing
+  });
+
+  it('does not report plain sand as a collection', () => {
+    const world = worldFrom(['.s']);
+    const player = miner(new Vec2(0, 0));
+    player.tryStartMove(RIGHT, world);
+    expect(player.justCollected).toBeNull();
+  });
+});
+
 describe('Player emergency drill (empty battery)', () => {
   it('slowly drills sand for free when out of battery', () => {
     const world = worldFrom(['.s']);

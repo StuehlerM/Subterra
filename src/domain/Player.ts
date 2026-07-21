@@ -58,6 +58,7 @@ export class Player {
   private progress = 0;
   private activeDuration = DEFAULT_WALK_DURATION;
   private lastDug: Vec2 | null = null;
+  private lastCollected: TileType | null = null;
   private lastEmergency = false;
 
   constructor(
@@ -83,6 +84,11 @@ export class Player {
   /** The tile drilled by the most recent tryStartMove, or null if none. */
   get justDug(): Vec2 | null {
     return this.lastDug;
+  }
+
+  /** The ore type collected by the most recent tryStartMove, or null. */
+  get justCollected(): TileType | null {
+    return this.lastCollected;
   }
 
   /** Smooth position in tile units, for rendering. */
@@ -116,6 +122,7 @@ export class Player {
    */
   tryStartMove(direction: Direction, world: World): boolean {
     this.lastDug = null;
+    this.lastCollected = null;
     this.lastEmergency = false;
     if (this.moving) return false;
     const target = this.tile.add(new Vec2(direction.dx, direction.dy));
@@ -163,7 +170,10 @@ export class Player {
     world.setTile(target.x, target.y, TileType.Empty);
     this.lastDug = target;
     this.battery.drain(DIG_BATTERY_COST);
-    if (value > 0) this.cargo.add(value);
+    if (value > 0) {
+      this.cargo.add(value);
+      this.lastCollected = tile;
+    }
     return true;
   }
 

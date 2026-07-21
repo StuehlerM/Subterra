@@ -1,4 +1,4 @@
-import { Bat } from '../domain/Bat';
+import { Bat, BatState } from '../domain/Bat';
 import { Direction } from '../domain/Direction';
 import { Dynamite } from '../domain/Dynamite';
 import { sellCargo } from '../domain/Economy';
@@ -222,9 +222,18 @@ export class Game {
 
   private updateBatsAndFlares(dt: number): void {
     this.updateFlares(dt);
+    // The surface base is a safe haven: bats can't knock the miner out there,
+    // and any that chased them home give up (flee and vanish) so they can't
+    // camp the frozen miner or strike the moment they descend again.
+    const safe = this.isAtBase();
     for (const bat of this.bats) {
       const result = bat.update(dt, this.world, this.player.tile);
-      if (result.hitPlayer) this.knockout();
+      if (result.hitPlayer && !safe) this.knockout();
+    }
+    if (safe) {
+      for (const bat of this.bats) {
+        if (bat.phase === BatState.Chasing) bat.startFleeing(this.player.tile);
+      }
     }
     for (let i = this.bats.length - 1; i >= 0; i--) {
       if (this.bats[i].isGone) this.bats.splice(i, 1);

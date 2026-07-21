@@ -69,6 +69,10 @@
   becomes empty (you dug under it, or dynamite cleared below). It falls until it hits
   something. If it falls onto the player → **knock-out** (see Failure). Telegraphed by a
   brief "wobble" before falling so the player can react.
+- **Base is a bat-safe zone (bugfix)**: bats can't knock the miner out while at the
+  surface, and any bat still *chasing* when the miner reaches home gives up (flees and
+  vanishes). Fixes a soft-lock where a bat that followed the miner up struck the frozen
+  miner on every respawn — stuck forever.
 - **Bats**: Sleep in natural cave pockets deeper down. Proximity/noise (digging nearby)
   **wakes** them. Awake bats chase the player.
   - Touch = **instant knock-out** (minimalist wording, not "death").

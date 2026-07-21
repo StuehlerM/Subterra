@@ -240,6 +240,15 @@ describe('Game bats and flares', () => {
     expect(game.progress.money).toBe(50); // kept the bank
   });
 
+  it('the base is a safe zone: a bat that follows the miner up is banished, never a knockout loop', () => {
+    // Regression: a chasing bat that reached the frozen miner at the surface
+    // used to knock them out on every respawn — stuck forever.
+    const game = newGame(['..', '..', '##'], new Vec2(0, 0), {}, [new Vec2(1, 0)]);
+    for (let i = 0; i < STEPS; i++) game.step(FIXED_DT, null);
+    expect(game.knockoutFlash).toBe(0); // never knocked out at home
+    expect(game.activeBats.length).toBe(0); // the pursuer gave up and vanished
+  });
+
   it('a flare banishes a nearby bat without harming the miner', () => {
     const game = newGame(TUNNEL, new Vec2(6, 1), {}, [new Vec2(3, 1)]);
     game.step(FIXED_DT, null); // bat wakes

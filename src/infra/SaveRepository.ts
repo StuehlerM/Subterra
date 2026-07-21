@@ -6,11 +6,14 @@ export const SLOT_COUNT = 3;
 interface SlotData {
   readonly seed: number;
   readonly progress: PlayerProgressData;
+  readonly tutorialStep?: number;
 }
 
 export interface SlotSave {
   readonly seed: number;
   readonly progress: PlayerProgress;
+  /** Saved tutorial step, or null when finished (legacy blobs count as finished). */
+  readonly tutorialStep: number | null;
 }
 
 /** What the slot picker shows for an occupied slot. */
@@ -32,11 +35,18 @@ export class SaveRepository {
 
   loadSlot(slot: number): SlotSave | null {
     const data = this.read(slot);
-    return data && { seed: data.seed, progress: PlayerProgress.fromJSON(data.progress) };
+    return (
+      data && {
+        seed: data.seed,
+        progress: PlayerProgress.fromJSON(data.progress),
+        tutorialStep: data.tutorialStep ?? null,
+      }
+    );
   }
 
-  saveSlot(slot: number, seed: number, progress: PlayerProgress): void {
-    this.storage.setItem(this.slotKey(slot), JSON.stringify({ seed, progress: progress.toJSON() }));
+  saveSlot(slot: number, seed: number, progress: PlayerProgress, tutorialStep?: number): void {
+    const data: SlotData = { seed, progress: progress.toJSON(), tutorialStep };
+    this.storage.setItem(this.slotKey(slot), JSON.stringify(data));
   }
 
   /** One entry per slot: its money, or null while the slot is empty. */

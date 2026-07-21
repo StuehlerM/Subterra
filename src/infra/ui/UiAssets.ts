@@ -1,4 +1,4 @@
-import { DIGIT_FONT, EMBLEM, FONT_PALETTE, PANELS, UI_ICONS } from '../sprites/art/ui';
+import { EMBLEM, FONT_PALETTE, PANELS, PIXEL_FONT, UI_ICONS } from '../sprites/art/ui';
 import { BakedSprite } from '../sprites/bake';
 
 /** Bakes every UI grid (glyphs, icons, panels, emblem) once, at startup. */
@@ -9,7 +9,7 @@ export class UiAssets {
   readonly emblem: BakedSprite;
 
   private constructor() {
-    for (const [char, grid] of Object.entries(DIGIT_FONT)) {
+    for (const [char, grid] of Object.entries(PIXEL_FONT)) {
       this.glyphs.set(char, BakedSprite.bake({ frames: [grid], palette: FONT_PALETTE }));
     }
     for (const [name, sprite] of Object.entries(UI_ICONS)) {

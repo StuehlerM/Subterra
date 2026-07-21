@@ -12,8 +12,12 @@ import { ENTITY_SPRITES } from './entities';
 
 export const FONT_PALETTE: Palette = { x: '#fff3d6' };
 
-/** 3x5 glyphs for numbers and the count separator. */
-export const DIGIT_FONT: Record<string, TextureGrid> = {
+/**
+ * 3x5 glyphs: digits, uppercase letters and a little punctuation. Space is
+ * not a glyph — the painter just advances the cursor. ('O' intentionally
+ * shares the '0' shape; at 3x5 there is only one honest way to draw it.)
+ */
+export const PIXEL_FONT: Record<string, TextureGrid> = {
   '0': ['xxx', 'x.x', 'x.x', 'x.x', 'xxx'],
   '1': ['.x.', 'xx.', '.x.', '.x.', 'xxx'],
   '2': ['xxx', '..x', 'xxx', 'x..', 'xxx'],
@@ -25,6 +29,35 @@ export const DIGIT_FONT: Record<string, TextureGrid> = {
   '8': ['xxx', 'x.x', 'xxx', 'x.x', 'xxx'],
   '9': ['xxx', 'x.x', 'xxx', '..x', 'xxx'],
   '/': ['..x', '..x', '.x.', 'x..', 'x..'],
+  A: ['xxx', 'x.x', 'xxx', 'x.x', 'x.x'],
+  B: ['xx.', 'x.x', 'xx.', 'x.x', 'xx.'],
+  C: ['xxx', 'x..', 'x..', 'x..', 'xxx'],
+  D: ['xx.', 'x.x', 'x.x', 'x.x', 'xx.'],
+  E: ['xxx', 'x..', 'xx.', 'x..', 'xxx'],
+  F: ['xxx', 'x..', 'xx.', 'x..', 'x..'],
+  G: ['xxx', 'x..', 'x.x', 'x.x', 'xxx'],
+  H: ['x.x', 'x.x', 'xxx', 'x.x', 'x.x'],
+  I: ['xxx', '.x.', '.x.', '.x.', 'xxx'],
+  J: ['..x', '..x', '..x', 'x.x', 'xxx'],
+  K: ['x.x', 'x.x', 'xx.', 'x.x', 'x.x'],
+  L: ['x..', 'x..', 'x..', 'x..', 'xxx'],
+  M: ['x.x', 'xxx', 'xxx', 'x.x', 'x.x'],
+  N: ['xxx', 'x.x', 'x.x', 'x.x', 'x.x'],
+  O: ['xxx', 'x.x', 'x.x', 'x.x', 'xxx'],
+  P: ['xxx', 'x.x', 'xxx', 'x..', 'x..'],
+  Q: ['xxx', 'x.x', 'x.x', 'xxx', '..x'],
+  R: ['xxx', 'x.x', 'xx.', 'x.x', 'x.x'],
+  S: ['.xx', 'x..', '.x.', '..x', 'xx.'],
+  T: ['xxx', '.x.', '.x.', '.x.', '.x.'],
+  U: ['x.x', 'x.x', 'x.x', 'x.x', 'xxx'],
+  V: ['x.x', 'x.x', 'x.x', 'x.x', '.x.'],
+  W: ['x.x', 'x.x', 'xxx', 'xxx', 'x.x'],
+  X: ['x.x', 'x.x', '.x.', 'x.x', 'x.x'],
+  Y: ['x.x', 'x.x', '.x.', '.x.', '.x.'],
+  Z: ['xxx', '..x', '.x.', 'x..', 'xxx'],
+  '!': ['.x.', '.x.', '.x.', '...', '.x.'],
+  '?': ['xxx', '..x', '.xx', '...', '.x.'],
+  "'": ['.x.', '.x.', '...', '...', '...'],
 };
 
 // ------------------------------------------------------------------ panels

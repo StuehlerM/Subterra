@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { parseGrid } from '../../src/infra/sprites/grid';
 import {
   BATTERY_INTERIOR,
-  DIGIT_FONT,
   EMBLEM,
   FONT_PALETTE,
   PANELS,
   PANEL_CORNER,
+  PIXEL_FONT,
   UI_ICONS,
 } from '../../src/infra/sprites/art/ui';
 
@@ -16,10 +16,10 @@ const ICON_SIZE = 16;
 const PANEL_SIZE = 24;
 const EMBLEM_SIZE = 32;
 
-describe('digit font', () => {
-  it('has a 3x5 glyph for every digit and the slash', () => {
-    for (const char of '0123456789/') {
-      const glyph = DIGIT_FONT[char];
+describe('pixel font', () => {
+  it('has a 3x5 glyph for every digit, letter and punctuation mark', () => {
+    for (const char of "0123456789/ABCDEFGHIJKLMNOPQRSTUVWXYZ!?'") {
+      const glyph = PIXEL_FONT[char];
       expect(glyph, char).toBeDefined();
       const parsed = parseGrid(glyph, FONT_PALETTE);
       expect(parsed.width, char).toBe(GLYPH_W);
@@ -27,9 +27,10 @@ describe('digit font', () => {
     }
   });
 
-  it('digits are distinct from each other', () => {
-    const shapes = new Set(Object.values(DIGIT_FONT).map((g) => g.join('\n')));
-    expect(shapes.size).toBe(Object.keys(DIGIT_FONT).length);
+  it('glyphs are distinct (except the classic O/0 pair)', () => {
+    const entries = Object.entries(PIXEL_FONT).filter(([char]) => char !== 'O');
+    const shapes = new Set(entries.map(([, g]) => g.join('\n')));
+    expect(shapes.size).toBe(entries.length);
   });
 });
 

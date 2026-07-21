@@ -33,6 +33,14 @@ describe('SaveRepository slots', () => {
     expect(save.loadSlot(0)).toBeNull();
   });
 
+  it('round-trips the tutorial step, treating legacy blobs as finished', () => {
+    const save = repo();
+    save.saveSlot(0, 42, new PlayerProgress(0), 2);
+    expect(save.loadSlot(0)?.tutorialStep).toBe(2);
+    save.saveSlot(1, 42, new PlayerProgress(0)); // no step given = finished
+    expect(save.loadSlot(1)?.tutorialStep).toBeNull();
+  });
+
   it('round-trips seed and progress per slot, independently', () => {
     const save = repo();
     save.saveSlot(0, 42, new PlayerProgress(100));
@@ -74,6 +82,7 @@ describe('SaveRepository legacy migration', () => {
 
     expect(save.loadSlot(0)?.seed).toBe(LEGACY_SEED);
     expect(save.loadSlot(0)?.progress.money).toBe(500);
+    expect(save.loadSlot(0)?.tutorialStep).toBeNull(); // veterans skip the tutorial
     expect(storage.getItem(LEGACY_KEY)).toBeNull(); // consumed
   });
 

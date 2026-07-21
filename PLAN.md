@@ -1,74 +1,75 @@
-# PLAN — Canvas game UI (title + 3 save slots, HUD, shop, pause)
+# PLAN — Text & tutorial (relaxing the no-words policy)
 
-> Previous task (text-grid sprite system + playtest fixes) is complete — see git
-> history and `docs/ROADMAP.md`. Sound/SFX is explicitly **the phase after this**.
+> Previous tasks (text-sprite system, canvas UI + save slots) are complete — see
+> git history. Sound/SFX remains the phase after this one.
 
 ## Task
-Replace the DOM overlays with a **canvas-native, fantasy wood/stone styled UI**
-drawn with the existing text-sprite system:
+Add a small amount of **written text** to the UI plus a **contextual first-run
+tutorial**, while keeping the pictogram-first philosophy and the zero-asset
+pipeline (letters become new 3×5 text-grid glyphs — still no fonts, no images).
 
-1. **Title screen** with a logo/emblem and a **3-save-slot picker** (small "load
-   game" flow; slots show 🪙 money or an empty-slot mark).
-2. **HUD in canvas**: pictograms + numbers via a tiny pixel digit font; the
-   **battery drawn as an actual battery** whose fill lowers (green → yellow →
-   red), cargo as a crate that fills up; dynamite/flare counts; depth.
-3. **Shop menu in canvas** (same behaviour as today: Left/Right pick, Down =
-   Drill again, X buy/confirm, Z close; opens on surface arrival, freezes miner).
-4. **Pause screen** (wood panel, ⏸ pictogram).
-5. Controls stay exactly as they are (arrows/WASD + Z + X, pictograms only).
+## Decisions (owner-approved defaults)
+- **Language: English**, but all strings live in one string table
+  (`src/app/strings.ts`) so translation later is a file swap.
+- **Where text appears** (supplement, not replacement):
+  - Title: game name **"DEEP DIGGERS"** + "PRESS X".
+  - Slot picker: **"NEW GAME"** on empty slots; money stays on used slots.
+  - Shop: the **highlighted** upgrade's name under the row; "DRILL AGAIN" on
+    the button.
+  - Pause: **"PAUSED"**.
+- **Tutorial**: contextual one-time hints during a slot's first run, shown in a
+  wood banner at the bottom; each advances when the action happens (or X):
+  1. On first spawn: "DIG DOWN WITH THE ARROWS!"
+  2. First ore collected: "ORE! FILL YOUR CARGO!"
+  3. Cargo full or battery low first time: "GO UP AND SELL AT THE TOP!"
+  4. First shop open: "BUY UPGRADES WITH X!"
+  5. After first purchase / shop close: "DIG DEEP AND GET RICH!" (soft goal)
+  - Tutorial progress is **saved per slot**; a finished tutorial never returns.
+- **Goal**: soft goal only for now ("dig deep and get rich"). A real win
+  condition (legendary gem at the bottom + win screen) is noted as a future
+  phase in the roadmap, not built now.
+- **Font**: extend the existing 3×5 pixel digit font with **A–Z and ! ' ?**,
+  uppercase only, rendered at 2× like the digits. No new render tech.
 
-## Decisions (confirmed by owner)
-- **Pause**: **Esc** toggles pause (meta key; the 6 gameplay keys unchanged),
-  plus auto-pause when the window loses focus.
-- **Slots**: existing single save migrates into slot 1 (keeps its old fixed
-  seed). No slot-delete UI in v1 (console wipe stays); delete/copy = future.
-- **New game per slot**: each slot stores **its own world seed** alongside
-  money/upgrades. Picking an empty slot rolls a fresh random seed and starts
-  with zero upgrades; picking a used slot regenerates *its* world from *its*
-  seed and continues its progress.
-
-## Architecture (dependencies stay infra → app → domain)
-- `src/app/AppFlow.ts` — **pure, tested** screen state machine:
-  `Title → SlotSelect → Playing ⇄ Paused`. Owns slot-cursor + which screen
-  consumes keys; gameplay input only reaches `Game` in `Playing`.
-- `src/app/ShopMenu.ts` — extract the shop **selection/buy logic** out of the
-  DOM `Shop` into a tested app model (Boy Scout: state was living in infra).
-- `SaveRepository` — 3 slots (`…-save-v1:slot{0..2}`); the blob gains a
-  `seed` field; `slotSummaries()` for the picker; legacy-key migration (old
-  blob → slot 1 + the old fixed seed). Tested against an in-memory Storage
-  fake. `main.ts` builds the world from the chosen slot's seed.
-- `src/infra/sprites/art/ui.ts` — UI art as text grids: 9-slice **wood panel**
-  + **stone frame**, 3×5 **digit font** (0–9, `/`), icons (coin, crate,
-  battery shell, dynamite, flare, depth arrow, pause bars, ⛏️⬇️ drill-again),
-  upgrade icons (reuse entity/tile grids where possible), 32×32 title emblem.
-- `src/infra/ui/*Painter.ts` — thin canvas painters (9-slice stretch, number
-  layout, gauge fills) driven by the app models; pure layout/gauge math lives
-  in tested helpers (e.g. `filledUnits(current, capacity, units)`).
-- **Delete** DOM `Hud` + `Shop`; `main.ts` wires `AppFlow` between input,
-  `Game`, and the painters.
+## Architecture
+- `src/infra/sprites/art/ui.ts` — extend `DIGIT_FONT` → full `PIXEL_FONT`
+  (A–Z, 0–9, `/ ! ? '` and space); art-validation tests cover every glyph.
+- `src/app/strings.ts` — every user-facing string as a named constant.
+- `src/app/Tutorial.ts` — **pure, tested** step machine. Inputs are game
+  events/observations (`update(game)` derives: dug first tile? cargo has ore?
+  cargo full/battery low? menu open? bought something?); outputs
+  `currentHint(): string | null`. Serializes to a small `{ step }` blob.
+- `SaveRepository` — slot blob gains optional `tutorialStep` (backwards
+  compatible: missing field = tutorial finished for old saves, EXCEPT brand-new
+  slots start at step 0). Tested.
+- `src/infra/ui/` — `UiPainter.text()` learns letters (same code path);
+  `HintPainter` (bottom wood banner + text + blinking X key); ShopPainter adds
+  the selected upgrade's name; ScreenPainters add title/slot/pause labels.
+- `main.ts` — owns a `Tutorial` per session; saves step with the slot.
 
 ## Steps (TDD; commit per milestone)
-1. **AppFlow** — RED: boot lands on Title; X → SlotSelect; Left/Right cursor;
-   X picks slot; Esc toggles pause only while playing; blur pauses; gameplay
-   keys ignored outside Playing. GREEN: implement.
-2. **Save slots** — RED: 3 independent slots (each with own seed), fresh-seed
-   creation for empty slots, summaries, legacy migration keeps old seed,
-   corrupt-JSON safety. GREEN: extend `SaveRepository`.
-3. **ShopMenu model** — RED: port menu behaviour specs (navigate, buy success/
-   fail, drill-again, close). GREEN: extract from DOM Shop; `Game` unchanged.
-4. **UI art + helpers** — RED: art validation (digit glyphs 3×5, 9-slice
-   pieces consistent, icons 16×16), gauge math. GREEN: draw the art.
-5. **Painters + wiring** — HUD/shop/title/pause painters on canvas; remove DOM
-   overlays; typecheck/build; zero regressions in existing 138 tests.
-6. **Playtest + polish** — owner eyeballs style/feel; tune grids/colors.
-7. **Docs** — GDD §11/§12/§16, HANDOVER, README controls section.
+1. **Font glyphs** — RED: validation tests for A–Z/punctuation (3×5, distinct,
+   parse). GREEN: author the glyphs. Extend `UiPainter.text` width tests? (pure
+   `textWidth` already covered by logic — keep painter thin.)
+2. **Strings table** — trivial module + test that all tutorial/UI strings only
+   use characters the font has (great guard!).
+3. **Tutorial machine** — RED: step advancement from game states (dig → ore →
+   return → shop → done), X-skip, serialization round-trip, per-slot
+   persistence rules. GREEN: implement.
+4. **Save integration** — RED: slot blob round-trips `tutorialStep`; legacy
+   blobs load as finished. GREEN.
+5. **Painters + wiring** — HintPainter banner, shop upgrade names, title/pause
+   labels, slot "NEW GAME"; wire tutorial into main.ts session + save.
+6. **Playtest + polish** — owner checks readability (2× font) + hint pacing.
+7. **Docs** — GDD (§11 controls/UI, §16 deviations: no-words policy relaxed,
+   soft goal), HANDOVER, README; add legendary-gem win condition to roadmap
+   ideas.
 
 ## Verification
-- All existing tests stay green + new AppFlow/save/menu/art/gauge tests.
-- Build clean; still zero image files; UI keys unchanged for gameplay.
-- Manual playtest of: cold start → title → empty slot (fresh world) → play →
-  surface menu → pause → refresh → slot shows money → continue (same world);
-  second slot gives a different world.
+- All existing 179 tests stay green + new font/strings/tutorial/save tests.
+- Typecheck + build clean; still zero image/font files shipped.
+- Manual: new slot shows hints in order and never again after finishing;
+  old slot (migrated) shows no hints; all text readable at 1080p.
 
 ## Status
 - [x] Plan written

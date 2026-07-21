@@ -1,4 +1,4 @@
-import { STRINGS } from '../../app/strings';
+import { str } from '../../app/strings';
 import { TileType } from '../../domain/tiles';
 import { AssetRegistry } from '../AssetRegistry';
 import { SlotSummary, SLOT_COUNT } from '../SaveRepository';
@@ -47,17 +47,17 @@ export class ScreenPainters {
     this.ui.icon('pickaxe', x - flankPx - 16, flankY, FLANK_SCALE);
     this.ui.icon('pickaxe', x + emblemPx + 16, flankY, FLANK_SCALE);
 
-    const titleW = this.ui.textWidth(STRINGS.title, TITLE_TEXT_SCALE);
+    const titleW = this.ui.textWidth(str().title, TITLE_TEXT_SCALE);
     const titleY = y + emblemPx + 24;
-    this.ui.text(STRINGS.title, Math.round((canvas.width - titleW) / 2), titleY, TITLE_TEXT_SCALE);
+    this.ui.text(str().title, Math.round((canvas.width - titleW) / 2), titleY, TITLE_TEXT_SCALE);
 
     if (frameIndexAt(timeMs, 2, BLINK_MS) === 0) {
-      const promptW = ICON_PX + 8 + this.ui.textWidth(STRINGS.pressX, LABEL_TEXT_SCALE);
+      const promptW = ICON_PX + 8 + this.ui.textWidth(str().pressX, LABEL_TEXT_SCALE);
       const promptX = Math.round((canvas.width - promptW) / 2);
       const promptY = titleY + GLYPH_H * TITLE_TEXT_SCALE + 28;
       this.ui.icon('x_key', promptX, promptY, SCALE);
       const textY = promptY + Math.round((ICON_PX - GLYPH_H * LABEL_TEXT_SCALE) / 2);
-      this.ui.text(STRINGS.pressX, promptX + ICON_PX + 8, textY, LABEL_TEXT_SCALE);
+      this.ui.text(str().pressX, promptX + ICON_PX + 8, textY, LABEL_TEXT_SCALE);
     }
   }
 
@@ -88,21 +88,21 @@ export class ScreenPainters {
     this.ui.nineSlice(this.ui.assets.panel('stone'), x, y, PAUSE_PANEL, PAUSE_PANEL, SCALE);
     const iconPx = 16 * 5;
     this.ui.icon('pause', x + (PAUSE_PANEL - iconPx) / 2, y + (PAUSE_PANEL - iconPx) / 2 - 8, 5);
-    const labelW = this.ui.textWidth(STRINGS.paused, LABEL_TEXT_SCALE);
+    const labelW = this.ui.textWidth(str().paused, LABEL_TEXT_SCALE);
     this.ui.text(
-      STRINGS.paused,
+      str().paused,
       x + Math.round((PAUSE_PANEL - labelW) / 2),
       y + PAUSE_PANEL - GLYPH_H * LABEL_TEXT_SCALE - 16,
       LABEL_TEXT_SCALE,
     );
 
     // Sound state under the panel: speaker icon + the key that flips it.
-    const hintW = ICON_PX + 8 + this.ui.textWidth(STRINGS.pressM, LABEL_TEXT_SCALE);
+    const hintW = ICON_PX + 8 + this.ui.textWidth(str().pressM, LABEL_TEXT_SCALE);
     const hintX = Math.round((canvas.width - hintW) / 2);
     const hintY = y + PAUSE_PANEL + 16;
     this.ui.icon(muted ? 'speaker_off' : 'speaker_on', hintX, hintY, SCALE);
     const textY = hintY + Math.round((ICON_PX - GLYPH_H * LABEL_TEXT_SCALE) / 2);
-    this.ui.text(STRINGS.pressM, hintX + ICON_PX + 8, textY, LABEL_TEXT_SCALE);
+    this.ui.text(str().pressM, hintX + ICON_PX + 8, textY, LABEL_TEXT_SCALE);
   }
 
   /** Sky ramp above two rows of sand — the world the menus lead into. */
@@ -132,9 +132,9 @@ export class ScreenPainters {
     const contentY = y + CARD_H - ICON_PX - 24;
     if (summary === null) {
       this.ui.icon('plus', x + Math.round((CARD_W - ICON_PX) / 2), contentY - 10, SCALE);
-      const labelW = this.ui.textWidth(STRINGS.newGame, LABEL_TEXT_SCALE);
+      const labelW = this.ui.textWidth(str().newGame, LABEL_TEXT_SCALE);
       this.ui.text(
-        STRINGS.newGame,
+        str().newGame,
         x + Math.round((CARD_W - labelW) / 2),
         contentY + ICON_PX - 4,
         LABEL_TEXT_SCALE,

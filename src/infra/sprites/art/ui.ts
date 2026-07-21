@@ -55,6 +55,11 @@ export const PIXEL_FONT: Record<string, TextureGrid> = {
   X: ['x.x', 'x.x', '.x.', 'x.x', 'x.x'],
   Y: ['x.x', 'x.x', '.x.', '.x.', '.x.'],
   Z: ['xxx', '..x', '.x.', 'x..', 'xxx'],
+  // Diacritics get the top row; the letter squeezes into the remaining four.
+  '\u00c5': ['.x.', 'xxx', 'x.x', 'xxx', 'x.x'],
+  '\u00c4': ['x.x', 'xxx', 'x.x', 'xxx', 'x.x'],
+  '\u00d6': ['x.x', 'xxx', 'x.x', 'x.x', 'xxx'],
+  '\u00dc': ['x.x', '...', 'x.x', 'x.x', 'xxx'],
   '!': ['.x.', '.x.', '.x.', '...', '.x.'],
   '?': ['xxx', '..x', '.xx', '...', '.x.'],
   "'": ['.x.', '.x.', '...', '...', '...'],
@@ -285,6 +290,58 @@ const STAR: SpriteDefinition = {
   palette: { y: '#ffe36e' },
 };
 
+const Z_KEY: SpriteDefinition = {
+  frames: [
+    [
+      '................',
+      '................',
+      '..oooooooooooo..',
+      '.occcccccccccco.',
+      '.occcccccccccco.',
+      '.occczzzzzzccco.',
+      '.occccccczzccco.',
+      '.occccczzccccco.',
+      '.occczzccccccco.',
+      '.occczzzzzzccco.',
+      '.occcccccccccco.',
+      '.occcccccccccco.',
+      '..oooooooooooo..',
+      '................',
+      '................',
+      '................',
+    ],
+  ],
+  palette: { o: '#2b2b35', c: '#e8e0d0', z: '#2b2b35' },
+};
+
+/**
+ * The wide segmented battery (the HUD's real battery). The interior is
+ * transparent; the painter draws up to five charge blocks behind it using
+ * BATTERY_SEGMENTS, so the shell's outline stays crisp on top.
+ */
+const BATTERY_WIDE: SpriteDefinition = {
+  frames: [
+    [
+      'ooooooooooooooooooooooo...',
+      'o.....................o...',
+      'o.....................o...',
+      'o.....................ott.',
+      'o.....................ott.',
+      'o.....................ott.',
+      'o.....................ott.',
+      'o.....................ott.',
+      'o.....................ott.',
+      'o.....................o...',
+      'o.....................o...',
+      'ooooooooooooooooooooooo...',
+    ],
+  ],
+  palette: { o: '#23262e', t: '#aeb6bf' },
+};
+
+/** Segment geometry inside BATTERY_WIDE, in art pixels. */
+export const BATTERY_SEGMENTS = { x: 2, y: 2, w: 3, h: 8, gap: 1, count: 5 };
+
 const X_KEY: SpriteDefinition = {
   frames: [
     [
@@ -471,6 +528,8 @@ export const UI_ICONS: Record<string, SpriteDefinition> = {
   warning: WARNING,
   speaker_on: SPEAKER_ON,
   speaker_off: SPEAKER_OFF,
+  z_key: Z_KEY,
+  battery_wide: BATTERY_WIDE,
 };
 
 // ------------------------------------------------------------------ emblem

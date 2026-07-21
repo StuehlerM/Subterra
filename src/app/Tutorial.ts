@@ -1,7 +1,8 @@
-import { TUTORIAL_HINTS } from './strings';
+/** How many hints the tutorial walks through (see strings tutorialHints). */
+const TUTORIAL_STEP_COUNT = 5;
 
 /** Step value meaning "tutorial finished, stay silent forever". */
-export const TUTORIAL_DONE = TUTORIAL_HINTS.length;
+export const TUTORIAL_DONE = TUTORIAL_STEP_COUNT;
 
 /** How deep the final "dig deep" step considers deep enough. */
 const GOAL_DEPTH = 5;
@@ -35,9 +36,13 @@ export class Tutorial {
     return this.current;
   }
 
-  /** The hint to show right now, or null when the tutorial is over. */
-  currentHint(): string | null {
-    return this.current < TUTORIAL_DONE ? TUTORIAL_HINTS[this.current] : null;
+  /**
+   * The index of the hint to show right now, or null when the tutorial is
+   * over. Callers resolve the text at draw time, so language switches
+   * retitle the active hint immediately.
+   */
+  currentHintIndex(): number | null {
+    return this.current < TUTORIAL_DONE ? this.current : null;
   }
 
   /** Advances at most one step per call, so hints are never skipped unseen. */

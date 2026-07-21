@@ -1,6 +1,6 @@
 import { Game } from '../../app/Game';
 import { ShopMenu } from '../../app/ShopMenu';
-import { STRINGS, UPGRADE_NAMES } from '../../app/strings';
+import { str, upgradeNames } from '../../app/strings';
 import { UpgradeType, maxLevel } from '../../domain/upgrades';
 import { UiPainter } from './UiPainter';
 
@@ -66,7 +66,7 @@ export class ShopPainter {
       this.drawCell(game, type, x, y, index === menu.selectedIndex && !menu.onDrillAgain);
     });
 
-    const label = STRINGS.drillAgain;
+    const label = str().drillAgain;
     const labelW = this.ui.textWidth(label, NAME_TEXT_SCALE);
     const buttonW = BUTTON_PADDING * 2 + ICON_PX + BUTTON_ICON_GAP + labelW;
     const buttonX = panelX + Math.round((panelW - buttonW) / 2);
@@ -88,7 +88,7 @@ export class ShopPainter {
 
     this.ctx.save();
     if (cost !== null && !affordable) this.ctx.globalAlpha = UNAFFORDABLE_ALPHA;
-    const name = UPGRADE_NAMES[type];
+    const name = upgradeNames()[type];
     const nameW = this.ui.textWidth(name, NAME_TEXT_SCALE);
     this.ui.text(name, x + Math.round((CELL_W - nameW) / 2), y + NAME_Y, NAME_TEXT_SCALE);
     this.ui.icon(UPGRADE_ICON[type], x + (CELL_W - ICON_PX) / 2, y + CELL_ICON_Y, SCALE);

@@ -12,6 +12,7 @@ import {
 import { FixedTimestep } from './app/FixedTimestep';
 import { Game } from './app/Game';
 import { ShopMenu } from './app/ShopMenu';
+import { tutorialHints } from './app/strings';
 import { Tutorial, TUTORIAL_DONE } from './app/Tutorial';
 import { BatState } from './domain/Bat';
 import { Player } from './domain/Player';
@@ -265,8 +266,10 @@ function bootstrap(): void {
         renderer.render(session.game, session.fog);
         hud.draw(session.game);
         if (session.game.isMenuOpen()) shop.draw(session.game, session.menu);
-        const hint = session.tutorial.currentHint();
-        if (hint && flow.screen === Screen.Playing) hints.draw(hint);
+        const hintIndex = session.tutorial.currentHintIndex();
+        if (hintIndex !== null && flow.screen === Screen.Playing) {
+          hints.draw(tutorialHints()[hintIndex]);
+        }
         if (flow.screen === Screen.Paused) screens.pause(audio.muted);
         break;
     }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseGrid } from '../../src/infra/sprites/grid';
 import {
   BATTERY_INTERIOR,
+  BATTERY_SEGMENTS,
   EMBLEM,
   FONT_PALETTE,
   PANELS,
@@ -18,7 +19,7 @@ const EMBLEM_SIZE = 32;
 
 describe('pixel font', () => {
   it('has a 3x5 glyph for every digit, letter and punctuation mark', () => {
-    for (const char of "0123456789/ABCDEFGHIJKLMNOPQRSTUVWXYZ!?'") {
+    for (const char of "0123456789/ABCDEFGHIJKLMNOPQRSTUVWXYZ\u00c5\u00c4\u00d6\u00dc!?'") {
       const glyph = PIXEL_FONT[char];
       expect(glyph, char).toBeDefined();
       const parsed = parseGrid(glyph, FONT_PALETTE);
@@ -35,19 +36,31 @@ describe('pixel font', () => {
 });
 
 describe('ui icons', () => {
-  it('every icon parses and is 16x16', () => {
+  it('every icon parses; all but the wide battery are 16x16', () => {
     for (const [name, sprite] of Object.entries(UI_ICONS)) {
       const parsed = parseGrid(sprite.frames[0], sprite.palette);
+      if (name === 'battery_wide') {
+        expect(parsed.width, name).toBe(26);
+        expect(parsed.height, name).toBe(12);
+        continue;
+      }
       expect(parsed.width, name).toBe(ICON_SIZE);
       expect(parsed.height, name).toBe(ICON_SIZE);
     }
+  });
+
+  it('the battery segments fit inside the wide shell', () => {
+    const { x, y, w, h, gap, count } = BATTERY_SEGMENTS;
+    expect(count).toBe(5);
+    expect(x + count * w + (count - 1) * gap).toBeLessThan(26 - 1); // inside outline
+    expect(y + h).toBeLessThan(12 - 1);
   });
 
   it('covers everything the HUD, shop, title and pause screens need', () => {
     const needed = [
       'coin', 'crate', 'battery', 'dynamite', 'flare', 'depth',
       'pickaxe', 'lightning', 'blast', 'star', 'x_key', 'pause', 'plus',
-      'drill_down', 'warning', 'speaker_on', 'speaker_off',
+      'drill_down', 'warning', 'speaker_on', 'speaker_off', 'z_key', 'battery_wide',
     ];
     for (const name of needed) expect(UI_ICONS[name], name).toBeDefined();
   });

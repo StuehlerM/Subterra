@@ -34,30 +34,36 @@ const SAND_PALETTE = {
   e: '#8f6f33', // deep shadow spots
 };
 
+/**
+ * Bedrock: dense, dark diagonal strata with hard crack lines, sharp ridges and
+ * a few crystalline glints — obviously solid/unbreakable, and clearly not the
+ * smooth rounded boulder that can fall. Tiles cleanly (4px diagonal period).
+ */
 const BEDROCK: TextureGrid = [
-  'kkkkkkkkkkkkkkkk',
-  'kbbbbbbbkbbbbbbb',
-  'kbhbbbbbkbbbbmbb',
-  'kbbbbmbbkbhbbbbb',
-  'kbbbbbbbkbbbbbbb',
-  'kkkkkkkkkkkkkkkk',
-  'bbbbkbbbbbbbkbbb',
-  'bhbbkbbbmbbbkbbb',
-  'bbbbkbbbbbbbkbmb',
-  'bbbbkbhbbbbbkbbb',
-  'kkkkkkkkkkkkkkkk',
-  'kbbbbbbbkbbbbbbb',
-  'kbbmbbbbkbbbbhbb',
-  'kbhbbbbbkbmbbbbb',
-  'kbbbbbbbkbbbbbbb',
-  'kkkkkkkkkkkkkkkk',
+  'dhbmdhbmdhbmdhbm',
+  'hbmdhbmdhbmdhbmd',
+  'bmdhbgdhbmdhbmdh',
+  'mdhbmdhbmdhbmdhb',
+  'dhbmdhbmdhbmdhbm',
+  'hbmdhbmdhbmdgbmd',
+  'bmdhbmdhbmdhbmdh',
+  'mdhbmdhbmdhbmdhb',
+  'dhbmdhbmdhbmdhbm',
+  'hbgdhbmdhbmdhbmd',
+  'bmdhbmdhbmdhbmdh',
+  'mdhbmdhbmdhbmdhb',
+  'dhbmdhbmdhbmdhbm',
+  'hbmdhbmdhgmdhbmd',
+  'bmdhbmdhbmdhbmdh',
+  'mdhbmdhbmdhbmdhb',
 ];
 
 const BEDROCK_PALETTE = {
-  b: '#3a3f4b', // stone block
-  h: '#4a5060', // chipped highlight
-  m: '#2c313c', // pit shadow
-  k: '#23262e', // mortar lines
+  d: '#171a20', // dark crack line
+  b: '#2b303a', // base stone
+  m: '#363c48', // mid facet
+  h: '#4a5264', // ridge highlight
+  g: '#7e879a', // crystalline glint
 };
 
 const ROCK: TextureGrid = [

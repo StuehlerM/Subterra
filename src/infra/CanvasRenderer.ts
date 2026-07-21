@@ -8,11 +8,20 @@ import { World } from '../domain/World';
 import { TileType } from '../domain/tiles';
 import { AssetRegistry } from './AssetRegistry';
 import { FogOfWar } from './FogOfWar';
+import { frameIndexAt } from './sprites/animation';
+import { BakedSprite } from './sprites/bake';
 
 /** Below this many seconds of fuse left, the dynamite blinks faster. */
 const FUSE_URGENT_SECONDS = 0.6;
 const BLINK_SLOW_MS = 260;
 const BLINK_FAST_MS = 110;
+
+/** Sprite art is authored at 16 pixels per tile; the renderer scales it up. */
+const ART_PIXELS_PER_TILE = 16;
+/** Idle animations (bats, flares, portals) flip frames at this rate. */
+const FRAME_DURATION_MS = 250;
+/** The miner's walk cycle swaps legs at this (faster) rate. */
+const WALK_FRAME_MS = 120;
 
 /** Fog: clear within CLEAR tiles of the miner, fading to hidden by DIM (double). */
 const CLEAR_RADIUS = 4;
@@ -22,7 +31,6 @@ const FLARE_REVEAL_RADIUS = 5;
 const HIDDEN_COLOR = '#0a0b16';
 /** Parallax factor for the backdrop (moves slower than the world). */
 const BACKGROUND_PARALLAX = 0.5;
-const SKY_TOP_COLOR = '#3f7cc0';
 
 interface Camera {
   readonly x: number;
@@ -67,6 +75,7 @@ export class CanvasRenderer {
 
   render(game: Game, fog: FogOfWar): void {
     const { canvas } = this.ctx;
+    this.ctx.imageSmoothingEnabled = false; // keep scaled pixel art crisp
     const center = game.player.renderPosition();
     const camera: Camera = {
       x: center.x * this.tileSize + this.tileSize / 2 - canvas.width / 2,
@@ -83,7 +92,7 @@ export class CanvasRenderer {
     for (const rock of game.activeFallingRocks) this.drawFallingRock(rock, camera);
     for (const dynamite of game.activeDynamites) this.drawDynamite(dynamite, camera);
     for (const bat of game.activeBats) this.drawBat(bat, camera);
-    this.drawPlayer(center, camera);
+    this.drawPlayer(center, game.player.isMoving, camera);
     this.drawFogMask(camera, fog);
     if (game.knockoutFlash > 0) this.drawKnockoutFlash(game.knockoutFlash);
   }
@@ -105,16 +114,12 @@ export class CanvasRenderer {
       for (let x = minX; x <= maxX; x++) {
         const tile = world.getTile(x, y);
         if (tile === TileType.Empty) continue; // open space: show the backdrop
+        const sprite = this.assets.tile(tile);
+        if (!sprite) continue;
         const px = Math.round(x * this.tileSize - camera.x);
         const py = Math.round(y * this.tileSize - camera.y);
-        const image = this.assets.tileImage(tile);
-        if (image) {
-          // Draw the art as-is so its transparency shows through (no backing fill).
-          this.ctx.drawImage(image, px, py, this.tileSize, this.tileSize);
-        } else {
-          this.ctx.fillStyle = this.assets.tileStyle(tile).color;
-          this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
-        }
+        // Draw the art as-is so its transparency shows through (no backing fill).
+        this.ctx.drawImage(sprite.frame(0), px, py, this.tileSize, this.tileSize);
       }
     }
   }
@@ -175,57 +180,32 @@ export class CanvasRenderer {
   }
 
   /**
-   * Backdrop: a tiled cave layer everywhere, with the sky drawn over the region
-   * above the surface line. Open tiles are skipped so this shows through them.
+   * Backdrop: a tiled cave layer everywhere, with the sky ramp stretched over
+   * the region above the surface line. Open tiles are skipped so this shows
+   * through them.
    */
   private drawBackground(camera: Camera, surfaceRow: number): void {
     const { canvas } = this.ctx;
     const surfaceY = Math.round(surfaceRow * this.tileSize - camera.y * BACKGROUND_PARALLAX);
 
-    const cave = this.assets.background('cave');
-    if (cave) {
-      this.tileBackdrop(cave, camera);
-    } else {
-      const gradient = this.ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, '#123138');
-      gradient.addColorStop(1, '#06121a');
-      this.ctx.fillStyle = gradient;
-      this.ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
+    this.tileBackdrop(this.assets.background('cave'), camera);
 
     if (surfaceY > 0) {
-      this.ctx.save();
-      this.ctx.beginPath();
-      this.ctx.rect(0, 0, canvas.width, surfaceY);
-      this.ctx.clip();
       const sky = this.assets.background('sky');
-      if (sky) {
-        const h = Math.round((canvas.width / sky.naturalWidth) * sky.naturalHeight);
-        if (surfaceY - h > 0) {
-          this.ctx.fillStyle = SKY_TOP_COLOR;
-          this.ctx.fillRect(0, 0, canvas.width, surfaceY - h);
-        }
-        this.ctx.drawImage(sky, 0, surfaceY - h, canvas.width, h);
-      } else {
-        const gradient = this.ctx.createLinearGradient(0, 0, 0, surfaceY);
-        gradient.addColorStop(0, SKY_TOP_COLOR);
-        gradient.addColorStop(1, '#cfeaf6');
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, canvas.width, surfaceY);
-      }
-      this.ctx.restore();
+      this.ctx.drawImage(sky.frame(0), 0, 0, canvas.width, surfaceY);
     }
   }
 
-  private tileBackdrop(image: HTMLImageElement, camera: Camera): void {
+  private tileBackdrop(sprite: BakedSprite, camera: Camera): void {
     const { canvas } = this.ctx;
-    const iw = image.naturalWidth;
-    const ih = image.naturalHeight;
+    const scale = this.tileSize / ART_PIXELS_PER_TILE;
+    const iw = sprite.width * scale;
+    const ih = sprite.height * scale;
     const startX = -((((camera.x * BACKGROUND_PARALLAX) % iw) + iw) % iw);
     const startY = -((((camera.y * BACKGROUND_PARALLAX) % ih) + ih) % ih);
     for (let y = startY; y < canvas.height; y += ih) {
       for (let x = startX; x < canvas.width; x += iw) {
-        this.ctx.drawImage(image, Math.round(x), Math.round(y));
+        this.ctx.drawImage(sprite.frame(0), Math.round(x), Math.round(y), iw, ih);
       }
     }
   }
@@ -243,21 +223,20 @@ export class CanvasRenderer {
     this.ctx.arc(cx, cy, radius, 0, Math.PI * 2);
     this.ctx.fill();
 
-    const image = this.assets.entityImage('portal');
-    if (image) {
-      this.ctx.drawImage(
-        image,
-        Math.round(tile.x * this.tileSize - camera.x),
-        Math.round(tile.y * this.tileSize - camera.y),
-        this.tileSize,
-        this.tileSize,
-      );
-    } else {
-      this.ctx.font = `${Math.floor(this.tileSize * 0.8)}px serif`;
-      this.ctx.textAlign = 'center';
-      this.ctx.textBaseline = 'middle';
-      this.ctx.fillText('🌀', cx, cy);
-    }
+    this.drawEntity('portal', tile.x, tile.y, camera);
+  }
+
+  /** Blits an entity sprite at a tile position, animating by wall-clock time. */
+  private drawEntity(name: string, tileX: number, tileY: number, camera: Camera): void {
+    const sprite = this.assets.entity(name);
+    const frame = frameIndexAt(performance.now(), sprite.frameCount, FRAME_DURATION_MS);
+    this.ctx.drawImage(
+      sprite.frame(frame),
+      Math.round(tileX * this.tileSize - camera.x),
+      Math.round(tileY * this.tileSize - camera.y),
+      this.tileSize,
+      this.tileSize,
+    );
   }
 
   private drawFallingRock(rock: FallingRock, camera: Camera): void {
@@ -265,52 +244,26 @@ export class CanvasRenderer {
       rock.phase === RockState.Wobbling ? Math.sin(performance.now() / 40) * (this.tileSize * 0.08) : 0;
     const px = Math.round(rock.tile.x * this.tileSize - camera.x + wobble);
     const py = Math.round((rock.tile.y + rock.fallProgress) * this.tileSize - camera.y);
-    const image = this.assets.tileImage(TileType.Rock);
-    if (image) {
-      this.ctx.drawImage(image, px, py, this.tileSize, this.tileSize);
-    } else {
-      this.ctx.fillStyle = this.assets.tileStyle(TileType.Rock).color;
-      this.ctx.fillRect(px, py, this.tileSize, this.tileSize);
-    }
+    const sprite = this.assets.tile(TileType.Rock);
+    if (sprite) this.ctx.drawImage(sprite.frame(0), px, py, this.tileSize, this.tileSize);
   }
 
   private drawDynamite(dynamite: Dynamite, camera: Camera): void {
     const px = Math.round(dynamite.tile.x * this.tileSize - camera.x);
     const py = Math.round(dynamite.tile.y * this.tileSize - camera.y);
+    // The spark frames flip at the blink rate; it speeds up as the fuse runs out.
     const blinkMs = dynamite.fuseRemaining < FUSE_URGENT_SECONDS ? BLINK_FAST_MS : BLINK_SLOW_MS;
-    const lit = Math.floor(performance.now() / blinkMs) % 2 === 0;
-
-    const image = this.assets.entityImage('dynamite');
-    if (image) {
-      this.ctx.save();
-      this.ctx.globalAlpha = lit ? 1 : 0.7;
-      this.ctx.drawImage(image, px, py, this.tileSize, this.tileSize);
-      this.ctx.restore();
-      return;
-    }
-    const inset = Math.round(this.tileSize * 0.2);
-    this.ctx.fillStyle = lit ? '#ff5a3c' : '#b53218';
-    this.ctx.fillRect(px + inset, py + inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
-    this.ctx.fillStyle = lit ? '#ffe36e' : '#8a6a1e';
-    this.ctx.fillRect(px + this.tileSize / 2 - 2, py + inset - 4, 4, 5);
+    const sprite = this.assets.entity('dynamite');
+    const frame = frameIndexAt(performance.now(), sprite.frameCount, blinkMs);
+    this.ctx.drawImage(sprite.frame(frame), px, py, this.tileSize, this.tileSize);
   }
 
   private drawBat(bat: Bat, camera: Camera): void {
     const p = bat.renderPosition();
-    const px = Math.round(p.x * this.tileSize - camera.x);
-    const py = Math.round(p.y * this.tileSize - camera.y);
     const asleep = bat.phase === BatState.Sleeping;
     this.ctx.save();
-    this.ctx.globalAlpha = asleep ? 0.7 : bat.phase === BatState.Fleeing ? 0.5 : 1;
-    const image = this.assets.entityImage(asleep ? 'bat_asleep' : 'bat');
-    if (image) {
-      this.ctx.drawImage(image, px, py, this.tileSize, this.tileSize);
-    } else {
-      this.ctx.font = `${Math.floor(this.tileSize * 0.8)}px serif`;
-      this.ctx.textAlign = 'center';
-      this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(asleep ? '😴' : '🦇', px + this.tileSize / 2, py + this.tileSize / 2);
-    }
+    this.ctx.globalAlpha = asleep ? 0.85 : bat.phase === BatState.Fleeing ? 0.5 : 1;
+    this.drawEntity(asleep ? 'bat_asleep' : 'bat', p.x, p.y, camera);
     this.ctx.restore();
   }
 
@@ -326,34 +279,20 @@ export class CanvasRenderer {
     this.ctx.arc(cx, cy, radius, 0, Math.PI * 2);
     this.ctx.fill();
 
-    const image = this.assets.entityImage('flare');
-    if (image) {
-      this.ctx.drawImage(
-        image,
-        Math.round(flare.tile.x * this.tileSize - camera.x),
-        Math.round(flare.tile.y * this.tileSize - camera.y),
-        this.tileSize,
-        this.tileSize,
-      );
-    } else {
-      this.ctx.font = `${Math.floor(this.tileSize * 0.8)}px serif`;
-      this.ctx.textAlign = 'center';
-      this.ctx.textBaseline = 'middle';
-      this.ctx.fillText('🔥', cx, cy);
-    }
+    this.drawEntity('flare', flare.tile.x, flare.tile.y, camera);
   }
 
-  private drawPlayer(center: Vec2, camera: Camera): void {
-    const px = Math.round(center.x * this.tileSize - camera.x);
-    const py = Math.round(center.y * this.tileSize - camera.y);
-    const image = this.assets.entityImage('player');
-    if (image) {
-      this.ctx.drawImage(image, px, py, this.tileSize, this.tileSize);
-      return;
-    }
-    const padding = Math.round(this.tileSize * 0.12);
-    this.ctx.fillStyle = this.assets.player;
-    this.ctx.fillRect(px + padding, py + padding, this.tileSize - padding * 2, this.tileSize - padding * 2);
+  private drawPlayer(center: Vec2, moving: boolean, camera: Camera): void {
+    const sprite = this.assets.entity('player');
+    // Legs swap while walking/drilling; standing still always shows frame 0.
+    const frame = moving ? frameIndexAt(performance.now(), sprite.frameCount, WALK_FRAME_MS) : 0;
+    this.ctx.drawImage(
+      sprite.frame(frame),
+      Math.round(center.x * this.tileSize - camera.x),
+      Math.round(center.y * this.tileSize - camera.y),
+      this.tileSize,
+      this.tileSize,
+    );
   }
 
   private drawKnockoutFlash(intensity: number): void {

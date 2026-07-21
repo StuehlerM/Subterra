@@ -1,34 +1,44 @@
 import { Game } from '../../app/Game';
 import { CargoEntry } from '../../domain/Cargo';
 import { AssetRegistry } from '../AssetRegistry';
-import { BATTERY_INTERIOR } from '../sprites/art/ui';
+import { BATTERY_SEGMENTS } from '../sprites/art/ui';
+import { frameIndexAt } from '../sprites/animation';
 import { filledUnits, gaugeColor } from './gauge';
 import { UiPainter } from './UiPainter';
 
-const SCALE = 2;
-const ICON_PX = 16 * SCALE;
-const MARGIN = 8;
-const PADDING = 10;
-const ROW_GAP = 4;
-const ICON_TEXT_GAP = 6;
-const TEXT_SCALE = 2;
+const SCALE = 4;
+const ICON_ART = 16;
+const ICON_PX = ICON_ART * SCALE;
+const MARGIN = 10;
+const PADDING = 14;
+const ROW_GAP = 8;
+const ICON_TEXT_GAP = 10;
+const TEXT_SCALE = 4;
 const GLYPH_H = 5;
 /** Mini ore chips in the cargo contents row. */
-const CHIP_PX = 16;
-const CHIP_GAP = 6;
-const CHIP_TEXT_SCALE = 1;
+const CHIP_PX = 24;
+const CHIP_GAP = 10;
+const CHIP_TEXT_SCALE = 2;
+/** The last battery segment blinks red at this rate. */
+const BLINK_MS = 300;
+const BLINK_RED = '#e04a3a';
+const BATTERY_ART_W = 26;
+/** Segments left at which the battery starts blinking red. */
+const BLINK_AT_SEGMENTS = 1;
 
 interface HudRow {
   readonly icon: string;
   readonly text: string;
+  /** Art-pixel width of the icon (the wide battery is 26, others 16). */
+  readonly iconArtWidth?: number;
   readonly decorate?: (x: number, y: number) => void;
 }
 
 /**
- * The always-on HUD, spread over the screen corners: battery + depth top-left,
- * the money pouch top-right, and the cargo hold (with what's inside) plus
- * dynamite/flare counts bottom-right. The battery is a real battery whose
- * charge lowers and shifts green → yellow → red.
+ * The always-on HUD, spread over the screen corners: the big segmented
+ * battery + depth top-left, the money pouch top-right, and the cargo hold
+ * (with what's inside) plus dynamite/flare counts bottom-right. The battery
+ * loses discrete segments and blinks red on the last one.
  */
 export class HudPainter {
   constructor(
@@ -43,11 +53,10 @@ export class HudPainter {
 
     this.panel(MARGIN, MARGIN, [
       {
-        icon: battery.isEmpty ? 'warning' : 'battery',
+        icon: 'battery_wide',
+        iconArtWidth: BATTERY_ART_W,
         text: `${battery.current}/${battery.capacity}`,
-        decorate: battery.isEmpty
-          ? undefined
-          : (x, y) => this.batteryFill(x, y, battery.current, battery.capacity),
+        decorate: (x, y) => this.batterySegments(x, y, battery.current, battery.capacity),
       },
       { icon: 'depth', text: `${game.depth()}` },
     ]);
@@ -57,6 +66,32 @@ export class HudPainter {
     this.panel(canvas.width - MARGIN - coinW, MARGIN, coinRows);
 
     this.bottomRight(game, dynamite.remaining, dynamite.capacity, flare.remaining, flare.capacity);
+  }
+
+  // ------------------------------------------------------------- battery
+
+  /** Discrete charge blocks behind the transparent shell interior. */
+  private batterySegments(iconX: number, iconY: number, current: number, capacity: number): void {
+    const { x, y, w, h, gap, count } = BATTERY_SEGMENTS;
+    const units = filledUnits(current, capacity, count);
+    const critical = units <= BLINK_AT_SEGMENTS;
+    const blinkOn = frameIndexAt(performance.now(), 2, BLINK_MS) === 0;
+    if (critical && !blinkOn) return; // blink: skip every other phase
+
+    this.ctx.fillStyle = critical ? BLINK_RED : gaugeColor(current / capacity);
+    const shown = units === 0 ? count : units; // empty: flash the whole shell
+    const alpha = units === 0 ? 0.45 : 1;
+    this.ctx.save();
+    this.ctx.globalAlpha = alpha;
+    for (let i = 0; i < shown; i++) {
+      this.ctx.fillRect(
+        iconX + (x + i * (w + gap)) * SCALE,
+        iconY + y * SCALE,
+        w * SCALE,
+        h * SCALE,
+      );
+    }
+    this.ctx.restore();
   }
 
   // ---------------------------------------------------------- bottom right
@@ -106,7 +141,7 @@ export class HudPainter {
     for (const entry of contents) {
       const sprite = this.world.tile(entry.type);
       if (sprite) this.ctx.drawImage(sprite.frame(0), cursor, y, CHIP_PX, CHIP_PX);
-      cursor += CHIP_PX + 2;
+      cursor += CHIP_PX + 3;
       const text = `${entry.count}`;
       const textY = y + CHIP_PX - GLYPH_H * CHIP_TEXT_SCALE;
       cursor += this.ui.text(text, cursor, textY, CHIP_TEXT_SCALE) + CHIP_GAP;
@@ -116,7 +151,7 @@ export class HudPainter {
   private contentsWidth(contents: readonly CargoEntry[]): number {
     let width = 0;
     for (const entry of contents) {
-      width += CHIP_PX + 2 + this.ui.textWidth(`${entry.count}`, CHIP_TEXT_SCALE) + CHIP_GAP;
+      width += CHIP_PX + 3 + this.ui.textWidth(`${entry.count}`, CHIP_TEXT_SCALE) + CHIP_GAP;
     }
     return Math.max(0, width - CHIP_GAP);
   }
@@ -132,34 +167,26 @@ export class HudPainter {
     let y = panelY + PADDING;
     for (const row of rows) {
       const x = panelX + PADDING;
-      row.decorate?.(x, y);
-      this.ui.icon(row.icon, x, y, SCALE);
+      // Center icons of any height (the wide battery is 26x12) in the row.
+      const sprite = this.ui.assets.icon(row.icon);
+      const iconY = y + Math.round((ICON_PX - sprite.height * SCALE) / 2);
+      row.decorate?.(x, iconY);
+      this.ui.icon(row.icon, x, iconY, SCALE);
+      const iconW = (row.iconArtWidth ?? ICON_ART) * SCALE;
       const textY = y + (ICON_PX - GLYPH_H * TEXT_SCALE) / 2;
-      this.ui.text(row.text, x + ICON_PX + ICON_TEXT_GAP, textY, TEXT_SCALE);
+      this.ui.text(row.text, x + iconW + ICON_TEXT_GAP, textY, TEXT_SCALE);
       y += ICON_PX + ROW_GAP;
     }
   }
 
   private panelWidth(rows: HudRow[]): number {
-    const textW = Math.max(...rows.map((r) => this.ui.textWidth(r.text, TEXT_SCALE)));
-    return PADDING * 2 + ICON_PX + ICON_TEXT_GAP + textW;
+    const rowW = (row: HudRow) =>
+      (row.iconArtWidth ?? ICON_ART) * SCALE + ICON_TEXT_GAP + this.ui.textWidth(row.text, TEXT_SCALE);
+    return PADDING * 2 + Math.max(...rows.map(rowW));
   }
 
   private panelHeight(rows: HudRow[]): number {
     return PADDING * 2 + rows.length * (ICON_PX + ROW_GAP) - ROW_GAP;
-  }
-
-  /** Paints the charge behind the battery shell's hollow interior. */
-  private batteryFill(iconX: number, iconY: number, current: number, capacity: number): void {
-    const units = filledUnits(current, capacity, BATTERY_INTERIOR.w);
-    if (units === 0) return;
-    this.ctx.fillStyle = gaugeColor(current / capacity);
-    this.ctx.fillRect(
-      iconX + BATTERY_INTERIOR.x * SCALE,
-      iconY + BATTERY_INTERIOR.y * SCALE,
-      units * SCALE,
-      BATTERY_INTERIOR.h * SCALE,
-    );
   }
 
   /** A thin bar under the crate showing how full the cargo hold is. */

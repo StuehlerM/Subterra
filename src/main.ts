@@ -12,7 +12,7 @@ import {
 import { FixedTimestep } from './app/FixedTimestep';
 import { Game } from './app/Game';
 import { ShopMenu } from './app/ShopMenu';
-import { tutorialHints } from './app/strings';
+import { setLanguage, tutorialHints } from './app/strings';
 import { Tutorial, TUTORIAL_DONE } from './app/Tutorial';
 import { BatState } from './domain/Bat';
 import { Player } from './domain/Player';
@@ -25,6 +25,7 @@ import { MuteStore } from './infra/audio/MuteStore';
 import { CanvasRenderer } from './infra/CanvasRenderer';
 import { FogOfWar } from './infra/FogOfWar';
 import { InputController } from './infra/InputController';
+import { LanguageStore } from './infra/LanguageStore';
 import { SaveRepository, SLOT_COUNT } from './infra/SaveRepository';
 import { HintPainter } from './infra/ui/HintPainter';
 import { HudPainter } from './infra/ui/HudPainter';
@@ -35,6 +36,7 @@ import { UiPainter } from './infra/ui/UiPainter';
 
 const SAVE_KEY = 'deep-diggers-save-v1';
 const MUTE_KEY = 'deep-diggers-muted';
+const LANGUAGE_KEY = 'deep-diggers-language';
 /** Below this depth (in tiles) the sparse cave music takes over... */
 const DEEP_MUSIC_DEPTH = 25;
 /** ...and only above this depth does the mining theme come back (hysteresis). */
@@ -113,27 +115,49 @@ function handlePlayingActions(session: Session, input: InputController, audio: A
   }
 }
 
-/** Routes keys on the title / slot picker screens; returns a picked slot. */
-function handleMenuActions(flow: AppFlow, input: InputController, audio: AudioEngine): number | null {
+interface MenuActionResult {
+  readonly chosenSlot: number | null;
+  readonly deleteSlot: number | null;
+}
+
+/** Routes keys on the menu screens; reports picked/deleted slots. */
+function handleMenuActions(
+  flow: AppFlow,
+  input: InputController,
+  audio: AudioEngine,
+  applyOption: (entry: number, step: -1 | 1) => void,
+): MenuActionResult {
   let chosenSlot: number | null = null;
+  let deleteSlot: number | null = null;
   let nav = input.consumeNav();
   while (nav) {
-    if (nav.dx !== 0) {
-      flow.navigate(nav.dx as -1 | 1);
+    if (nav.dy !== 0) {
+      flow.moveVertical(nav.dy as -1 | 1);
+      audio.playSfx('menu_move');
+    } else if (nav.dx !== 0) {
+      if (flow.screen === Screen.Options) applyOption(flow.optionsCursor, nav.dx as -1 | 1);
+      else flow.navigate(nav.dx as -1 | 1);
       audio.playSfx('menu_move');
     }
     nav = input.consumeNav();
   }
   if (input.consumeConfirm()) {
     audio.playSfx('menu_confirm');
-    const before: Screen = flow.screen;
-    flow.pressConfirm();
-    if (before === Screen.SlotSelect && flow.screen === Screen.Playing) {
-      chosenSlot = flow.slotCursor;
+    if (flow.screen === Screen.Options) {
+      applyOption(flow.optionsCursor, 1);
+    } else {
+      const before: Screen = flow.screen;
+      flow.pressConfirm();
+      if (before === Screen.SlotSelect && flow.screen === Screen.Playing) {
+        chosenSlot = flow.slotCursor;
+      }
+      if (before === Screen.ConfirmDelete && flow.screen === Screen.SlotSelect) {
+        deleteSlot = flow.slotCursor;
+      }
     }
   }
   if (input.consumeDynamite()) flow.pressBack();
-  return chosenSlot;
+  return { chosenSlot, deleteSlot };
 }
 
 function bootstrap(): void {
@@ -160,6 +184,8 @@ function bootstrap(): void {
   const screens = new ScreenPainters(ctx, ui, worldAssets);
 
   const audio = new AudioEngine(new MuteStore(MUTE_KEY, window.localStorage));
+  const languages = new LanguageStore(LANGUAGE_KEY, window.localStorage);
+  setLanguage(languages.language);
   const flow = new AppFlow(SLOT_COUNT);
   const input = new InputController();
   input.attach(window);
@@ -180,11 +206,15 @@ function bootstrap(): void {
 
     if (flow.screen === Screen.Playing && session) {
       stepGame(session, frameDt);
-    } else if (flow.screen === Screen.Title || flow.screen === Screen.SlotSelect) {
-      const chosen = handleMenuActions(flow, input, audio);
-      if (chosen !== null) session = startSession(save, chosen, () => audio.playSfx('upgrade'));
-    } else {
+    } else if (flow.screen === Screen.Paused) {
       drainInput();
+    } else {
+      flow.updateOccupancy(save.slotSummaries().map((s) => s !== null));
+      const result = handleMenuActions(flow, input, audio, applyOption);
+      if (result.deleteSlot !== null) save.deleteSlot(result.deleteSlot);
+      if (result.chosenSlot !== null) {
+        session = startSession(save, result.chosenSlot, () => audio.playSfx('upgrade'));
+      }
     }
 
     audio.playMusic(chooseMusic());
@@ -193,9 +223,16 @@ function bootstrap(): void {
     requestAnimationFrame(frame);
   };
 
+  /** Options entries: 0 = sound on/off, 1 = language cycle. */
+  const applyOption = (entry: number, _step: -1 | 1): void => {
+    if (entry === 0) audio.toggleMuted();
+    else setLanguage(languages.cycle());
+  };
+
   let inDeepMusic = false;
   const chooseMusic = (): string => {
-    if (flow.screen === Screen.Title || flow.screen === Screen.SlotSelect) return 'title';
+    const inMenus = flow.screen !== Screen.Playing && flow.screen !== Screen.Paused;
+    if (inMenus) return 'title';
     const depth = session ? session.game.depth() : 0;
     if (depth > DEEP_MUSIC_DEPTH) inDeepMusic = true;
     else if (depth < MINING_MUSIC_DEPTH) inDeepMusic = false;
@@ -255,10 +292,15 @@ function bootstrap(): void {
   const draw = (now: number): void => {
     switch (flow.screen) {
       case Screen.Title:
-        screens.title(now);
+        screens.title(flow.titleCursor);
+        break;
+      case Screen.Options:
+        screens.options(flow.optionsCursor, audio.muted);
         break;
       case Screen.SlotSelect:
-        screens.slotSelect(save.slotSummaries(), flow.slotCursor, now);
+      case Screen.ConfirmDelete:
+        screens.slotSelect(save.slotSummaries(), flow.slotCursor, flow.onDeleteRow, now);
+        if (flow.screen === Screen.ConfirmDelete) screens.confirmDelete();
         break;
       case Screen.Playing:
       case Screen.Paused:

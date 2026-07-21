@@ -1,10 +1,10 @@
 import { UiPainter } from './UiPainter';
 
-const SCALE = 2;
-const TEXT_SCALE = 2;
-const PADDING_X = 18;
-const PADDING_Y = 12;
-const BOTTOM_MARGIN = 24;
+const SCALE = 4;
+const TEXT_SCALE = 4;
+const PADDING_X = 26;
+const PADDING_Y = 18;
+const BOTTOM_MARGIN = 28;
 const GLYPH_H = 5;
 
 /** The tutorial banner: one short sentence on a wood plank, bottom-center. */

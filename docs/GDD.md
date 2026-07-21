@@ -123,7 +123,10 @@
 
 ## 14. Out of Scope (v1) / Future Ideas
 - Crafting, multiple biomes, boss caves, day/night, achievements, leaderboards,
-  multiple save slots, touch controls, real art/audio. All designed to slot in later.
+  touch controls, audio. All designed to slot in later.
+- **Legendary gem win condition**: a unique gem at the very bottom of the world; finding
+  it triggers a win screen ("YOU FOUND THE GREAT GEM!"). Candidate for a future phase
+  now that the tutorial states a soft goal.
 
 ## 15. Resolved Design Decisions (confirmed by owner)
 1. Battery at 0 = can walk, and only the **super-slow emergency drill** works (see §16)
@@ -174,6 +177,16 @@ Things that differ from the first draft above, decided during build/playtest:
   the renderer picks a variant per tile via a deterministic position hash, so ore fields
   don't look stamped. Tile sprites with multiple grids mean *variants*; entity sprites
   with multiple grids mean *animation frames*.
+- **No-words policy relaxed (owner decision)**: short uppercase text now supplements the
+  pictograms, drawn with a 3×5 pixel font that lives in the text-grid sprite system (still
+  zero shipped fonts/images). Text appears on the title ("DEEP DIGGERS", "PRESS X"), empty
+  save slots ("NEW GAME"), the shop (highlighted upgrade's name + "DRILL AGAIN") and pause
+  ("PAUSED"). All strings live in `src/app/strings.ts` for later translation.
+- **First-run tutorial**: five contextual hints on a wood banner (dig → collect ore →
+  go up and sell → buy upgrades → "DIG DEEP AND GET RICH!"), each advancing when the
+  player actually does the thing; progress saved per slot; legacy saves never see it.
+  The stated goal stays **soft** for now — a real win condition (legendary gem at the
+  bottom + win screen) is a future-phase idea (§14).
 - **Canvas game UI (post-sprite-system)**: DOM HUD/shop overlays replaced by a canvas
   UI drawn with text-grid sprites — wood/stone nine-slice panels, a 3×5 pixel digit
   font, 16×16 icons. The battery is drawn as a real battery whose fill lowers and

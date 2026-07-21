@@ -73,4 +73,6 @@ pipeline (letters become new 3×5 text-grid glyphs — still no fonts, no images
 
 ## Status
 - [x] Plan written
-- [ ] **Awaiting explicit go-ahead — do not implement before owner approval**
+- [x] Steps 1–5 implemented (font letters, strings table, tutorial machine,
+      per-slot persistence, painters + wiring) — 189 tests, build clean
+- [ ] Owner playtest (step 6), then docs already updated (step 7)

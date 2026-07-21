@@ -87,14 +87,14 @@ export class CanvasRenderer {
 
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
     this.drawBackground(camera, game.surfaceRow);
-    this.drawTiles(game.world, camera, canvas.width, canvas.height);
+    this.drawTiles(game.world, camera, canvas.width, canvas.height, game.surfaceRow);
     for (const portal of game.activePortals) this.drawPortal(portal, camera);
     for (const flare of game.activeFlares) this.drawFlare(flare, camera);
     for (const rock of game.activeFallingRocks) this.drawFallingRock(rock, camera);
     for (const dynamite of game.activeDynamites) this.drawDynamite(dynamite, camera);
     for (const bat of game.activeBats) this.drawBat(bat, camera);
     this.drawPlayer(center, game.player.isMoving, camera);
-    this.drawFogMask(camera, fog);
+    this.drawFogMask(camera, fog, game.surfaceRow);
     if (game.knockoutFlash > 0) this.drawKnockoutFlash(game.knockoutFlash);
   }
 
@@ -105,20 +105,28 @@ export class CanvasRenderer {
     }
   }
 
-  private drawTiles(world: World, camera: Camera, viewW: number, viewH: number): void {
+  private drawTiles(world: World, camera: Camera, viewW: number, viewH: number, surfaceRow: number): void {
     const minX = Math.floor(camera.x / this.tileSize);
     const minY = Math.floor(camera.y / this.tileSize);
     const maxX = Math.ceil((camera.x + viewW) / this.tileSize);
     const maxY = Math.ceil((camera.y + viewH) / this.tileSize);
+    const maxDepth = Math.max(1, world.height - surfaceRow);
 
     for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
         const tile = world.getTile(x, y);
         if (tile === TileType.Empty) continue; // open space: show the backdrop
-        const sprite = this.assets.tile(tile);
-        if (!sprite) continue;
         const px = Math.round(x * this.tileSize - camera.x);
         const py = Math.round(y * this.tileSize - camera.y);
+        if (tile === TileType.Sand) {
+          // Ground: grass on the exposed surface, else soil tinted by depth.
+          const grassy = y === surfaceRow && world.getTile(x, y - 1) === TileType.Empty;
+          const sprite = grassy ? this.assets.grass() : this.assets.soil((y - surfaceRow) / maxDepth);
+          this.ctx.drawImage(sprite.frame(0), px, py, this.tileSize, this.tileSize);
+          continue;
+        }
+        const sprite = this.assets.tile(tile);
+        if (!sprite) continue;
         // Tiles with several grids are position-hashed variants, not animation.
         const variant = variantIndexAt(x, y, sprite.frameCount);
         // Draw the art as-is so its transparency shows through (no backing fill).
@@ -133,7 +141,7 @@ export class CanvasRenderer {
    * then composites it over the scene. The circle is drawn in pixels, so it is a
    * fixed shape that never wobbles as the miner moves sub-tile.
    */
-  private drawFogMask(camera: Camera, fog: FogOfWar): void {
+  private drawFogMask(camera: Camera, fog: FogOfWar, surfaceRow: number): void {
     const { canvas } = this.ctx;
     if (this.fog.width !== canvas.width || this.fog.height !== canvas.height) {
       this.fog.width = canvas.width;
@@ -147,6 +155,12 @@ export class CanvasRenderer {
     f.globalCompositeOperation = 'destination-out';
     this.eraseExploredTiles(camera, fog);
     this.eraseTorch(canvas.width / 2, canvas.height / 2);
+    // The open sky above the surface is never fogged, so it reads as open air.
+    const surfaceY = Math.round(surfaceRow * this.tileSize - camera.y);
+    if (surfaceY > 0) {
+      f.fillStyle = 'rgba(0,0,0,1)';
+      f.fillRect(0, 0, canvas.width, surfaceY);
+    }
     f.globalCompositeOperation = 'source-over';
 
     this.ctx.drawImage(this.fog, 0, 0);

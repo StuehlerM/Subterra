@@ -12,6 +12,8 @@ const DEFAULT_SPAWN = new Vec2(1, 1);
  * open sky over the central floor.
  */
 const VALLEY_SLOPE = 0.22;
+/** How many rows the sloped cliffs rise above the valley floor (rest is open sky). */
+const CLIFF_HEIGHT = 6;
 
 // Cave/bat tuning.
 const DEFAULT_CAVE_COUNT = 22;
@@ -202,12 +204,15 @@ export class World {
    * next to each wall, stepping down to the open centre over `span` columns.
    */
   private static isCliffBedrock(x: number, y: number, width: number, surfaceRows: number): boolean {
+    const cliffH = Math.min(CLIFF_HEIGHT, surfaceRows);
+    const cliffTop = surfaceRows - cliffH; // rows above this are fully open sky
+    if (y < cliffTop) return false;
     const span = Math.floor((width - 2) * VALLEY_SLOPE);
     if (span < 1) return false;
     const dist = Math.min(x, width - 1 - x); // 1 == column beside a wall
     if (dist < 1 || dist > span) return false;
-    const cliffTopY = Math.round(((dist - 1) / span) * surfaceRows);
-    return y >= cliffTopY;
+    const cliffSurface = cliffTop + Math.round(((dist - 1) / span) * cliffH);
+    return y >= cliffSurface;
   }
 
   private static pickOre(depth: number, rng: Rng): TileType {

@@ -13,8 +13,8 @@ export const MAX_FRAME_DT = 0.25;
 export const WORLD_WIDTH = 44;
 export const WORLD_HEIGHT = 180;
 
-/** Open-air rows at the top (the valley's sky + sloped cliffs) before ground. */
-export const SURFACE_ROWS = 6;
+/** Open-air rows at the top: tall open sky over the valley's cliffs and floor. */
+export const SURFACE_ROWS = 16;
 
 /** Default procedural-generation seed. */
 export const DEFAULT_SEED = 1337;

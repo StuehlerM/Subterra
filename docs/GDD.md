@@ -200,6 +200,13 @@ Things that differ from the first draft above, decided during build/playtest:
   player actually does the thing; progress saved per slot; legacy saves never see it.
   The stated goal stays **soft** for now — a real win condition (legendary gem at the
   bottom + win screen) is a future-phase idea (§14).
+- **Open sky + soil gradient (playtest)**: the surface no longer fogs the sky (fog is
+  clipped to below the ground line) and there's tall open headroom above the valley,
+  so up reads as open air. The cliff height was decoupled from the sky band. Ground is
+  now depth-tinted: rich-brown topsoil greying through the middle into near-black deep
+  down (baked soil bands, pure `soilPalette`), with **grass** on the exposed valley
+  floor only (a sand tile whose tile above is open sky — never under the cliffs or in
+  dug tunnels).
 - **Valley surface + deeper world (playtest)**: the world is much deeper (180 rows) and
   the miner spawns in the **centre of a valley**: sloped bedrock cliffs step down from
   each wall to an open central floor, with **open sky above** (no ceiling). The miner

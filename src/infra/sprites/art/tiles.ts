@@ -7,7 +7,8 @@ import { SpriteDefinition, TextureGrid } from '../grid';
  * so a new ore costs three hex values.
  */
 
-const SAND: TextureGrid = [
+/** Shared soil/ground shape; the renderer tints it by depth (see art/soil.ts). */
+export const SAND_GRID: TextureGrid = [
   'aaaalaadaaaaalaa',
   'adaaaaaaalaaaaaa',
   'aaaaadaaaaaaalad',
@@ -161,7 +162,7 @@ function ore(vein: string, highlight: string, shadow: string): SpriteDefinition 
 }
 
 export const TILE_SPRITES: Partial<Record<TileType, SpriteDefinition>> = {
-  [TileType.Sand]: { frames: [SAND], palette: SAND_PALETTE },
+  [TileType.Sand]: { frames: [SAND_GRID], palette: SAND_PALETTE },
   [TileType.Bedrock]: { frames: [BEDROCK], palette: BEDROCK_PALETTE },
   [TileType.Rock]: { frames: [ROCK], palette: ROCK_PALETTE },
   [TileType.Coal]: ore('#33343a', '#4d4f57', '#1f2024'),

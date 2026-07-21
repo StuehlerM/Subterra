@@ -1,4 +1,4 @@
-# Art prompts — "Deep Diggers"
+# Art prompts — "Subterra"
 
 Use these to generate **consistent** fantasy artwork for the assets in
 `public/assets/`. The trick to consistency: keep the **Style Anchor** identical for

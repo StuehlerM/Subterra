@@ -1,4 +1,4 @@
-# PLAN — Deep Diggers (mining game)
+# PLAN — Subterra (mining game)
 
 ## Task
 Design-first, then build a kid-friendly, web-based 2D mining game in TypeScript + HTML5

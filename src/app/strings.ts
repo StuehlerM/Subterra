@@ -35,7 +35,7 @@ export interface UiStrings {
 
 const TABLES: Record<Language, UiStrings> = {
   en: {
-    title: 'DEEP DIGGERS',
+    title: 'SUBTERRA',
     pressX: 'PRESS X',
     newGame: 'NEW GAME',
     paused: 'PAUSED',
@@ -57,7 +57,7 @@ const TABLES: Record<Language, UiStrings> = {
     ctrlFlare: 'FLARE',
   },
   sv: {
-    title: 'DEEP DIGGERS',
+    title: 'SUBTERRA',
     pressX: 'TRYCK X',
     newGame: 'NYTT SPEL',
     paused: 'PAUS',
@@ -79,7 +79,7 @@ const TABLES: Record<Language, UiStrings> = {
     ctrlFlare: 'BLOSS',
   },
   de: {
-    title: 'DEEP DIGGERS',
+    title: 'SUBTERRA',
     pressX: 'DRÜCK X',
     newGame: 'NEUES SPIEL',
     paused: 'PAUSE',

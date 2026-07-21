@@ -1,4 +1,4 @@
-# Deep Diggers
+# Subterra
 
 A kid-friendly 2D mining game: dig down, collect ore, return to the surface to sell and
 upgrade, then dig deeper. Built with TypeScript + HTML5 Canvas (no game engine).

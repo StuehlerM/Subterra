@@ -1,4 +1,4 @@
-# Game Design Document — "Deep Diggers" (working title)
+# Game Design Document — "Subterra" (working title)
 
 > A kid-friendly 2D mining game. Drill down, collect ore, return to the surface to
 > sell and upgrade, then dig deeper. Inspired by a time-based museum game (Tekniska),

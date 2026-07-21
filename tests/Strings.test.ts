@@ -55,7 +55,7 @@ describe('i18n strings', () => {
   it('the title stays the brand in every language', () => {
     for (const lang of LANGUAGES) {
       setLanguage(lang);
-      expect(str().title).toBe('DEEP DIGGERS');
+      expect(str().title).toBe('SUBTERRA');
     }
   });
 });

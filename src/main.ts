@@ -12,6 +12,7 @@ import {
 import { FixedTimestep } from './app/FixedTimestep';
 import { Game } from './app/Game';
 import { ShopMenu } from './app/ShopMenu';
+import { Tutorial, TUTORIAL_DONE } from './app/Tutorial';
 import { Player } from './domain/Player';
 import { PlayerProgress } from './domain/PlayerProgress';
 import { World } from './domain/World';
@@ -20,6 +21,7 @@ import { CanvasRenderer } from './infra/CanvasRenderer';
 import { FogOfWar } from './infra/FogOfWar';
 import { InputController } from './infra/InputController';
 import { SaveRepository, SLOT_COUNT } from './infra/SaveRepository';
+import { HintPainter } from './infra/ui/HintPainter';
 import { HudPainter } from './infra/ui/HudPainter';
 import { ScreenPainters } from './infra/ui/ScreenPainters';
 import { ShopPainter } from './infra/ui/ShopPainter';
@@ -35,7 +37,9 @@ interface Session {
   readonly game: Game;
   readonly menu: ShopMenu;
   readonly fog: FogOfWar;
+  readonly tutorial: Tutorial;
   wasMenuOpen: boolean;
+  boughtSomething: boolean;
 }
 
 function rollSeed(): number {
@@ -46,7 +50,9 @@ function startSession(save: SaveRepository, slot: number): Session {
   const stored = save.loadSlot(slot);
   const seed = stored?.seed ?? rollSeed();
   const progress = stored?.progress ?? new PlayerProgress();
-  if (!stored) save.saveSlot(slot, seed, progress); // claim the slot right away
+  // Fresh slots get the tutorial; stored slots resume it (legacy = finished).
+  const tutorial = new Tutorial(stored ? (stored.tutorialStep ?? TUTORIAL_DONE) : 0);
+  if (!stored) save.saveSlot(slot, seed, progress, tutorial.step); // claim the slot
 
   const { world, batSpawns, portalSpawns } = World.generateMap(WORLD_WIDTH, WORLD_HEIGHT, seed, {
     surfaceRows: SURFACE_ROWS,
@@ -54,8 +60,20 @@ function startSession(save: SaveRepository, slot: number): Session {
   });
   const player = new Player(SPAWN_TILE);
   const game = new Game(world, player, progress, SURFACE_ROWS, SPAWN_TILE, batSpawns, portalSpawns);
-  const menu = new ShopMenu(game, () => save.saveSlot(slot, seed, progress));
-  return { slot, seed, game, menu, fog: new FogOfWar(WORLD_WIDTH, WORLD_HEIGHT), wasMenuOpen: false };
+  const session: Session = {
+    slot,
+    seed,
+    game,
+    menu: new ShopMenu(game, () => {
+      session.boughtSomething = true;
+      save.saveSlot(slot, seed, progress, session.tutorial.step);
+    }),
+    fog: new FogOfWar(WORLD_WIDTH, WORLD_HEIGHT),
+    tutorial,
+    wasMenuOpen: false,
+    boughtSomething: false,
+  };
+  return session;
 }
 
 /** Routes edge-triggered keys while playing: shop menu vs gameplay actions. */
@@ -117,6 +135,7 @@ function bootstrap(): void {
   const ui = new UiPainter(ctx, UiAssets.withDefaults());
   const hud = new HudPainter(ctx, ui);
   const shop = new ShopPainter(ctx, ui);
+  const hints = new HintPainter(ctx, ui);
   const screens = new ScreenPainters(ctx, ui, worldAssets);
 
   const flow = new AppFlow(SLOT_COUNT);
@@ -155,10 +174,18 @@ function bootstrap(): void {
     handlePlayingActions(active, input);
     active.menu.update();
 
+    active.tutorial.update({
+      underground: active.game.depth() > 0,
+      hasOre: active.game.player.cargo.count > 0,
+      shopOpen: active.game.isMenuOpen(),
+      boughtSomething: active.boughtSomething,
+      depth: active.game.depth(),
+    });
+
     // Save when the surface menu opens (i.e. on arrival, after auto-sell).
     const menuOpen = active.game.isMenuOpen();
     if (menuOpen && !active.wasMenuOpen) {
-      save.saveSlot(active.slot, active.seed, active.game.progress);
+      save.saveSlot(active.slot, active.seed, active.game.progress, active.tutorial.step);
     }
     active.wasMenuOpen = menuOpen;
   };
@@ -185,6 +212,8 @@ function bootstrap(): void {
         renderer.render(session.game, session.fog);
         hud.draw(session.game);
         if (session.game.isMenuOpen()) shop.draw(session.game, session.menu);
+        const hint = session.tutorial.currentHint();
+        if (hint && flow.screen === Screen.Playing) hints.draw(hint);
         if (flow.screen === Screen.Paused) screens.pause();
         break;
     }

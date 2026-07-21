@@ -1,78 +1,72 @@
-# PLAN — Deep Diggers (mining game)
+# PLAN — Text-based sprite system (zero PNGs)
+
+> Previous roadmap preserved at `docs/ROADMAP.md`.
 
 ## Task
-Design-first, then build a kid-friendly, web-based 2D mining game in TypeScript + HTML5
-Canvas (no engine). Core loop: dig down → collect ore → return to surface base → sell &
-upgrade → dig deeper. Includes sand, destructible rocks (dynamite), indestructible bedrock,
-falling-rock and bat hazards, procedural generation, an upgrade economy, and gentle
-(rogue-lite) failure. See `docs/GDD.md`, `docs/adr/0001-tech-stack.md`,
-`docs/adr/0002-architecture.md`.
+Replace the PNG asset pipeline entirely with a text-grid sprite system (à la the
+"pixel art as text" approach): every sprite is a character grid + named palette in
+the source code, baked once to a cached canvas at startup, then blitted by the
+renderer like any image. Includes multi-frame animation, shared-shape/many-palettes
+ore tiles, grid-based backgrounds, and a PNG→grid converter script.
+
+## Decisions (confirmed with owner)
+1. **Full replacement** — delete `public/assets/**`, `scripts/gen-placeholders.mjs`,
+   `scripts/gen-backgrounds.mjs`, and all `HTMLImageElement` loading. Animated sprites
+   are multi-frame grids (complete replacement, no PNG exceptions).
+2. **Resolution**: 16×16 native for tiles + entities (readable/editable text, uniform
+   pixel grain), scaled up crisply by the renderer (`imageSmoothingEnabled = false`).
+   Backgrounds: sky = 1×N vertical color-ramp grid stretched to the viewport;
+   cave = 32×32 tileable dither grid. Baker is size-agnostic, so individual sprites
+   can be up-resed later if the playtest demands it.
+3. **Shared shapes**: one "ore veins in stone" grid + 6 palettes (coal, copper, iron,
+   silver, gold, gem). Sand, rock, bedrock get their own grids.
+4. **Animation**: 2-frame variants — bat (wing flap), bat_asleep (breathing), flare
+   (flicker), dynamite (fuse spark), portal (swirl), player (walk leg-swap; frame
+   picked from move tween, idle = frame 0). Renderer picks frame by game time.
+5. **Converter**: `scripts/png-to-grid.mjs` (own PNG decoder, zero deps) with
+   `--frames N`, `--palette`, `--tolerance`, `--force-nearest`. Round-trip tested
+   against the existing `scripts/png.mjs` encoder.
+
+## Architecture
+- `src/infra/sprites/grid.ts` — **pure, no DOM**: `parseGrid(grid, palette)` →
+  `{ width, height, pixels: Uint8ClampedArray (RGBA) }`. Validates ragged rows,
+  unknown chars, empty grids. Unit-testable in node.
+- `src/infra/sprites/bake.ts` — thin DOM layer: pixels → `ImageData` →
+  `OffscreenCanvas` (fallback: regular canvas), cached per sprite+frame.
+- `src/infra/sprites/art/` — the art itself: `palettes.ts` (shared colors),
+  `tiles.ts`, `entities.ts`, `backgrounds.ts`. Types: `TextureGrid = string[]`,
+  sprites declare `frames: TextureGrid[]` + `palette`.
+- `AssetRegistry` rework: bakes grids instead of loading PNGs; API becomes
+  `tileSprite(tile)`, `entitySprite(name, frame)`, `background(name)` returning
+  `CanvasImageSource`. Color fallbacks stay for safety. Renderer types widened
+  from `HTMLImageElement` to `CanvasImageSource`; frame index derived from
+  elapsed time (named constant `FRAME_DURATION_S`).
+
+## Steps (TDD: red → green → refactor; commit after each milestone)
+1. **Grid parser (pure)** — tests: correct RGBA output, transparency dots,
+   ragged-row error with row index, unknown-char error with coordinate,
+   palette reuse across grids. Then implement `grid.ts`.
+2. **Art + validation tests** — write all grids/palettes; tests assert every
+   sprite parses, is the declared size, frames of one sprite are same size and
+   distinct, ore palettes are distinct.
+3. **Bake + registry rework** — swap AssetRegistry internals to baked canvases,
+   widen renderer types, add frame selection + animation timing, wire player
+   walk frames to the move tween.
+4. **Delete PNG pipeline** — remove `public/assets`, both gen scripts, image
+   loading code. Verify build output ships zero image files.
+5. **Converter** — `png-to-grid.mjs`: PNG decoder (IHDR/PLTE/tRNS/IDAT,
+   unfiltering), grid emitter (keys most-used-first), `--frames`, `--palette`
+   strict matching with exact-coordinate errors, `--tolerance`, `--force-nearest`.
+   Tests: round-trip grid → PNG (via `scripts/png.mjs`) → grid is identical;
+   palette-mismatch error case.
+6. **Playtest + polish** — run dev server, eyeball look/animation, tune art.
+   Update HANDOVER.md, GDD deviations log, commit.
+
+## Verification
+- All existing 100 tests stay green + new sprite/converter tests.
+- Typecheck + build clean; `dist/` contains no `.png`.
+- Manual playtest for look & animation feel.
 
 ## Status
-- [x] Requirements gathered (Q&A with owner)
-- [x] GDD drafted (`docs/GDD.md`)
-- [x] ADR 0001 tech stack, ADR 0002 architecture
-- [x] Owner confirmed GDD + all design decisions (GDD §15)
-- [ ] Implementation (awaiting explicit go-ahead)
-
-## Confirmed decisions
-1. Battery at 0 = can walk, cannot dig → forced to go home to recharge.
-2. Flares are the anti-bat tool; bats tire and re-sleep if they lose you.
-3. No player gravity; only rocks fall.
-4. Exactly 6 keys (4 move/dig + dynamite + flare); shop is automatic at base.
-5. Vite fine (tooling free choice); localStorage saves.
-
-## Proposed implementation roadmap (build in vertical slices)
-> Each phase is playable. Start rough (placeholder art), expand.
-
-- **Phase 0 — Skeleton** ✅ DONE: Vite + TS project, fixed-timestep game loop, Canvas
-  renderer, asset registry, input controller, seeded world, grid movement with tween.
-  28 unit tests passing; typecheck clean.
-- **Phase 1 — Dig & world** ✅ DONE: Sand tiles + drilling (move into sand removes it),
-  bedrock walls/floor, open-air surface band, top-right surface spawn, seeded sand/pillar
-  generation. Tests use an ASCII-map helper. 30 tests passing; typecheck clean.
-- **Phase 2 — Ore & economy** ✅ DONE: 6 ore tiers (value + hardness gating), cargo hold,
-  battery (drains per drill, blocks drilling at 0), surface base auto-sell + recharge,
-  4 upgrades (drill strength/speed, cargo, battery), HUD + base shop overlay, localStorage
-  save (money + upgrade levels). 57 tests passing; typecheck + build clean.
-- **Phase 3 — Rocks & dynamite** ✅ DONE: destructible Rock tile, dynamite consumable
-  (Consumable + Dynamite entity, fuse → small blast that clears rock/sand, preserves ore &
-  bedrock, no friendly fire), auto-restock at base, dynamite-capacity upgrade. Feedback
-  polish shipped: keyboard-only shop (Z=cycle, X=buy at base; Z=dynamite underground),
-  pictogram/emoji HUD + shop (no words), save on every surface arrival. 71 tests passing;
-  typecheck + build clean.
-- **Phase 4 — Falling rocks** ✅ DONE: a Rock with empty space below becomes unsupported →
-  short **wobble** tell → falls one tile at a time until it lands (re-becomes a Rock tile).
-  If a falling rock enters the miner's tile → gentle **knock-out**: respawn at the surface
-  spawn, clear this run's cargo, keep money + upgrades; brief red flash. Chains (stacked
-  rocks collapse in sequence). **Event-driven** (no per-frame scan): rocks are re-checked
-  only when a tile is emptied by a drill/blast, cascading up the column; a single settle
-  pass at startup catches pre-unsupported rocks. 83 tests passing; typecheck + build clean.
-- **Phase 5 — Bats** ✅ DONE: cave pockets in procgen (World.generateMap returns bat spawns);
-  sleeping bats wake on proximity → chase (grid AI through open tiles at 0.18s/tile, slower
-  than walking so you can outrun); touch while awake = knock-out (reuses rock knock-out).
-  Flares are a consumable (X underground): light one → nearby bats flee and vanish. Awake
-  bats tire and re-sleep after losing you for 3s. New Flare-capacity upgrade (🔦). Renderer
-  refactored to take the Game; bats 🦇/😴 and flare 🔥 glow drawn. 100 tests passing; build clean.
-- **Phase 6 — Return tech & polish** (IN PROGRESS): swappable image assets in public/assets
-  (done); random **return-to-surface portals** (fantasy teleport, cargo kept) placed deep
-  underground (done); tuning — more bedrock + fewer ores so progression is slower (done).
-  Remaining: battery low-warning polish, elevator (optional), SFX hooks, more depth tuning.
-
-## Menu rework (post-Phase 3) ✅ DONE (76 tests, build clean)
-Surface shop becomes a modal menu that freezes the miner:
-- Opens on arrival at the surface (and at game start). Auto-sell/recharge/restock/save still run.
-- Navigation with normal keys: Left/Right pick an upgrade; Down → "Drill again" button
-  (below the row), Up → back to the upgrade row.
-- X = confirm (buy the highlighted upgrade, or on "Drill again" leave the menu).
-- After Drill again the menu closes and stays closed until the next surface arrival.
-- Miner is frozen (movement keys drive the menu, not the miner) while the menu is open.
-
-## Engineering practices (every phase)
-- **Write tests** for domain logic (dig rules, rock gravity, dynamite radius/no-friendly-fire,
-  bat AI states, economy/upgrades, seeded procgen determinism). Use Vitest.
-- Keep domain pure (no DOM) so it's unit-testable per ADR 0002.
-- **Commit to git locally after each phase** (do NOT push).
-
-## Notes
-- Do NOT start implementation until the owner gives an explicit go-ahead.
+- [x] Plan written
+- [ ] **Awaiting explicit go-ahead — do not implement before owner approval**

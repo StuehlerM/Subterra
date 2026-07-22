@@ -15,7 +15,7 @@ const GLYPH_W = 3;
 const GLYPH_H = 5;
 const ICON_SIZE = 16;
 const PANEL_SIZE = 24;
-const EMBLEM_SIZE = 32;
+const EMBLEM_SIZE = 64;
 
 describe('pixel font', () => {
   it('has a 3x5 glyph for every digit, letter and punctuation mark', () => {
@@ -80,10 +80,13 @@ describe('panels', () => {
 });
 
 describe('emblem and battery', () => {
-  it('the title emblem parses at 32x32', () => {
-    const parsed = parseGrid(EMBLEM.frames[0], EMBLEM.palette);
-    expect(parsed.width).toBe(EMBLEM_SIZE);
-    expect(parsed.height).toBe(EMBLEM_SIZE);
+  it('every emblem twinkle frame parses at 64x64', () => {
+    expect(EMBLEM.frames.length).toBeGreaterThan(1);
+    for (const frame of EMBLEM.frames) {
+      const parsed = parseGrid(frame, EMBLEM.palette);
+      expect(parsed.width).toBe(EMBLEM_SIZE);
+      expect(parsed.height).toBe(EMBLEM_SIZE);
+    }
   });
 
   it('the battery interior sits inside the battery icon', () => {

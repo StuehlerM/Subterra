@@ -16,7 +16,9 @@ const TITLE_GRASS_PX = TILE_PX * TITLE_GRASS_SCALE;
 /** Title-only: the miner, standing large to one side of the menu. */
 const TITLE_PLAYER_SCALE = 12;
 const TITLE_PLAYER_X_FRACTION = 0.16;
-const EMBLEM_SCALE = 6;
+const EMBLEM_SCALE = 3;
+/** How fast the emblem's "bling" twinkle cycles through its frames. */
+const EMBLEM_TWINKLE_MS = 140;
 const FLANK_SCALE = 4;
 const BLINK_MS = 600;
 const CARD_W = 260;
@@ -46,13 +48,15 @@ export class ScreenPainters {
     private readonly world: AssetRegistry,
   ) {}
 
-  title(cursor: number): void {
+  title(cursor: number, timeMs: number): void {
     this.titleBackdrop();
     const { canvas } = this.ctx;
-    const emblemPx = this.ui.assets.emblem.width * EMBLEM_SCALE;
+    const emblem = this.ui.assets.emblem;
+    const emblemPx = emblem.width * EMBLEM_SCALE;
     const x = Math.round((canvas.width - emblemPx) / 2);
     const y = Math.round(canvas.height * 0.1);
-    this.ctx.drawImage(this.ui.assets.emblem.frame(0), x, y, emblemPx, emblemPx);
+    const frame = frameIndexAt(timeMs, emblem.frameCount, EMBLEM_TWINKLE_MS);
+    this.ctx.drawImage(emblem.frame(frame), x, y, emblemPx, emblemPx);
 
     const flankPx = 16 * FLANK_SCALE;
     const flankY = y + Math.round((emblemPx - flankPx) / 2);

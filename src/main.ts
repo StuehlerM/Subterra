@@ -292,7 +292,7 @@ function bootstrap(): void {
   const draw = (now: number): void => {
     switch (flow.screen) {
       case Screen.Title:
-        screens.title(flow.titleCursor);
+        screens.title(flow.titleCursor, now);
         break;
       case Screen.Options:
         screens.options(flow.optionsCursor, audio.muted);

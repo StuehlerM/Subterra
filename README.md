@@ -8,7 +8,7 @@ technical decisions.
 
 ## Requirements
 
-- Node.js 18+ and npm.
+- Node.js 22+ and npm.
 
 ## Getting started
 
@@ -32,7 +32,8 @@ Every sprite is a **text grid + palette in the source code** (`src/infra/sprites
 Each character is one pixel; `.` is transparent; a letter looks up a hex colour in the
 sprite's palette. At startup each grid is **baked once** onto a cached canvas and the
 renderer blits it like a decoded PNG — so the art rides inside the JS bundle (the whole
-game is ~12 KiB gzipped), is diffable in git, greppable, and a one-character edit away.
+game — logic, art, and audio — is ~27 KiB gzipped), is diffable in git, greppable, and a
+one-character edit away.
 
 Animation = extra frames (a second grid with the bat's wings down, the flame leaning the
 other way…). All six ores share **one vein shape** and differ only by a three-colour
@@ -60,11 +61,18 @@ its own tiny PNG decoder, zero dependencies).
 
 ## Architecture (short)
 
-- `src/domain/` — pure game rules (no browser APIs): tiles, world + seeded procedural
-  generation, player movement, RNG, vectors. Fully unit-tested.
-- `src/app/` — orchestration: fixed-timestep loop, `Game` step, tuning constants.
-- `src/infra/` — browser adapters: canvas renderer, keyboard input, asset registry
-  (bakes the text-grid sprites in `src/infra/sprites/`).
+- `src/domain/` — pure game rules (no browser APIs), grouped by concern:
+  - `math/` — vectors and directions
+  - `world/` — tiles + seeded procedural generation
+  - `entities/` — player, bat, dynamite, explosion, falling rock, flare
+  - `economy/` — cargo, money, upgrades, consumables, battery, progress
+  - `random/` — seeded RNG
+- `src/app/` — orchestration: fixed-timestep loop, `Game` step, tuning constants, plus
+  `onboarding/` (tutorial + coach), `menu/` (shop), and `i18n/` (strings).
+- `src/infra/` — browser adapters, grouped into `audio/`, `sprites/`, and `ui/`: canvas
+  renderer, keyboard input, asset registry (bakes the text-grid sprites).
+- `tools/` — build-time tooling kept out of the game bundle (`graphics/` holds the
+  zero-dependency PNG ↔ text-grid converter).
 
 Dependencies point inward (infra → app → domain), so rules stay testable and art/input/
 storage are replaceable. See `docs/adr/0002-architecture.md`.

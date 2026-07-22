@@ -206,7 +206,7 @@ Things that differ from the first draft above, decided during build/playtest:
   pictograms, drawn with a 3×5 pixel font that lives in the text-grid sprite system (still
   zero shipped fonts/images). Text appears on the title ("DEEP DIGGERS", "PRESS X"), empty
   save slots ("NEW GAME"), the shop (highlighted upgrade's name + "DRILL AGAIN") and pause
-  ("PAUSED"). All strings live in `src/app/strings.ts` for later translation.
+  ("PAUSED"). All strings live in `src/app/i18n/strings.ts` for later translation.
 - **First-run tutorial**: five contextual hints on a wood banner (dig → collect ore →
   go up and sell → buy upgrades → "DIG DEEP AND GET RICH!"), each advancing when the
   player actually does the thing; progress saved per slot; legacy saves never see it.
@@ -253,3 +253,8 @@ Things that differ from the first draft above, decided during build/playtest:
   single save migrated into slot 1. **Esc** toggles pause (meta key; the 6 gameplay
   keys unchanged) and the game auto-pauses when the window loses focus. Sound/SFX
   is the next planned phase.
+- **Repo cleanup (non-functional)**: flat `src/domain/` was grouped into `math/`,
+  `world/`, `entities/`, `economy/`, `random/`; `src/app/` gained `onboarding/`,
+  `menu/`, `i18n/`; the PNG tooling moved from `scripts/` to `tools/graphics/`.
+  Tooling bumped to Vite 8 / Vitest 4 / TypeScript 7 and Node 22+. Pure moves and
+  version bumps only — no gameplay change; all 265 tests stayed green.

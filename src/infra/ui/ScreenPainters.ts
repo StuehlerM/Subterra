@@ -10,6 +10,12 @@ const SCALE = 4;
 const ICON_PX = 16 * SCALE;
 const TILE_PX = 64;
 const GROUND_ROWS = 2;
+/** Title-only: the exposed top-soil surface, drawn far bigger than in-game. */
+const TITLE_GRASS_SCALE = 3;
+const TITLE_GRASS_PX = TILE_PX * TITLE_GRASS_SCALE;
+/** Title-only: the miner, standing large to one side of the menu. */
+const TITLE_PLAYER_SCALE = 12;
+const TITLE_PLAYER_X_FRACTION = 0.16;
 const EMBLEM_SCALE = 6;
 const FLANK_SCALE = 4;
 const BLINK_MS = 600;
@@ -41,7 +47,7 @@ export class ScreenPainters {
   ) {}
 
   title(cursor: number): void {
-    this.backdrop();
+    this.titleBackdrop();
     const { canvas } = this.ctx;
     const emblemPx = this.ui.assets.emblem.width * EMBLEM_SCALE;
     const x = Math.round((canvas.width - emblemPx) / 2);
@@ -59,6 +65,38 @@ export class ScreenPainters {
 
     const entries = [str().startGame, str().options];
     this.menu(entries, cursor, titleY + GLYPH_H * TITLE_TEXT_SCALE + 44);
+  }
+
+  /**
+   * Title-only backdrop: blue sky over a single oversized band of the
+   * grass-capped top-soil, with the miner standing large to one side — like a
+   * zoomed-in shot of the surface the game starts on.
+   */
+  private titleBackdrop(): void {
+    const { canvas } = this.ctx;
+    this.ctx.imageSmoothingEnabled = false;
+    const surfaceY = canvas.height - TITLE_GRASS_PX;
+    const sky = this.world.background('sky');
+    this.ctx.drawImage(sky.frame(0), 0, 0, canvas.width, surfaceY);
+
+    const grass = this.world.grass();
+    for (let x = 0; x < canvas.width; x += TITLE_GRASS_PX) {
+      const variant = variantIndexAt(x / TITLE_GRASS_PX, 0, grass.frameCount);
+      this.ctx.drawImage(grass.frame(variant), x, surfaceY, TITLE_GRASS_PX, TITLE_GRASS_PX);
+    }
+
+    this.titlePlayer(surfaceY);
+  }
+
+  /** The big miner standing on the surface, offset toward one side. */
+  private titlePlayer(surfaceY: number): void {
+    const { canvas } = this.ctx;
+    const player = this.world.entity('player');
+    const w = player.width * TITLE_PLAYER_SCALE;
+    const h = player.height * TITLE_PLAYER_SCALE;
+    const x = Math.round(canvas.width * TITLE_PLAYER_X_FRACTION - w / 2);
+    const y = Math.round(surfaceY - h);
+    this.ctx.drawImage(player.frame(0), x, y, w, h);
   }
 
   options(cursor: number, muted: boolean): void {

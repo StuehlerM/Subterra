@@ -1,6 +1,6 @@
-import { Vec2 } from './Vec2';
-import { World } from './World';
-import { TileType } from './tiles';
+import { Vec2 } from '../math/Vec2';
+import { World } from '../world/World';
+import { TileType } from '../world/tiles';
 
 /** Grace period before an unsupported rock starts to fall (the "wobble"). */
 const DEFAULT_WOBBLE_SECONDS = 0.5;

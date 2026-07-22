@@ -1,6 +1,6 @@
-import { Vec2 } from './Vec2';
-import { World } from './World';
-import { TileType, isBlastable } from './tiles';
+import { Vec2 } from '../math/Vec2';
+import { World } from '../world/World';
+import { TileType, isBlastable } from '../world/tiles';
 
 /**
  * Detonates at `center`, clearing every blastable tile within `radius` to

@@ -1,4 +1,4 @@
-import { Vec2 } from './Vec2';
+import { Vec2 } from '../math/Vec2';
 
 /** Seconds a lit flare glows before burning out. */
 const DEFAULT_FLARE_LIFE = 2;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TileType } from '../../src/domain/tiles';
+import { TileType } from '../../src/domain/world/tiles';
 import { parseGrid } from '../../src/infra/sprites/grid';
 import { TILE_SPRITES } from '../../src/infra/sprites/art/tiles';
 import { ENTITY_SPRITES } from '../../src/infra/sprites/art/entities';

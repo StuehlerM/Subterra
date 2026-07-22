@@ -5,7 +5,7 @@ import {
   COACH_BAT_MAX,
   COACH_BAT_MIN,
   COACH_SHOW_MS,
-} from '../src/app/Coach';
+} from '../src/app/onboarding/Coach';
 
 const IDLE: CoachObservation = {
   underground: true,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { Vec2 } from '../src/domain/Vec2';
-import { World } from '../src/domain/World';
-import { TileType, isDiggable, isOre } from '../src/domain/tiles';
+import { Vec2 } from '../src/domain/math/Vec2';
+import { World } from '../src/domain/world/World';
+import { TileType, isDiggable, isOre } from '../src/domain/world/tiles';
 
 const SIZE = 10;
 const SURFACE_ROWS = 3;

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { Game } from '../src/app/Game';
-import { Battery } from '../src/domain/Battery';
-import { Consumable } from '../src/domain/Consumable';
-import { RIGHT, UP } from '../src/domain/Direction';
-import { Player } from '../src/domain/Player';
-import { PlayerProgress } from '../src/domain/PlayerProgress';
-import { TileType } from '../src/domain/tiles';
-import { UpgradeType } from '../src/domain/upgrades';
-import { Vec2 } from '../src/domain/Vec2';
+import { Battery } from '../src/domain/economy/Battery';
+import { Consumable } from '../src/domain/economy/Consumable';
+import { RIGHT, UP } from '../src/domain/math/Direction';
+import { Player } from '../src/domain/entities/Player';
+import { PlayerProgress } from '../src/domain/economy/PlayerProgress';
+import { TileType } from '../src/domain/world/tiles';
+import { UpgradeType } from '../src/domain/economy/upgrades';
+import { Vec2 } from '../src/domain/math/Vec2';
 import { worldFrom } from './helpers/worldFrom';
 
 const MOVE_DURATION = 0.1;

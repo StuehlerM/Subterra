@@ -1,16 +1,16 @@
-import { Bat, BatState } from '../domain/Bat';
-import { Direction } from '../domain/Direction';
-import { Dynamite } from '../domain/Dynamite';
-import { sellCargo } from '../domain/Economy';
-import { explode } from '../domain/Explosion';
-import { FallingRock } from '../domain/FallingRock';
-import { FLARE_RADIUS, Flare } from '../domain/Flare';
-import { Player } from '../domain/Player';
-import { PlayerProgress } from '../domain/PlayerProgress';
-import { Vec2 } from '../domain/Vec2';
-import { TileType } from '../domain/tiles';
-import { UpgradeType } from '../domain/upgrades';
-import { World } from '../domain/World';
+import { Bat, BatState } from '../domain/entities/Bat';
+import { Direction } from '../domain/math/Direction';
+import { Dynamite } from '../domain/entities/Dynamite';
+import { sellCargo } from '../domain/economy/Economy';
+import { explode } from '../domain/entities/Explosion';
+import { FallingRock } from '../domain/entities/FallingRock';
+import { FLARE_RADIUS, Flare } from '../domain/entities/Flare';
+import { Player } from '../domain/entities/Player';
+import { PlayerProgress } from '../domain/economy/PlayerProgress';
+import { Vec2 } from '../domain/math/Vec2';
+import { TileType } from '../domain/world/tiles';
+import { UpgradeType } from '../domain/economy/upgrades';
+import { World } from '../domain/world/World';
 
 /** Seconds the red knock-out flash lingers. */
 const KNOCKOUT_FLASH_SECONDS = 0.9;

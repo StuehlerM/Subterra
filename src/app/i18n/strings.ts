@@ -1,5 +1,5 @@
-import { UpgradeType } from '../domain/upgrades';
-import type { CoachLesson } from './Coach';
+import { UpgradeType } from '../../domain/economy/upgrades';
+import type { CoachLesson } from '../onboarding/Coach';
 
 /**
  * Every user-facing string in three languages (uppercase only — the pixel

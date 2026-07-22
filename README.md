@@ -40,7 +40,7 @@ palette. Editing art:
 
 - **Type it**: change a letter/dot in a grid, or a hex value in a palette, and reload.
 - **Draw it**: make a PNG in any pixel editor (frames as a horizontal strip) and run
-  `node scripts/png-to-grid.mjs sprite.png --frames 2`, then paste the output into
+  `node tools/graphics/png-to-grid.mjs sprite.png --frames 2`, then paste the output into
   `src/infra/sprites/art/`. `--palette shared.json` matches pixels onto existing named
   colours (strict; `--tolerance N` allows drift, `--force-nearest` snaps everything).
 
@@ -55,7 +55,7 @@ palette. Editing art:
 | `npm run test:watch`| Run tests in watch mode.              |
 | `npm run typecheck` | Typecheck without emitting.           |
 
-Art tooling: `node scripts/png-to-grid.mjs` converts PNGs to text-grid sprites (it has
+Art tooling: `node tools/graphics/png-to-grid.mjs` converts PNGs to text-grid sprites (it has
 its own tiny PNG decoder, zero dependencies).
 
 ## Architecture (short)

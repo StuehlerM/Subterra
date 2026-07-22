@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Battery } from '../src/domain/Battery';
+import { Battery } from '../src/domain/economy/Battery';
 
 describe('Battery', () => {
   it('starts full', () => {

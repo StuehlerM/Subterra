@@ -1,4 +1,4 @@
-import { Vec2 } from './Vec2';
+import { Vec2 } from '../math/Vec2';
 
 /** Seconds from placement until the blast. */
 const DEFAULT_FUSE_SECONDS = 1.2;

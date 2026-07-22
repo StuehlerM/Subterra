@@ -1,4 +1,4 @@
-import { TileType } from './tiles';
+import { TileType } from '../world/tiles';
 
 export interface CargoEntry {
   readonly type: TileType;

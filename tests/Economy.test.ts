@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { Cargo } from '../src/domain/Cargo';
-import { TileType } from '../src/domain/tiles';
-import { sellCargo } from '../src/domain/Economy';
-import { PlayerProgress } from '../src/domain/PlayerProgress';
+import { Cargo } from '../src/domain/economy/Cargo';
+import { TileType } from '../src/domain/world/tiles';
+import { sellCargo } from '../src/domain/economy/Economy';
+import { PlayerProgress } from '../src/domain/economy/PlayerProgress';
 
 describe('sellCargo', () => {
   it('banks the cargo value and empties the hold', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { PlayerProgress } from '../src/domain/PlayerProgress';
-import { UpgradeType, maxLevel, upgradeCost } from '../src/domain/upgrades';
+import { PlayerProgress } from '../src/domain/economy/PlayerProgress';
+import { UpgradeType, maxLevel, upgradeCost } from '../src/domain/economy/upgrades';
 
 describe('PlayerProgress', () => {
   it('starts every upgrade at level 1', () => {

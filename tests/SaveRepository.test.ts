@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PlayerProgress } from '../src/domain/PlayerProgress';
+import { PlayerProgress } from '../src/domain/economy/PlayerProgress';
 import { SaveRepository, SLOT_COUNT } from '../src/infra/SaveRepository';
 
 const BASE_KEY = 'test-save';

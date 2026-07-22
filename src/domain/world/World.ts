@@ -1,5 +1,5 @@
-import { Rng } from './Rng';
-import { Vec2 } from './Vec2';
+import { Rng } from '../random/Rng';
+import { Vec2 } from '../math/Vec2';
 import { TileType, isSolid } from './tiles';
 
 const DEFAULT_PILLAR_CHANCE = 0.16;

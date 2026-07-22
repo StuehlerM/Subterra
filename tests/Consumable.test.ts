@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Consumable } from '../src/domain/Consumable';
+import { Consumable } from '../src/domain/economy/Consumable';
 
 describe('Consumable', () => {
   it('starts full and uses one at a time', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { explode } from '../src/domain/Explosion';
-import { Vec2 } from '../src/domain/Vec2';
-import { TileType } from '../src/domain/tiles';
+import { explode } from '../src/domain/entities/Explosion';
+import { Vec2 } from '../src/domain/math/Vec2';
+import { TileType } from '../src/domain/world/tiles';
 import { worldFrom } from './helpers/worldFrom';
 
 describe('explode', () => {

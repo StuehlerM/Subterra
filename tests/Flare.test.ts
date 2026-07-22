@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { Flare } from '../src/domain/Flare';
-import { Vec2 } from '../src/domain/Vec2';
+import { Flare } from '../src/domain/entities/Flare';
+import { Vec2 } from '../src/domain/math/Vec2';
 
 describe('Flare', () => {
   it('burns down and finishes', () => {

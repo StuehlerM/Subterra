@@ -1,4 +1,4 @@
-import { TileType } from '../../domain/tiles';
+import { TileType } from '../../domain/world/tiles';
 
 /** What the director observes about the game, once per frame. */
 export interface AudioSnapshot {

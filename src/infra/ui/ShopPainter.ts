@@ -1,7 +1,7 @@
 import { Game } from '../../app/Game';
-import { ShopMenu } from '../../app/ShopMenu';
-import { str, upgradeNames } from '../../app/strings';
-import { UpgradeType, maxLevel } from '../../domain/upgrades';
+import { ShopMenu } from '../../app/menu/ShopMenu';
+import { str, upgradeNames } from '../../app/i18n/strings';
+import { UpgradeType, maxLevel } from '../../domain/economy/upgrades';
 import { UiPainter } from './UiPainter';
 
 const SCALE = 4;

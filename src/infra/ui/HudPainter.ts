@@ -1,6 +1,6 @@
 import { Game } from '../../app/Game';
-import { str } from '../../app/strings';
-import { CargoEntry } from '../../domain/Cargo';
+import { str } from '../../app/i18n/strings';
+import { CargoEntry } from '../../domain/economy/Cargo';
 import { AssetRegistry } from '../AssetRegistry';
 import { BATTERY_SEGMENTS } from '../sprites/art/ui';
 import { frameIndexAt } from '../sprites/animation';

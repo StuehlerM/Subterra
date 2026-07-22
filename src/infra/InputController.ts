@@ -1,4 +1,4 @@
-import { DOWN, Direction, LEFT, RIGHT, UP } from '../domain/Direction';
+import { DOWN, Direction, LEFT, RIGHT, UP } from '../domain/math/Direction';
 
 const KEY_DIRECTIONS: Record<string, Direction> = {
   ArrowUp: UP,

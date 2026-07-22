@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { Bat, BatState } from '../src/domain/Bat';
-import { Vec2 } from '../src/domain/Vec2';
+import { Bat, BatState } from '../src/domain/entities/Bat';
+import { Vec2 } from '../src/domain/math/Vec2';
 import { worldFrom } from './helpers/worldFrom';
 
 const FAST = 0.05;

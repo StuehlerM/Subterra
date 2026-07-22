@@ -1,11 +1,11 @@
 import { Game } from '../app/Game';
-import { Bat, BatState } from '../domain/Bat';
-import { Dynamite } from '../domain/Dynamite';
-import { FallingRock, RockState } from '../domain/FallingRock';
-import { FLARE_RADIUS, Flare } from '../domain/Flare';
-import { Vec2 } from '../domain/Vec2';
-import { World } from '../domain/World';
-import { TileType } from '../domain/tiles';
+import { Bat, BatState } from '../domain/entities/Bat';
+import { Dynamite } from '../domain/entities/Dynamite';
+import { FallingRock, RockState } from '../domain/entities/FallingRock';
+import { FLARE_RADIUS, Flare } from '../domain/entities/Flare';
+import { Vec2 } from '../domain/math/Vec2';
+import { World } from '../domain/world/World';
+import { TileType } from '../domain/world/tiles';
 import { AssetRegistry } from './AssetRegistry';
 import { FogOfWar } from './FogOfWar';
 import { frameIndexAt } from './sprites/animation';

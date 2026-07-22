@@ -1,6 +1,6 @@
-import { Vec2 } from './Vec2';
-import { World } from './World';
-import { TileType } from './tiles';
+import { Vec2 } from '../math/Vec2';
+import { World } from '../world/World';
+import { TileType } from '../world/tiles';
 
 /** Seconds per tile while flying (slower than walking, so the miner can flee). */
 const BAT_MOVE_DURATION = 0.18;

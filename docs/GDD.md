@@ -117,7 +117,7 @@
 - Every sprite is a **text grid + palette in the source** (`src/infra/sprites/art/`);
   the **AssetRegistry** bakes each grid once onto a cached canvas at startup and the
   renderer blits those like decoded PNGs. Animation = extra frame grids; ores share one
-  vein shape with per-ore palettes. `scripts/png-to-grid.mjs` converts pixel-editor PNGs
+  vein shape with per-ore palettes. `tools/graphics/png-to-grid.mjs` converts pixel-editor PNGs
   into grids (with `--palette` matching onto shared named colours).
 - Audio is **text too**, zero dependencies and zero sound files: notes like
   `"C4 . E4 - G4 | ..."` (`.` sustains, `-` rests, `|` bar-checks) are parsed by a pure,

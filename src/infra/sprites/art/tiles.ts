@@ -1,4 +1,4 @@
-import { TileType } from '../../../domain/tiles';
+import { TileType } from '../../../domain/world/tiles';
 import { SpriteDefinition, TextureGrid } from '../grid';
 
 /**

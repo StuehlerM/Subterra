@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { AudioDirector, AudioSnapshot } from '../../src/infra/audio/AudioDirector';
-import { TileType } from '../../src/domain/tiles';
+import { TileType } from '../../src/domain/world/tiles';
 
 const IDLE: AudioSnapshot = {
   moving: false,

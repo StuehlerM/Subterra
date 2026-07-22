@@ -1,5 +1,5 @@
-import { str } from '../../app/strings';
-import { TileType } from '../../domain/tiles';
+import { str } from '../../app/i18n/strings';
+import { TileType } from '../../domain/world/tiles';
 import { AssetRegistry } from '../AssetRegistry';
 import { SlotSummary, SLOT_COUNT } from '../SaveRepository';
 import { frameIndexAt } from '../sprites/animation';

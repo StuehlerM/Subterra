@@ -1,4 +1,4 @@
-import { TileType } from '../domain/tiles';
+import { TileType } from '../domain/world/tiles';
 import { BACKGROUND_SPRITES } from './sprites/art/backgrounds';
 import { ENTITY_SPRITES } from './sprites/art/entities';
 import { GRASS_SPRITE, SOIL_BANDS, soilBandIndex, soilPalette } from './sprites/art/soil';

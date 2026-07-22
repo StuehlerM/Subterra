@@ -1,6 +1,6 @@
-import { Direction } from '../domain/Direction';
-import { ALL_UPGRADES, UpgradeType } from '../domain/upgrades';
-import { Game } from './Game';
+import { Direction } from '../../domain/math/Direction';
+import { ALL_UPGRADES, UpgradeType } from '../../domain/economy/upgrades';
+import { Game } from '../Game';
 
 /**
  * Selection + purchase logic for the surface shop menu, independent of how it

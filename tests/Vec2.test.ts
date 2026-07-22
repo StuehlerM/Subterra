@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Vec2 } from '../src/domain/Vec2';
+import { Vec2 } from '../src/domain/math/Vec2';
 
 describe('Vec2', () => {
   it('adds component-wise', () => {

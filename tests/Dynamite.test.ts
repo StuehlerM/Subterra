@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { Dynamite } from '../src/domain/Dynamite';
-import { Vec2 } from '../src/domain/Vec2';
+import { Dynamite } from '../src/domain/entities/Dynamite';
+import { Vec2 } from '../src/domain/math/Vec2';
 
 describe('Dynamite', () => {
   it('counts its fuse down', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { Cargo } from '../src/domain/Cargo';
-import { TileType } from '../src/domain/tiles';
+import { Cargo } from '../src/domain/economy/Cargo';
+import { TileType } from '../src/domain/world/tiles';
 
 describe('Cargo', () => {
   it('accumulates count and value', () => {

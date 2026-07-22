@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { FallingRock, RockState } from '../src/domain/FallingRock';
-import { Vec2 } from '../src/domain/Vec2';
-import { TileType } from '../src/domain/tiles';
+import { FallingRock, RockState } from '../src/domain/entities/FallingRock';
+import { Vec2 } from '../src/domain/math/Vec2';
+import { TileType } from '../src/domain/world/tiles';
 import { worldFrom } from './helpers/worldFrom';
 
 const WOBBLE = 0.2;

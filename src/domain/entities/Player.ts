@@ -1,11 +1,11 @@
-import { Battery } from './Battery';
-import { Cargo } from './Cargo';
-import { Consumable } from './Consumable';
-import { Direction } from './Direction';
-import { PlayerProgress } from './PlayerProgress';
-import { Vec2 } from './Vec2';
-import { World } from './World';
-import { TileType, isDiggable, isSolid, tileHardness, tileValue } from './tiles';
+import { Battery } from '../economy/Battery';
+import { Cargo } from '../economy/Cargo';
+import { Consumable } from '../economy/Consumable';
+import { Direction } from '../math/Direction';
+import { PlayerProgress } from '../economy/PlayerProgress';
+import { Vec2 } from '../math/Vec2';
+import { World } from '../world/World';
+import { TileType, isDiggable, isSolid, tileHardness, tileValue } from '../world/tiles';
 
 /** Fixed walking speed through open tiles (matches the fastest drill level). */
 const DEFAULT_WALK_DURATION = 0.07;

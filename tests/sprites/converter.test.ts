@@ -2,8 +2,8 @@ import { deflateSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { parseGrid } from '../../src/infra/sprites/grid';
 // eslint-disable-next-line -- plain-JS tool modules with .d.mts declarations
-import { chunk, encodePng } from '../../scripts/png.mjs';
-import { convertPngToSprite, decodePng } from '../../scripts/png-to-grid.mjs';
+import { chunk, encodePng } from '../../tools/graphics/png.mjs';
+import { convertPngToSprite, decodePng } from '../../tools/graphics/png-to-grid.mjs';
 
 const PALETTE = { g: '#6fae52', d: '#4a7a34', t: '#b1d67e' };
 

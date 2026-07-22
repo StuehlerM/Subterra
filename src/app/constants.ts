@@ -1,4 +1,4 @@
-import { Vec2 } from '../domain/Vec2';
+import { Vec2 } from '../domain/math/Vec2';
 
 /** Pixel size of one tile when rendered. */
 export const TILE_SIZE = 32;

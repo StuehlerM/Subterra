@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { Game } from '../src/app/Game';
-import { ShopMenu } from '../src/app/ShopMenu';
-import { DOWN, LEFT, RIGHT, UP } from '../src/domain/Direction';
-import { Player } from '../src/domain/Player';
-import { PlayerProgress } from '../src/domain/PlayerProgress';
-import { ALL_UPGRADES } from '../src/domain/upgrades';
-import { Vec2 } from '../src/domain/Vec2';
+import { ShopMenu } from '../src/app/menu/ShopMenu';
+import { DOWN, LEFT, RIGHT, UP } from '../src/domain/math/Direction';
+import { Player } from '../src/domain/entities/Player';
+import { PlayerProgress } from '../src/domain/economy/PlayerProgress';
+import { ALL_UPGRADES } from '../src/domain/economy/upgrades';
+import { Vec2 } from '../src/domain/math/Vec2';
 import { worldFrom } from './helpers/worldFrom';
 
 const FIXED_DT = 1 / 60;

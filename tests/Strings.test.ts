@@ -7,10 +7,10 @@ import {
   str,
   tutorialHints,
   upgradeNames,
-} from '../src/app/strings';
+} from '../src/app/i18n/strings';
 
 const COACH_LESSONS = ['rock', 'bat', 'batteryEmpty', 'supplyEmpty', 'cargoFull', 'portal'] as const;
-import { ALL_UPGRADES } from '../src/domain/upgrades';
+import { ALL_UPGRADES } from '../src/domain/economy/upgrades';
 import { PIXEL_FONT } from '../src/infra/sprites/art/ui';
 
 const TUTORIAL_STEPS = 5;

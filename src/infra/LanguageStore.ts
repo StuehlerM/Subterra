@@ -1,4 +1,4 @@
-import { LANGUAGES, Language } from '../app/strings';
+import { LANGUAGES, Language } from '../app/i18n/strings';
 
 /** Remembers the chosen UI language across reloads. */
 export class LanguageStore {

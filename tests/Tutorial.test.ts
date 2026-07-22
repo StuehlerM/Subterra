@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Tutorial, TUTORIAL_DONE, TutorialObservation } from '../src/app/Tutorial';
+import { Tutorial, TUTORIAL_DONE, TutorialObservation } from '../src/app/onboarding/Tutorial';
 
 const IDLE: TutorialObservation = {
   underground: false,

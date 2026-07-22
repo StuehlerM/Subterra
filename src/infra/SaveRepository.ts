@@ -1,4 +1,4 @@
-import { PlayerProgress, PlayerProgressData } from '../domain/PlayerProgress';
+import { PlayerProgress, PlayerProgressData } from '../domain/economy/PlayerProgress';
 
 /** How many independent save slots the title screen offers. */
 export const SLOT_COUNT = 3;

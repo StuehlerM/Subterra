@@ -1,5 +1,5 @@
-import { World } from '../../src/domain/World';
-import { TileType } from '../../src/domain/tiles';
+import { World } from '../../src/domain/world/World';
+import { TileType } from '../../src/domain/world/tiles';
 
 const CHAR_TO_TILE: Record<string, TileType> = {
   '.': TileType.Empty,

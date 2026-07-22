@@ -7,6 +7,7 @@ interface SlotData {
   readonly seed: number;
   readonly progress: PlayerProgressData;
   readonly tutorialStep?: number;
+  readonly coachLearned?: readonly string[];
 }
 
 export interface SlotSave {
@@ -14,6 +15,8 @@ export interface SlotSave {
   readonly progress: PlayerProgress;
   /** Saved tutorial step, or null when finished (legacy blobs count as finished). */
   readonly tutorialStep: number | null;
+  /** Contextual-coach lessons already taught (empty for legacy/new blobs). */
+  readonly coachLearned: string[];
 }
 
 /** What the slot picker shows for an occupied slot. */
@@ -40,12 +43,19 @@ export class SaveRepository {
         seed: data.seed,
         progress: PlayerProgress.fromJSON(data.progress),
         tutorialStep: data.tutorialStep ?? null,
+        coachLearned: [...(data.coachLearned ?? [])],
       }
     );
   }
 
-  saveSlot(slot: number, seed: number, progress: PlayerProgress, tutorialStep?: number): void {
-    const data: SlotData = { seed, progress: progress.toJSON(), tutorialStep };
+  saveSlot(
+    slot: number,
+    seed: number,
+    progress: PlayerProgress,
+    tutorialStep?: number,
+    coachLearned?: readonly string[],
+  ): void {
+    const data: SlotData = { seed, progress: progress.toJSON(), tutorialStep, coachLearned };
     this.storage.setItem(this.slotKey(slot), JSON.stringify(data));
   }
 

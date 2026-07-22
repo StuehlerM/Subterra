@@ -1,4 +1,5 @@
 import { UpgradeType } from '../domain/upgrades';
+import type { CoachLesson } from './Coach';
 
 /**
  * Every user-facing string in three languages (uppercase only — the pixel
@@ -131,6 +132,37 @@ const TUTORIAL_TABLES: Record<Language, readonly string[]> = {
   ],
 };
 
+/**
+ * Contextual-coach lines (keyed by lesson). Uppercase and glyph-safe: the
+ * pixel font only draws A-Z, digits, / ! ? and Å Ä Ö Ü.
+ */
+const COACH_TABLES: Record<Language, Record<CoachLesson, string>> = {
+  en: {
+    rock: 'ROCK BLOCKS THE WAY! PRESS Z FOR DYNAMITE',
+    bat: 'BATS AHEAD! PRESS X FOR A FLARE',
+    batteryEmpty: 'BATTERY EMPTY! GO BACK UP TO RECHARGE',
+    supplyEmpty: 'OUT OF SUPPLIES! GO BACK UP TO RESTOCK',
+    cargoFull: 'CARGO FULL! GO BACK UP TO SELL',
+    portal: 'A PORTAL! STEP IN TO WARP HOME WITH YOUR CARGO',
+  },
+  sv: {
+    rock: 'STEN I VÄGEN! TRYCK Z FÖR DYNAMIT',
+    bat: 'FLADDERMÖSS! TRYCK X FÖR EN FACKLA',
+    batteryEmpty: 'BATTERIET TOMT! GÅ UPP OCH LADDA',
+    supplyEmpty: 'SLUT PÅ FÖRRÅD! GÅ UPP OCH FYLL PÅ',
+    cargoFull: 'LASTEN FULL! GÅ UPP OCH SÄLJ',
+    portal: 'EN PORTAL! GÅ IN FÖR ATT RESA HEM MED LASTEN',
+  },
+  de: {
+    rock: 'FELS VERSPERRT DEN WEG! DRÜCK Z FÜR DYNAMIT',
+    bat: 'FLEDERMÄUSE! DRÜCK X FÜR EINE FACKEL',
+    batteryEmpty: 'AKKU LEER! GEH NACH OBEN ZUM LADEN',
+    supplyEmpty: 'VORRAT LEER! GEH NACH OBEN ZUM AUFFÜLLEN',
+    cargoFull: 'LADUNG VOLL! GEH NACH OBEN ZUM VERKAUFEN',
+    portal: 'EIN PORTAL! STEIG EIN UND REISE HEIM MIT LADUNG',
+  },
+};
+
 const UPGRADE_TABLES: Record<Language, Record<UpgradeType, string>> = {
   en: {
     [UpgradeType.DrillStrength]: 'POWER',
@@ -184,4 +216,9 @@ export function tutorialHints(): readonly string[] {
 /** The shop upgrade names of the active language. */
 export function upgradeNames(): Record<UpgradeType, string> {
   return UPGRADE_TABLES[active];
+}
+
+/** The contextual-coach lines of the active language (keyed by lesson). */
+export function coachHints(): Record<CoachLesson, string> {
+  return COACH_TABLES[active];
 }

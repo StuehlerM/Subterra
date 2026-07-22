@@ -41,6 +41,14 @@ describe('SaveRepository slots', () => {
     expect(save.loadSlot(1)?.tutorialStep).toBeNull();
   });
 
+  it('round-trips the learned coach lessons, defaulting to none', () => {
+    const save = repo();
+    save.saveSlot(0, 42, new PlayerProgress(0), 2, ['rock', 'bat']);
+    expect(save.loadSlot(0)?.coachLearned).toEqual(['rock', 'bat']);
+    save.saveSlot(1, 42, new PlayerProgress(0)); // nothing given
+    expect(save.loadSlot(1)?.coachLearned).toEqual([]);
+  });
+
   it('round-trips seed and progress per slot, independently', () => {
     const save = repo();
     save.saveSlot(0, 42, new PlayerProgress(100));

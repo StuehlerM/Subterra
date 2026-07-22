@@ -1,12 +1,15 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   LANGUAGES,
+  coachHints,
   currentLanguage,
   setLanguage,
   str,
   tutorialHints,
   upgradeNames,
 } from '../src/app/strings';
+
+const COACH_LESSONS = ['rock', 'bat', 'batteryEmpty', 'supplyEmpty', 'cargoFull', 'portal'] as const;
 import { ALL_UPGRADES } from '../src/domain/upgrades';
 import { PIXEL_FONT } from '../src/infra/sprites/art/ui';
 
@@ -39,10 +42,24 @@ describe('i18n strings', () => {
     }
   });
 
+  it('every language has a line for every coach lesson', () => {
+    for (const lang of LANGUAGES) {
+      setLanguage(lang);
+      for (const lesson of COACH_LESSONS) {
+        expect(coachHints()[lesson], `${lang} coach ${lesson}`).toBeTruthy();
+      }
+    }
+  });
+
   it('every string in every language is drawable with the pixel font', () => {
     for (const lang of LANGUAGES) {
       setLanguage(lang);
-      const all = [...Object.values(str()), ...tutorialHints(), ...Object.values(upgradeNames())];
+      const all = [
+        ...Object.values(str()),
+        ...tutorialHints(),
+        ...Object.values(upgradeNames()),
+        ...Object.values(coachHints()),
+      ];
       for (const text of all) {
         for (const char of text) {
           if (char === ' ') continue;

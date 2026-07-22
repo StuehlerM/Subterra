@@ -170,7 +170,19 @@ Things that differ from the first draft above, decided during build/playtest:
   never wasted. Blast is a 3×3 area; **no friendly fire** (player never harmed).
 - **Rock** is a distinct tile from Bedrock: Rock is destructible by dynamite; Bedrock is
   fully indestructible.
-- **Save trigger**: on every surface arrival (when the menu opens), plus after purchases.
+- **Save trigger**: on every surface arrival (when the menu opens), plus after purchases,
+  plus the moment a new contextual-coach lesson is learned (so it never re-appears).
+- **Contextual coach ("show, don't tell")**: alongside the scripted first-run tutorial, an
+  event-driven `Coach` teaches tools/hazards *in situ* the first time you meet them, then
+  stays quiet forever (learned set persisted per slot). Lessons: **rock blocks the way →
+  dynamite (Z)**, **bat within a 2–5 tile band → flare (X)**, **cargo full → go back up**,
+  **battery empty → go back up**. Tool lessons only fire when you still hold that consumable;
+  danger/urgency-first priority (rock > bat > battery > **supply** > cargo > **portal**); each
+  cue shows ~4s once, highlighting the actual thing (amber ring + arrow on the world tile/bat/
+  portal, or a pulse on the HUD gauge) with one short line. Coach cue takes precedence over the
+  onboarding hint. Also: **supply empty** — dynamite *or* flares hitting 0 (either is enough) →
+  pulse the supply panel, “go back up to restock”; **portal** — a portal within 5 tiles →
+  highlight it, “step in to warp home with your cargo”.
 - **Upgrade set (7)**: Drill Strength, Drill Speed, Cargo, Battery, Dynamite, Blast Radius
   (💥 3 levels: 3×3 → 5×5 → 7×7), Flare (🔦). Elevator & teleport (§9) remain future work.
 - **Bats**: sleep in generated caves; wake within 4 tiles; chase through open tiles at

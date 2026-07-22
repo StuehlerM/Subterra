@@ -12,11 +12,13 @@ import {
 import { FixedTimestep } from './app/FixedTimestep';
 import { Game } from './app/Game';
 import { ShopMenu } from './app/ShopMenu';
-import { setLanguage, tutorialHints } from './app/strings';
+import { Coach, CoachCue, CoachObservation } from './app/Coach';
+import { coachHints, setLanguage, tutorialHints } from './app/strings';
 import { Tutorial, TUTORIAL_DONE } from './app/Tutorial';
 import { BatState } from './domain/Bat';
 import { Player } from './domain/Player';
 import { PlayerProgress } from './domain/PlayerProgress';
+import { TileType } from './domain/tiles';
 import { World } from './domain/World';
 import { AssetRegistry } from './infra/AssetRegistry';
 import { AudioDirector } from './infra/audio/AudioDirector';
@@ -50,13 +52,56 @@ interface Session {
   readonly menu: ShopMenu;
   readonly fog: FogOfWar;
   readonly tutorial: Tutorial;
+  readonly coach: Coach;
   readonly audioDirector: AudioDirector;
   wasMenuOpen: boolean;
   boughtSomething: boolean;
+  /** The coach cue to show this frame (set in stepGame, drawn in draw). */
+  coachCue: CoachCue | null;
+  /** How many coach lessons were learned at the last save, to detect changes. */
+  savedCoachCount: number;
 }
 
 function rollSeed(): number {
   return (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
+}
+
+/** A Rock tile orthogonally next to the miner (what dynamite is for), or null. */
+function findAdjacentRock(game: Game): { x: number; y: number } | null {
+  const { x, y } = game.player.tile;
+  const neighbors: [number, number][] = [
+    [x + 1, y],
+    [x - 1, y],
+    [x, y + 1],
+    [x, y - 1],
+  ];
+  for (const [nx, ny] of neighbors) {
+    if (game.world.getTile(nx, ny) === TileType.Rock) return { x: nx, y: ny };
+  }
+  return null;
+}
+
+/** The nearest live bat (Chebyshev tiles) to the miner, or null if none. */
+function findNearestBat(game: Game): { x: number; y: number; distance: number } | null {
+  const { x, y } = game.player.tile;
+  let best: { x: number; y: number; distance: number } | null = null;
+  for (const bat of game.activeBats) {
+    if (bat.phase === BatState.Gone) continue;
+    const distance = Math.max(Math.abs(bat.tile.x - x), Math.abs(bat.tile.y - y));
+    if (!best || distance < best.distance) best = { x: bat.tile.x, y: bat.tile.y, distance };
+  }
+  return best;
+}
+
+/** The nearest portal (Chebyshev tiles) to the miner, or null if none. */
+function findNearestPortal(game: Game): { x: number; y: number; distance: number } | null {
+  const { x, y } = game.player.tile;
+  let best: { x: number; y: number; distance: number } | null = null;
+  for (const portal of game.activePortals) {
+    const distance = Math.max(Math.abs(portal.x - x), Math.abs(portal.y - y));
+    if (!best || distance < best.distance) best = { x: portal.x, y: portal.y, distance };
+  }
+  return best;
 }
 
 function startSession(save: SaveRepository, slot: number, onPurchaseSound: () => void): Session {
@@ -65,7 +110,8 @@ function startSession(save: SaveRepository, slot: number, onPurchaseSound: () =>
   const progress = stored?.progress ?? new PlayerProgress();
   // Fresh slots get the tutorial; stored slots resume it (legacy = finished).
   const tutorial = new Tutorial(stored ? (stored.tutorialStep ?? TUTORIAL_DONE) : 0);
-  if (!stored) save.saveSlot(slot, seed, progress, tutorial.step); // claim the slot
+  const coach = new Coach(stored?.coachLearned ?? []);
+  if (!stored) save.saveSlot(slot, seed, progress, tutorial.step, coach.learnedIds()); // claim the slot
 
   const { world, batSpawns, portalSpawns } = World.generateMap(WORLD_WIDTH, WORLD_HEIGHT, seed, {
     surfaceRows: SURFACE_ROWS,
@@ -80,13 +126,16 @@ function startSession(save: SaveRepository, slot: number, onPurchaseSound: () =>
     menu: new ShopMenu(game, () => {
       session.boughtSomething = true;
       onPurchaseSound();
-      save.saveSlot(slot, seed, progress, session.tutorial.step);
+      save.saveSlot(slot, seed, progress, session.tutorial.step, session.coach.learnedIds());
     }),
     fog: new FogOfWar(WORLD_WIDTH, WORLD_HEIGHT),
     tutorial,
+    coach,
     audioDirector: new AudioDirector(),
     wasMenuOpen: false,
     boughtSomething: false,
+    coachCue: null,
+    savedCoachCount: coach.learnedIds().length,
   };
   return session;
 }
@@ -258,13 +307,36 @@ function bootstrap(): void {
       boughtSomething: active.boughtSomething,
       depth: active.game.depth(),
     });
+    active.coachCue = active.coach.update(coachObservationFor(active), frameDt * 1000);
 
-    // Save when the surface menu opens (i.e. on arrival, after auto-sell).
+    // Save when the surface menu opens (i.e. on arrival, after auto-sell) or as
+    // soon as a new coach lesson is learned, so it never nags again on reload.
     const menuOpen = active.game.isMenuOpen();
-    if (menuOpen && !active.wasMenuOpen) {
-      save.saveSlot(active.slot, active.seed, active.game.progress, active.tutorial.step);
+    const coachCount = active.coach.learnedIds().length;
+    if ((menuOpen && !active.wasMenuOpen) || coachCount !== active.savedCoachCount) {
+      persist(active);
     }
     active.wasMenuOpen = menuOpen;
+  };
+
+  const persist = (active: Session): void => {
+    save.saveSlot(active.slot, active.seed, active.game.progress, active.tutorial.step, active.coach.learnedIds());
+    active.savedCoachCount = active.coach.learnedIds().length;
+  };
+
+  /** Builds this frame's coach observation from the running game. */
+  const coachObservationFor = (active: Session): CoachObservation => {
+    const { game } = active;
+    return {
+      underground: game.depth() > 0 && !game.isAtBase(),
+      blockingRock: findAdjacentRock(game),
+      dynamiteRemaining: game.player.dynamite.remaining,
+      nearestBat: findNearestBat(game),
+      flareRemaining: game.player.flare.remaining,
+      cargoFull: game.player.cargo.isFull,
+      batteryEmpty: game.player.battery.isEmpty,
+      nearestPortal: findNearestPortal(game),
+    };
   };
 
   const snapshotFor = (active: Session) => ({
@@ -309,13 +381,27 @@ function bootstrap(): void {
         hud.draw(session.game);
         hud.knockout(session.game.knockoutBanner);
         if (session.game.isMenuOpen()) shop.draw(session.game, session.menu);
-        const hintIndex = session.tutorial.currentHintIndex();
-        if (hintIndex !== null && flow.screen === Screen.Playing) {
-          hints.draw(tutorialHints()[hintIndex]);
-        }
+        if (flow.screen === Screen.Playing) drawGuidance(session, now);
         if (flow.screen === Screen.Paused) screens.pause(audio.muted);
         break;
     }
+  };
+
+  /**
+   * Player guidance while playing: a contextual coach cue (highlight + line)
+   * takes precedence; otherwise the scripted onboarding hint shows.
+   */
+  const drawGuidance = (session: Session, now: number): void => {
+    if (session.game.isMenuOpen()) return; // the shop owns the screen
+    const cue = session.coachCue;
+    if (cue) {
+      if (cue.target.kind === 'hud') hud.pulse(cue.target.element, now);
+      else renderer.highlightTile(session.game, cue.target.x, cue.target.y, now);
+      hints.draw(coachHints()[cue.lesson]);
+      return;
+    }
+    const hintIndex = session.tutorial.currentHintIndex();
+    if (hintIndex !== null) hints.draw(tutorialHints()[hintIndex]);
   };
 
   requestAnimationFrame(frame);

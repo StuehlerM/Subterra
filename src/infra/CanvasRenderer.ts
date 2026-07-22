@@ -32,6 +32,10 @@ const FLARE_REVEAL_RADIUS = 5;
 const HIDDEN_COLOR = '#0a0b16';
 /** Parallax factor for the backdrop (moves slower than the world). */
 const BACKGROUND_PARALLAX = 0.5;
+/** Contextual-coach highlight: a pulsing amber ring + bobbing arrow. */
+const COACH_COLOR = '#ffe14d';
+const COACH_ARROW_HALF = 12;
+const COACH_ARROW_GAP = 14;
 
 interface Camera {
   readonly x: number;
@@ -78,10 +82,7 @@ export class CanvasRenderer {
     const { canvas } = this.ctx;
     this.ctx.imageSmoothingEnabled = false; // keep scaled pixel art crisp
     const center = game.player.renderPosition();
-    const camera: Camera = {
-      x: center.x * this.tileSize + this.tileSize / 2 - canvas.width / 2,
-      y: center.y * this.tileSize + this.tileSize / 2 - canvas.height / 2,
-    };
+    const camera = this.cameraFor(game);
 
     this.revealAround(game, fog);
 
@@ -96,6 +97,47 @@ export class CanvasRenderer {
     this.drawPlayer(center, game.player.isMoving, camera);
     this.drawFogMask(camera, fog, game.surfaceRow);
     if (game.knockoutFlash > 0) this.drawKnockoutFlash(game.knockoutFlash);
+  }
+
+  /**
+   * Pulsing amber ring + bobbing down-arrow around a world tile/entity, so the
+   * contextual coach can point at the very thing it is talking about. Called
+   * right after render(), so the camera matches the frame just drawn.
+   */
+  highlightTile(game: Game, tileX: number, tileY: number, timeMs: number): void {
+    const camera = this.cameraFor(game);
+    const x = Math.round(tileX * this.tileSize - camera.x);
+    const y = Math.round(tileY * this.tileSize - camera.y);
+    const pulse = 0.5 + 0.5 * Math.sin(timeMs / 180); // 0..1
+    const size = this.tileSize;
+    const margin = 2 + pulse * 5;
+
+    this.ctx.save();
+    this.ctx.globalAlpha = 0.55 + 0.45 * pulse;
+    this.ctx.strokeStyle = COACH_COLOR;
+    this.ctx.lineWidth = 4 + pulse * 3;
+    this.ctx.strokeRect(x - margin, y - margin, size + margin * 2, size + margin * 2);
+
+    const cx = x + size / 2;
+    const tipY = y - COACH_ARROW_GAP - pulse * 6;
+    this.ctx.globalAlpha = 1;
+    this.ctx.fillStyle = COACH_COLOR;
+    this.ctx.beginPath();
+    this.ctx.moveTo(cx, tipY);
+    this.ctx.lineTo(cx - COACH_ARROW_HALF, tipY - COACH_ARROW_HALF);
+    this.ctx.lineTo(cx + COACH_ARROW_HALF, tipY - COACH_ARROW_HALF);
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.restore();
+  }
+
+  private cameraFor(game: Game): Camera {
+    const { canvas } = this.ctx;
+    const center = game.player.renderPosition();
+    return {
+      x: center.x * this.tileSize + this.tileSize / 2 - canvas.width / 2,
+      y: center.y * this.tileSize + this.tileSize / 2 - canvas.height / 2,
+    };
   }
 
   private revealAround(game: Game, fog: FogOfWar): void {

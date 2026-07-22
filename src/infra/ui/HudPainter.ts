@@ -29,12 +29,21 @@ const BLINK_AT_SEGMENTS = 1;
 /** The big "OUCH!" knock-out banner. */
 const OUCH_SCALE = 14;
 const OUCH_SHADOW = 5;
+/** Contextual-coach pulse around a gauge the player should notice. */
+const COACH_COLOR = '#ffe14d';
 /** The controls legend is drawn smaller so it stays unobtrusive. */
 const LEGEND_SCALE = 3;
 const LEGEND_ICON_PX = ICON_ART * LEGEND_SCALE;
 const LEGEND_TEXT_SCALE = 2;
 const LEGEND_GAP = 6;
 const LEGEND_ROW_GAP = 6;
+
+interface Rect {
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+}
 
 interface HudRow {
   readonly icon: string;
@@ -51,6 +60,11 @@ interface HudRow {
  * loses discrete segments and blinks red on the last one.
  */
 export class HudPainter {
+  /** Panel rects cached each draw() so the coach can pulse them afterwards. */
+  private batteryRect: Rect | null = null;
+  private cargoRect: Rect | null = null;
+  private supplyRect: Rect | null = null;
+
   constructor(
     private readonly ctx: CanvasRenderingContext2D,
     private readonly ui: UiPainter,
@@ -61,7 +75,7 @@ export class HudPainter {
     const { canvas } = this.ctx;
     const { battery, dynamite, flare } = game.player;
 
-    this.panel(MARGIN, MARGIN, [
+    const topRows: HudRow[] = [
       {
         icon: 'battery_wide',
         iconArtWidth: BATTERY_ART_W,
@@ -69,7 +83,9 @@ export class HudPainter {
         decorate: (x, y) => this.batterySegments(x, y, battery.current, battery.capacity),
       },
       { icon: 'depth', text: `${game.depth()}` },
-    ]);
+    ];
+    this.panel(MARGIN, MARGIN, topRows);
+    this.batteryRect = { x: MARGIN, y: MARGIN, w: this.panelWidth(topRows), h: this.panelHeight(topRows) };
 
     const coinRows: HudRow[] = [{ icon: 'coin', text: `${game.progress.money}` }];
     const coinW = this.panelWidth(coinRows);
@@ -77,6 +93,25 @@ export class HudPainter {
 
     this.bottomRight(game, dynamite.remaining, dynamite.capacity, flare.remaining, flare.capacity);
     if (!game.isMenuOpen()) this.controlsLegend();
+  }
+
+  /** A pulsing amber ring around the battery or cargo gauge (coach cue). */
+  pulse(element: 'battery' | 'cargo' | 'supply', timeMs: number): void {
+    const rect = this.rectFor(element);
+    if (!rect) return;
+    const wave = 0.5 + 0.5 * Math.sin(timeMs / 180); // 0..1
+    const margin = 4 + wave * 6;
+    this.ctx.save();
+    this.ctx.globalAlpha = 0.55 + 0.45 * wave;
+    this.ctx.strokeStyle = COACH_COLOR;
+    this.ctx.lineWidth = 4 + wave * 3;
+    this.ctx.strokeRect(rect.x - margin, rect.y - margin, rect.w + margin * 2, rect.h + margin * 2);
+    this.ctx.restore();
+  }
+
+  private rectFor(element: 'battery' | 'cargo' | 'supply'): Rect | null {
+    if (element === 'battery') return this.batteryRect;
+    return element === 'cargo' ? this.cargoRect : this.supplyRect;
   }
 
   /** Big centered "OUCH!" while the knock-out flash fades (rock or bat hit). */
@@ -166,6 +201,7 @@ export class HudPainter {
     const cargoH = PADDING * 2 + ICON_PX + contentsH;
     const cargoX = canvas.width - MARGIN - cargoW;
     const cargoY = canvas.height - MARGIN - cargoH;
+    this.cargoRect = { x: cargoX, y: cargoY, w: cargoW, h: cargoH };
     this.ui.nineSlice(this.ui.assets.panel('wood'), cargoX, cargoY, cargoW, cargoH, SCALE);
     this.rowsAt(cargoX, cargoY, cargoRows);
     if (contents.length > 0) {
@@ -178,7 +214,10 @@ export class HudPainter {
     ];
     const supplyW = this.panelWidth(supplyRows);
     const supplyH = this.panelHeight(supplyRows);
-    this.panel(cargoX - MARGIN - supplyW, canvas.height - MARGIN - supplyH, supplyRows);
+    const supplyX = cargoX - MARGIN - supplyW;
+    const supplyY = canvas.height - MARGIN - supplyH;
+    this.supplyRect = { x: supplyX, y: supplyY, w: supplyW, h: supplyH };
+    this.panel(supplyX, supplyY, supplyRows);
   }
 
   /** Mini ore chips with counts: what the hold actually carries. */
